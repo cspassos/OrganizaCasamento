@@ -575,3 +575,22 @@ Solicitação atendida: itens 2 a 6 da revisão.
 - .gitignore exclui dependências, build, caches, resultados e evidências dos testes, downloads gerados, variáveis de ambiente, chaves, configuração MCP local e diretório da Vercel.
 - .gitattributes padroniza finais de linha do código e trata os assets como binários. Configuração antiga de debug do Karma retirada; projeto usa Vitest.
 - Validação anterior ao envio: 88 testes unitários, 59 testes de navegador (sem falhas ou ignorados), build e verificação do diff aprovados. Nenhum dado do navegador foi alterado.
+
+## Preparação do Supabase — 16/11/2026
+
+- Criadas duas migrações locais com Supabase CLI 3.2.0: estrutura relacional (23 tabelas), RLS por proprietário, referências por casamento e Storage privado para imagens e documentos.
+- Valores em centavos inteiros; fotos/anexos por caminho no Storage; quantidades de presentes, confirmações individuais e pares especiais contemplados. Histórico de módulos anteriores tem área de preservação.
+- Escrita financeira direta bloqueada até implementar as RPCs transacionais de saldos e auditoria na etapa de integração. O frontend continua local, sem migração ou alteração dos cadastros atuais.
+- Validação local: 50 verificações em Postgres/WASM isolado aprovadas, incluindo acesso de duas contas, rejeição de leitura anônima nas 23 tabelas, tentativas de troca de proprietário, referências cruzadas, arquivamento, Storage e cascata com financeiro preenchido.
+- Pendente: inspecionar e aplicar no projeto OrganizaCasamento hospedado, executar advisors e validar Auth/Storage reais. Nesta sessão a ferramenta Supabase não está exposta, a configuração MCP encontrada aponta para outro projeto e o controle nativo do navegador está indisponível. Usuário informou que vai conectar o projeto correto.
+- Detalhes e limitações em supabase/README.md. Nenhuma alteração remota foi executada.
+
+## Supabase aplicado e verificado — 16/11/2026
+
+- Conector supabase-organizacasamento autorizado e projeto luhamomwwsiqxodwjodo confirmado. Inspeção prévia encontrou banco da aplicação, migrações, usuários e buckets vazios.
+- Três migrações aplicadas: 20261116184053 wedding_control_foundation; 20261116184100 private_wedding_storage; 20261116184215 restrict_internal_ddl_trigger. Arquivos locais renomeados para coincidir com o histórico remoto.
+- 23 tabelas com RLS, 87 políticas da aplicação, quatro políticas de Storage e dois buckets privados, com limites de imagens/documentos. Corrigida permissão pública da função interna rls_auto_enable; auditoria de segurança final sem avisos.
+- Teste RLS remoto aprovado com duas contas temporárias, bloqueios de leitura/escrita cruzadas, troca de proprietário e acesso anônimo. Todas as fixtures revertidas; zero usuários/casamentos/convidados persistidos após o teste. Data API anônima para weddings bloqueada com HTTP 401.
+- Auth consultado: e-mail habilitado, confirmação exigida, login anônimo desabilitado. Não alteradas configurações remotas de Auth, SMTP, Google ou URLs de retorno.
+- Tipos TypeScript gerados do banco real, 50 verificações locais em Postgres/WASM e build aprovados. Avisos de performance apenas informativos de índices ainda sem uso no banco vazio.
+- A aplicação permanece local: login, adaptadores, RPCs transacionais financeiras, arquivos via Storage API e migração segura dos cadastros são próximos passos. Dados do navegador preservados.

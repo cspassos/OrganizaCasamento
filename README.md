@@ -67,4 +67,8 @@ O `.gitignore` mantém fora do repositório `node_modules`, build, caches, relat
 
 O repositório contém o sistema; os casamentos cadastrados no IndexedDB não fazem parte do Git. Antes de migrar para Supabase, preparar backup e importação dos dados existentes.
 
-Próximos passos: Supabase com controle de acesso, login, migração dos dados locais e publicação na Vercel.
+## Banco Supabase preparado
+
+O projeto OrganizaCasamento já possui a estrutura remota de 23 tabelas, RLS por proprietário e buckets privados para imagens e documentos. Migrações, testes SQL e instruções estão em `supabase/`; os tipos do banco ficam em `src/app/core/models/database.types.ts`.
+
+**A aplicação ainda salva no navegador.** A existência do banco não migra os dados nem ativa login automaticamente. Próximos passos: implementar login e adaptadores, RPCs financeiras transacionais, importação dos dados locais com backup e publicação na Vercel. Detalhes de validação e limitações em `supabase/README.md`.

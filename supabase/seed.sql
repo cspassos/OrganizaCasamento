@@ -1,0 +1,1 @@
+-- Intentionally empty. Demo data belongs to isolated tests, never to hosted setup.
