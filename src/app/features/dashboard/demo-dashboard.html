@@ -1,0 +1,137 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">O COMEÇO DE UMA LINDA HISTÓRIA</div>
+    <h1>Visão geral<span class="gold"> ✧</span></h1>
+    <p class="muted">Tudo no seu lugar. Mais tempo para viver esse momento.</p>
+  </div>
+  <span class="pill demo-pill"><oc-icon name="science" /> Modo demonstração</span>
+</div>
+<section class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow">CLARA & LUCAS</div>
+    <h2>O próximo capítulo<br />começa com um <em>sim.</em></h2>
+    <p>Cada escolha aproxima vocês do grande dia.</p>
+    <div class="hero-meta">
+      <span><oc-icon name="calendar_today" />22 de maio de 2027 · 16:00</span
+      ><span><oc-icon name="location_on" />Jardim das Oliveiras · São Paulo</span>
+    </div>
+    <a routerLink="/modulo/1/0" class="button primary"
+      >Nosso casamento <oc-icon name="arrow_forward"
+    /></a>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <div class="botanical b1">❧</div>
+    <div class="invitation">
+      <small>JUNTOS, PARA SEMPRE</small>
+      <div class="invite-line"></div>
+      <span>Clara</span><em>&</em><span>Lucas</span><small>22 · 05 · 2027</small>
+      <div class="invite-line"></div>
+      <p>uma vida inteira de nós</p>
+    </div>
+    <div class="botanical b2">❧</div>
+    <div class="countdown">
+      <strong>{{ days }}</strong><span>dias para o nosso sim</span>
+    </div>
+  </div>
+</section>
+<div class="demo-caption">
+  <oc-icon name="info" />Os números abaixo são exemplos de demonstração. Nenhum cadastro real foi
+  criado.
+</div>
+<section class="stats-grid">
+  <oc-stat
+    label="ORÇAMENTO"
+    [value]="(demo.budget | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR')!"
+    [detail]="(total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR') + ' contratados'"
+    icon="account_balance_wallet"
+    [progress]="(total / demo.budget) * 100"
+    caption="71% do orçamento comprometido"
+  /><oc-stat
+    label="CONVIDADOS"
+    [value]="'' + demo.guests"
+    [detail]="demo.confirmed + ' presenças confirmadas'"
+    icon="group"
+    [progress]="(demo.confirmed / demo.guests) * 100"
+    caption="34 pessoas aguardando resposta"
+  /><oc-stat
+    label="PLANEJAMENTO"
+    [value]="progress + '%'"
+    [detail]="demo.completed + ' de ' + demo.tasks + ' tarefas concluídas'"
+    icon="task_alt"
+    [progress]="progress"
+    caption="Um passo de cada vez"
+  /><oc-stat
+    label="PAGAMENTOS"
+    [value]="(paid | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR')!"
+    detail="pagos até agora"
+    icon="payments"
+    [progress]="(paid / total) * 100"
+    [caption]="(total - paid | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR') + ' em aberto'"
+  />
+</section>
+<section class="dashboard-grid">
+  <article class="card activities">
+    <div class="section-heading">
+      <h2><oc-icon name="event_note" />Próximos passos</h2>
+      <a routerLink="/modulo/1/2">Ver checklist <oc-icon name="arrow_forward" /></a>
+    </div>
+    <p class="muted section-description">Pequenos cuidados que fazem toda a diferença.</p>
+    @for (task of tasks; track task.title) {
+      <a class="task-row" routerLink="/modulo/1/2"
+        ><span class="task-icon"><oc-icon [name]="task.icon" /></span>
+        <div>
+          <strong>{{ task.title }}</strong><small>{{ task.category }}</small>
+        </div>
+        <span class="date-chip">{{ task.date }}</span><oc-icon name="chevron_right"
+      /></a>
+    }
+    <div class="gentle-note">
+      <oc-icon name="favorite_border" />Vocês estão construindo algo especial. Aproveitem o caminho.
+    </div>
+  </article>
+  <article class="card budget">
+    <div class="section-heading">
+      <h2><oc-icon name="donut_small" />Para onde vai o orçamento</h2>
+    </div>
+    <div class="budget-content">
+      <div
+        class="donut"
+        role="img"
+        aria-label="Distribuição demonstrativa: buffet 39%, local 25%, decoração 15%, fotografia 11%, outros 11%"
+      >
+        <div>
+          <small>Total contratado</small
+          ><strong>{{ total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
+        </div>
+      </div>
+      <div class="legend">
+        @for (e of demo.expenses; track e.category; let i = $index) {
+          <div>
+            <i [class]="'dot dot-' + i"></i><span>{{ e.category }}</span
+            ><strong>{{ (e.value / total) * 100 | number: '1.0-0' }}%</strong>
+          </div>
+        }
+      </div>
+    </div>
+    <a class="text-link" routerLink="/modulo/2/0"
+      >Explorar orçamento <oc-icon name="arrow_forward"
+    /></a>
+  </article>
+</section>
+<section class="bottom-grid">
+  <article class="inspiration">
+    <span class="eyebrow">LEMBRETE COM CARINHO</span>
+    <p>“O mais bonito do planejamento<br />é saber com quem você vai viver.”</p>
+    <span class="gold">— cada detalhe tem um porquê</span>
+  </article>
+  <article class="card shortcuts">
+    <h2>Cuide dos próximos detalhes</h2>
+    <div>
+      <a routerLink="/modulo/3/0"
+        ><oc-icon name="person_add" />Convidados<oc-icon name="north_east" /></a
+      ><a routerLink="/modulo/5/0"
+        ><oc-icon name="storefront" />Fornecedores<oc-icon name="north_east" /></a
+      ><a routerLink="/modulo/4/0"><oc-icon name="mail" />Convites<oc-icon name="north_east" /></a>
+    </div>
+  </article>
+</section>

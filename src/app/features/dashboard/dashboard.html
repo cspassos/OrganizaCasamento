@@ -1,0 +1,142 @@
+﻿@if (store.loading()) {
+  <p role="status">Carregando seu casamento…</p>
+} @else if (store.error()) {
+  <p class="feedback error" role="alert">{{ store.error() }}</p>
+} @else if (store.active(); as w) {
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">SEU CASAMENTO, SEM COMPLICAÇÃO</div>
+      <h1>Visão geral</h1>
+      <p>{{ w.name }} · {{ date(w.date) }}</p>
+    </div>
+    <a class="button secondary" [routerLink]="['/casamentos', w.id, 'editar']"
+      >Dados do casamento</a
+    >
+  </div>
+  @if (saved()) {
+    <p class="feedback success" role="status">Casamento salvo com sucesso.</p>
+  }
+  @if (finance.error()) {
+    <p class="feedback error" role="alert">{{ finance.error() }}</p>
+  }
+  @if (finance.summary(); as s) {
+    <section class="stats-grid" aria-label="Resumo do dinheiro" id="indicadores">
+      <oc-stat
+        label="QUANTO PODEMOS GASTAR"
+        [value]="money(s.budget)"
+        icon="account_balance_wallet"
+        detail="Orçamento do casamento"
+      />
+      <oc-stat
+        label="JÁ COMBINADO"
+        [value]="money(s.contracted)"
+        icon="payments"
+        detail="Total dos gastos contratados"
+      />
+      <oc-stat
+        label="JÁ PAGAMOS"
+        [value]="money(s.paid)"
+        icon="verified_user"
+        detail="Pagamentos registrados"
+      />
+      <oc-stat
+        label="FALTA PAGAR"
+        [value]="money(s.open)"
+        icon="event_note"
+        detail="Saldo das contas em aberto"
+      />
+    </section>
+    <div class="simple-home-actions">
+      <a class="button primary" routerLink="/financeiro/despesas/nova">Adicionar gasto</a>
+      <a class="button secondary" routerLink="/financeiro/contas">Ver o que falta pagar</a>
+      <a class="button secondary" routerLink="/financeiro/relatorios">Baixar relatório</a>
+    </div>
+    <section class="card form-section" id="alertas">
+      @if (s.overdue > 0) {
+        <p class="field-error">
+          <strong>{{ money(s.overdue) }} em contas vencidas.</strong>
+          <a routerLink="/financeiro/contas">Conferir contas</a>
+        </p>
+      }
+      @if (s.available < 0) {
+        <p class="field-error">
+          Os gastos combinados e a reserva ultrapassam o orçamento em {{ money(-s.available) }}.
+        </p>
+      } @else {
+        <p>
+          <strong>{{ money(s.available) }}</strong> ainda disponíveis no orçamento, depois dos
+          gastos combinados e da reserva.
+        </p>
+      }
+      <a routerLink="/financeiro/orcamento">Ajustar meu orçamento</a>
+    </section>
+  }
+  <section class="dashboard-grid">
+    <article class="card form-section" id="atividades">
+      <h2>Próximas contas</h2>
+      <p class="muted">As contas vencidas aparecem primeiro.</p>
+      @for (bill of nextBills(); track bill.id) {
+        <a
+          class="simple-bill-link"
+          [class.field-error]="bill.dueDate < finance.today()"
+          [routerLink]="['/financeiro/despesas', bill.expenseId]"
+        >
+          <span
+            ><strong>{{ expenseName(bill.expenseId) }}</strong
+            ><small>{{ bill.label }} · {{ date(bill.dueDate) }}</small></span
+          >
+          <strong>{{ money(bill.open) }}</strong>
+        </a>
+      } @empty {
+        <p>{{ finance.loading() ? 'Carregando contas…' : 'Nenhuma conta em aberto.' }}</p>
+      }
+      <a class="text-link" routerLink="/financeiro/contas">Ver todas as contas →</a>
+    </article>
+    <article class="card form-section">
+      <h2>Convidados</h2>
+      @if (people.error()) {
+        <p role="alert" class="field-error">{{ people.error() }}</p>
+      } @else {
+        <div class="finance-metrics">
+          <div>
+            <small>Na lista</small><strong>{{ people.summary().total }}</strong>
+          </div>
+          <div>
+            <small>Confirmados</small><strong>{{ people.summary().confirmed }}</strong>
+          </div>
+          <div>
+            <small>Sem resposta</small><strong>{{ people.summary().pending }}</strong>
+          </div>
+        </div>
+        <p>
+          Use uma lista de nomes ou uma planilha para cadastrar vários de uma vez. Os contatos são
+          opcionais.
+        </p>
+      }
+      <a class="button secondary" routerLink="/pessoas/convidados">Ver convidados</a>
+    </article>
+  </section>
+  <section class="card form-section">
+    <h2>Fornecedores e convites</h2>
+    <div class="simple-home-actions">
+      <a routerLink="/fornecedores/cadastro">Contatos dos fornecedores</a
+      ><a routerLink="/convites/modelos">Meus convites</a>
+    </div>
+  </section>
+} @else {
+  <h1>Seu casamento, sem complicação</h1>
+  <p>Saiba quanto vai gastar, quanto já pagou e o que ainda falta pagar.</p>
+  <section class="card form-section">
+    <h2>Vamos começar?</h2>
+    <p>
+      Informe os nomes, a data e quanto vocês pretendem gastar. O restante pode ficar para depois.
+    </p>
+    <a class="button primary" routerLink="/casamentos/novo">Cadastrar meu casamento</a
+    ><a class="button secondary" routerLink="/casamentos">Meus casamentos</a>
+  </section>
+}
+
+<details class="optional-details temporary-tools">
+  <summary>Dados de teste (temporário)</summary>
+  <oc-temporary-data-panel />
+</details>

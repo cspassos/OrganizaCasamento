@@ -1,0 +1,90 @@
+<main class="local-rsvp-page">
+  <div class="local-rsvp-heading">
+    <span class="eyebrow">ORGANIZACASAMENTO</span
+    ><a routerLink="/convites/enviados" class="text-link">Voltar à organização</a>
+  </div>
+  <p class="notice invitation-local-note">
+    Simulação local: esta página só funciona no navegador e endereço em que o convite foi criado. As
+    respostas de teste atualizam seus convidados. Não é um link público para envio.
+  </p>
+  @if (loading()) {
+    <p role="status">Abrindo seu convite…</p>
+  }
+  @if (error()) {
+    <p role="alert" class="feedback error">{{ error() }}</p>
+  }
+  @if (view(); as v) {
+    <div class="local-rsvp-grid">
+      <oc-invitation-preview [design]="v.issue.design" [recipient]="v.issue.recipientLabel" />
+      <section class="card form-section">
+        <div class="eyebrow">VAMOS CELEBRAR JUNTOS?</div>
+        <h1>Confirme sua presença</h1>
+        <p>Convite para {{ v.issue.recipientLabel }}. Responda por cada pessoa abaixo.</p>
+        @if (saved()) {
+          <p class="feedback success" role="status">
+            Respostas salvas neste navegador. Você pode alterá-las e salvar novamente.
+          </p>
+        }
+        <form (ngSubmit)="save()">
+          <div class="people-form">
+            @for (a of answers(); track a.guestId) {
+              <div class="full rsvp-person">
+                <label [for]="'rsvp-' + a.guestId"
+                  >{{ a.name }} vai comparecer?<select
+                    [id]="'rsvp-' + a.guestId"
+                    [name]="'choice-' + a.guestId"
+                    [ngModel]="a.choice"
+                    (ngModelChange)="update(a.guestId, 'choice', $event)"
+                  >
+                    <option value="">Escolha uma resposta</option>
+                    <option value="yes">Sim, vou comparecer</option>
+                    <option value="no">Não poderei comparecer</option>
+                  </select></label
+                >
+                @if (a.choice === 'yes') {
+                  <details class="optional-details">
+                    <summary>Informar restrição alimentar (opcional)</summary>
+                    <label
+                      >Restrição alimentar de {{ a.name
+                      }}<textarea
+                        [name]="'diet-' + a.guestId"
+                        [ngModel]="a.diet"
+                        (ngModelChange)="update(a.guestId, 'diet', $event)"
+                        maxlength="500"
+                        rows="2"
+                      ></textarea>
+                    </label>
+                  </details>
+                }
+              </div>
+            }
+          </div>
+          <button class="button primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Salvando…' : 'Salvar respostas de teste' }}
+          </button>
+        </form>
+        @if (v.issue.design.address) {
+          <section class="rsvp-location">
+            <h2>Como chegar</h2>
+            <p>{{ v.issue.design.venue }}<br />{{ v.issue.design.address }}</p>
+            <div class="people-actions">
+              <a
+                class="button secondary"
+                [href]="maps('google')"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Abrir Google Maps</a
+              ><a
+                class="button secondary"
+                [href]="maps('waze')"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Abrir Waze</a
+              >
+            </div>
+          </section>
+        }
+      </section>
+    </div>
+  }
+</main>

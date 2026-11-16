@@ -1,0 +1,22 @@
+import { test, expect } from '@playwright/test';
+test('formats the budget as reais and persists its numeric value', async ({ page }) => {
+  await page.goto('/casamentos/novo');
+  await page.getByLabel('Nome do casamento', { exact: true }).fill('Ana e João');
+  await page.getByLabel('Nome completo da noiva').fill('Ana');
+  await page.getByLabel('Nome completo do noivo').fill('João');
+  const budget = page.getByLabel('Orçamento inicial (R$)');
+  await budget.focus();
+  await budget.pressSequentially('15000');
+  await expect(budget).toHaveValue(/R\$\s15\.000,00/);
+  await budget.pressSequentially(',50');
+  await expect(budget).toHaveValue(/R\$\s15\.000,50/);
+  await budget.fill('15000');
+  await page.getByLabel('Estimativa de convidados').click();
+  await expect(budget).toHaveValue(/R\$\s15\.000,00/);
+  await budget.fill('R$ 15.000,50');
+  await page.getByRole('button', { name: 'Salvar casamento', exact: true }).click();
+  await expect(page.locator('.stats-grid')).toContainText('15.000,50');
+  await page.reload();
+  await page.getByRole('link', { name: 'Dados do casamento' }).click();
+  await expect(budget).toHaveValue(/R\$\s15\.000,50/);
+});

@@ -1,0 +1,351 @@
+@if (!embedded()) {
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">QUEM VAI CUIDAR DE CADA DETALHE</div>
+      <h1>{{ titles[section()] }}</h1>
+      <p class="muted">{{ store.weddings.active()?.name }}</p>
+    </div>
+  </div>
+}
+@if (embedded()) {
+  <h2>Contatos dos fornecedores</h2>
+}
+@if (!store.weddings.active()) {
+  <section class="card empty-state">
+    <h2>Selecione um casamento</h2>
+    <a class="button primary" routerLink="/casamentos">Meus casamentos</a>
+  </section>
+} @else if (store.loading() || store.finance.loading()) {
+  <p role="status">Carregando fornecedores…</p>
+} @else {
+  @if (error() || store.error()) {
+    <p role="alert" class="feedback error">
+      {{ error() || store.error() }}
+      <button class="button secondary" (click)="store.refresh()">Atualizar dados</button>
+    </p>
+  }
+  @if (message()) {
+    <p role="status" class="feedback success">{{ message() }}</p>
+  }
+  @if (savedContract(); as contract) {
+    @if (contract.expenseId) {
+      <section class="card" aria-label="Próximos passos do contrato">
+        <h2>Contrato assinado. E agora?</h2>
+        <p>
+          <strong>{{ contract.title }}</strong> já está no financeiro.
+        </p>
+        <p>
+          Os vencimentos definidos no contrato foram cadastrados automaticamente. Para consultar ou
+          alterar entrada e parcelas, acesse Financeiro &rarr; Despesas.
+        </p>
+        <p>
+          Quando pagar, use Registrar na parcela correspondente. A assinatura do contrato n&atilde;o
+          registra pagamento.
+        </p>
+        <a class="button secondary" [routerLink]="['/financeiro/despesas', contract.expenseId]"
+          >Conferir parcelas e registrar pagamentos</a
+        >
+      </section>
+    }
+  }
+  @if (!embedded()) {
+    <nav class="people-tabs" aria-label="Fornecedores">
+      <a routerLink="/fornecedores/cadastro" [class.active]="section() === 'cadastro'">Contatos</a>
+    </nav>
+  }
+  @if (section() === 'cadastro') {
+    <section class="feedback supplier-purpose" aria-label="Para que servem os fornecedores">
+      <strong>Aqui ficam os contatos de quem você está pesquisando ou contratou.</strong>
+      <p>
+        Os contatos são criados quando você adiciona um gasto. Aqui você completa o WhatsApp e
+        consulta os gastos e documentos. Também pode guardar um contato antes de ter um gasto.
+      </p>
+      <a class="button secondary" routerLink="/financeiro/despesas"
+        >Quero cuidar dos valores e pagamentos →</a
+      >
+    </section>
+  } @else if (section() === 'contratos') {
+    <section class="feedback supplier-purpose" aria-label="Para que servem os contratos">
+      <strong>Contratos são opcionais: guarde o documento e o que foi combinado.</strong>
+      <p>
+        Você pode controlar todos os valores em Gastos e pagamentos sem cadastrar contrato. Se o
+        gasto já existe, vincule-o ao contrato para manter as mesmas parcelas e pagamentos.
+      </p>
+      <a class="button secondary" routerLink="/financeiro/despesas"
+        >Ver meus gastos e pagamentos →</a
+      >
+    </section>
+  }
+  @if (section() === 'cadastro') {
+    <details class="optional-details">
+      <summary>Contratos cadastrados anteriormente</summary>
+      <p>
+        Seus contratos existentes continuam disponíveis para consulta e alteração. Para novos
+        gastos, anexe o documento no próprio cadastro do gasto.
+      </p>
+      <a class="button secondary" routerLink="/fornecedores/contratos">Consultar contratos</a>
+    </details>
+  }
+  <div class="people-toolbar">
+    <label
+      >Buscar
+      {{ section() === 'cadastro' ? 'fornecedor, empresa ou contato' : 'por fornecedor ou serviço'
+      }}<input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        placeholder="Digite para pesquisar em todos os registros"
+    /></label>
+    @if (section() === 'cadastro') {
+      <button class="button primary" (click)="edit('supplier')">Novo fornecedor</button>
+    }
+    @if (section() === 'orcamentos') {
+      <button class="button primary" (click)="edit('quote')" [disabled]="!allSuppliers().length">
+        Novo orçamento
+      </button>
+    }
+    @if (section() === 'contratos') {
+      <button class="button primary" (click)="contract()" [disabled]="!allSuppliers().length">
+        Novo contrato
+      </button>
+    }
+  </div>
+  <div class="collection-toolbar">
+    @if (section() !== 'pagamentos') {
+      <label
+        >Situação<select [ngModel]="status()" (ngModelChange)="status.set($event)">
+          <option value="">Todas</option>
+          @for (s of statuses(); track s[0]) {
+            <option [value]="s[0]">{{ s[1] }}</option>
+          }
+        </select></label
+      >
+    } @else {
+      <label
+        >Situação do pagamento<select [ngModel]="status()" (ngModelChange)="status.set($event)">
+          <option value="">Todas</option>
+          <option>Planejada</option>
+          <option>Contratada</option>
+          <option>Parcialmente paga</option>
+          <option>Paga</option>
+          <option>Vencida</option>
+          <option>Cancelada</option>
+        </select></label
+      >
+    }
+    @if (section() === 'cadastro' || section() === 'orcamentos') {
+      <label
+        >Categoria<select [ngModel]="category()" (ngModelChange)="category.set($event)">
+          <option value="">Todas</option>
+          @for (c of categories(); track c) {
+            <option>{{ c }}</option>
+          }
+        </select></label
+      >
+    }
+    <button class="button primary" (click)="clear()">Limpar filtros</button
+    ><button class="button secondary" (click)="export()">Baixar lista do filtro</button>
+  </div>
+  @if (section() === 'cadastro') {
+    <ng-template #supplierActions let-s
+      ><button mat-menu-item class="button secondary" (click)="edit('supplier', s)">
+        Editar fornecedor
+      </button>
+      <div class="row-menu-group">
+        <div>
+          <button mat-menu-item class="button secondary" (click)="details(s)">Ver dados</button
+          ><a mat-menu-item routerLink="/financeiro/despesas" [queryParams]="{ fornecedor: s.id }"
+            >Ver gastos deste fornecedor</a
+          >
+          <a
+            mat-menu-item
+            routerLink="/financeiro/despesas/nova"
+            [queryParams]="{ fornecedor: s.id }"
+            >Adicionar gasto</a
+          >
+          @if (s.attachment) {
+            <button mat-menu-item class="button secondary" (click)="downloadFile(s.attachment)">
+              Baixar documento
+            </button>
+          }
+          <button mat-menu-item class="button secondary" (click)="remove('supplier', s.id, s.name)">
+            Excluir fornecedor
+          </button>
+        </div>
+      </div></ng-template
+    >
+    <oc-collection-table
+      label="Fornecedores cadastrados"
+      [headers]="['Nome', 'Categoria', 'Contato', 'Situação']"
+      [rows]="supplierRows()"
+      [actions]="supplierActions"
+    />
+  } @else if (section() === 'orcamentos') {
+    <p class="muted">
+      Selecione duas ou mais propostas para comparar valores, serviços incluídos, condições e
+      prazos. A menor proposta não é escolhida automaticamente.
+    </p>
+    <ng-template #quoteActions let-q
+      ><button mat-menu-item class="button secondary" (click)="edit('quote', q)">
+        Editar orçamento
+      </button>
+      <div class="row-menu-group">
+        <div>
+          <button mat-menu-item class="button secondary" (click)="quoteDetails(q)">
+            Ver detalhes</button
+          ><button
+            mat-menu-item
+            class="button secondary"
+            (click)="selectQuote(q)"
+            [disabled]="store.busy()"
+          >
+            Selecionar proposta</button
+          ><button mat-menu-item class="button primary" (click)="contract(undefined, q)">
+            Criar contrato desta proposta
+          </button>
+          @if (q.attachment) {
+            <button mat-menu-item class="button secondary" (click)="downloadFile(q.attachment)">
+              Baixar proposta
+            </button>
+          }
+          <button mat-menu-item class="button secondary" (click)="remove('quote', q.id, q.service)">
+            Excluir orçamento
+          </button>
+        </div>
+      </div></ng-template
+    >
+    <oc-collection-table
+      label="Orçamentos dos fornecedores"
+      [headers]="['Serviço', 'Fornecedor', 'Valor', 'Situação', 'Validade', 'Entrega']"
+      [rows]="quoteRows()"
+      [actions]="quoteActions"
+      [selectable]="true"
+      [selected]="selected()"
+      (selectionChange)="selected.set(toSet($event))"
+      [disabled]="store.busy()"
+    />
+    @if (comparison().length >= 2) {
+      <section class="card form-section">
+        <div class="people-row">
+          <h2>Comparação dos selecionados</h2>
+          <button class="button secondary" (click)="exportComparison()">Baixar comparação</button>
+        </div>
+        <p class="muted">
+          A diferença é calculada em relação ao menor valor selecionado. Compare propostas do mesmo
+          serviço e confira o que cada uma inclui.
+        </p>
+        <oc-collection-table
+          label="Comparação de orçamentos"
+          [headers]="[
+            'Fornecedor',
+            'Serviço',
+            'Valor',
+            'Diferença para o menor',
+            'Incluído',
+            'Condições',
+            'Entrega',
+            'Validade',
+            'Situação',
+          ]"
+          [rows]="comparison()"
+        />
+      </section>
+    }
+  } @else if (section() === 'contratos') {
+    @if (queries()?.get('contrato')) {
+      <p class="feedback">
+        Mostrando o contrato vinculado à despesa.
+        <a routerLink="/fornecedores/contratos">Ver todos os contratos</a>
+      </p>
+    }
+    <p class="muted">
+      Rascunhos não geram cobrança. Contratos assinados ficam vinculados a uma única despesa, onde
+      os pagamentos são registrados.
+    </p>
+    <ng-template #contractActions let-c
+      ><button mat-menu-item class="button secondary" (click)="contractDetails(c)">
+        Ver contrato
+      </button>
+      <div class="row-menu-group">
+        <div>
+          @if (c.status !== 'cancelled') {
+            <button mat-menu-item class="button secondary" (click)="contract(c)">
+              Editar contrato</button
+            ><button mat-menu-item class="button secondary" (click)="cancelContract(c)">
+              Cancelar contrato
+            </button>
+          }
+          @if (c.expenseId) {
+            <a
+              mat-menu-item
+              class="button primary"
+              [routerLink]="['/financeiro/despesas', c.expenseId]"
+              >Abrir despesa e pagamentos</a
+            >
+          }
+          @if (c.attachment) {
+            <button mat-menu-item class="button secondary" (click)="downloadFile(c.attachment)">
+              Baixar contrato
+            </button>
+          }
+          @if (c.status === 'draft') {
+            <button
+              mat-menu-item
+              class="button secondary"
+              (click)="remove('contract', c.id, c.title)"
+            >
+              Excluir rascunho
+            </button>
+          }
+        </div>
+      </div></ng-template
+    >
+    <oc-collection-table
+      label="Contratos dos fornecedores"
+      [headers]="['Contrato', 'Fornecedor', 'Situação', 'Valor', 'Já pago', 'Falta pagar']"
+      [rows]="contractRows()"
+      [actions]="contractActions"
+    />
+  } @else if (section() === 'pagamentos') {
+    <p class="muted">
+      Estes são os mesmos registros do Financeiro, consultados pelo vínculo do fornecedor. Nenhum
+      pagamento é duplicado aqui. Despesas antigas informadas só por nome podem ser vinculadas ao
+      editar a despesa no Financeiro.
+    </p>
+    @if (queries()?.get('fornecedor')) {
+      <p class="feedback">
+        Mostrando apenas {{ supplierName(queries()!.get('fornecedor')!) }}.
+        <a routerLink="/fornecedores/pagamentos">Ver todos os fornecedores</a>
+      </p>
+    }
+    <ng-template #paymentActions let-e
+      ><a mat-menu-item class="button secondary" [routerLink]="['/financeiro/despesas', e.id]"
+        >Abrir despesa</a
+      ></ng-template
+    >
+    <oc-collection-table
+      label="Pagamentos vinculados aos fornecedores"
+      [headers]="['Fornecedor', 'Despesa', 'Situação', 'Valor', 'Pago líquido', 'Em aberto']"
+      [rows]="paymentRows()"
+      [actions]="paymentActions"
+    />
+  } @else {
+    <p class="muted">
+      {{ rated().length }} fornecedores avaliados · média {{ average() }} de 5. Apenas avaliações
+      preenchidas entram na média.
+    </p>
+    <ng-template #reviewActions let-s
+      ><button mat-menu-item class="button secondary" (click)="edit('review', s)">
+        Avaliar fornecedor</button
+      ><button mat-menu-item class="button secondary" (click)="details(s)">
+        Ver dados
+      </button></ng-template
+    >
+    <oc-collection-table
+      label="Avaliações dos fornecedores"
+      [headers]="['Fornecedor', 'Categoria', 'Nota', 'Avaliação']"
+      [rows]="reviewRows()"
+      [actions]="reviewActions"
+    />
+  }
+}

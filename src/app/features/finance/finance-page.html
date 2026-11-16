@@ -1,0 +1,106 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">CUIDADO COM CADA ESCOLHA</div>
+    <h1>Gastos e pagamentos</h1>
+    <p class="muted">
+      {{ finance.weddings.active()?.name || 'Selecione um casamento para começar.' }}
+    </p>
+  </div>
+  <button
+    class="button secondary"
+    [disabled]="finance.loading() || finance.busy()"
+    (click)="finance.refresh()"
+  >
+    Atualizar dados
+  </button>
+</div>
+@if (finance.loading() || finance.weddings.loading()) {
+  <p role="status">Carregando financeiro…</p>
+} @else if (finance.error() || finance.weddings.error()) {
+  <p role="alert" class="feedback error">{{ finance.error() || finance.weddings.error() }}</p>
+} @else if (finance.summary(); as s) {
+  <section class="finance-summary simple-finance-summary">
+    <article class="card">
+      <small>ORÇAMENTO</small><strong>{{ money(s.budget) }}</strong
+      ><span>Quanto podemos gastar</span>
+    </article>
+    <article class="card">
+      <small>JÁ COMBINADO</small><strong>{{ money(s.contracted) }}</strong
+      ><span>Total dos gastos contratados</span>
+    </article>
+    <article class="card">
+      <small>JÁ PAGAMOS</small><strong>{{ money(s.paid) }}</strong
+      ><span>Pagamentos registrados</span>
+    </article>
+    <article class="card">
+      <small>FALTA PAGAR</small><strong>{{ money(s.open) }}</strong
+      ><span>Vencido {{ money(s.overdue) }}</span>
+    </article>
+  </section>
+  @if (s.overdue > 0) {
+    <p class="feedback error" role="status">
+      Existem {{ money(s.overdue) }} em contas vencidas.
+      <a routerLink="/financeiro/contas">Consultar contas a pagar →</a>
+    </p>
+  }
+  @if (s.available < 0) {
+    <p class="feedback error">
+      Os compromissos e a reserva ultrapassam o orçamento em {{ money(-s.available) }}.
+    </p>
+  }
+  @if (upcoming().length) {
+    <details class="upcoming-panel card">
+      <summary>{{ upcoming().length }} conta(s) vencem nos próximos 7 dias</summary>
+      @for (i of upcoming(); track i.id) {
+        <p>
+          <a [routerLink]="['/financeiro/despesas', i.expenseId]"
+            >{{ i.label }} · {{ date(i.dueDate) }} · {{ money(i.open) }}</a
+          >
+        </p>
+      }
+    </details>
+  }
+  <nav class="finance-tabs" aria-label="Módulos financeiros">
+    @for (tab of tabs; track tab.path) {
+      <a [routerLink]="['/financeiro', tab.path]" routerLinkActive="active">{{ tab.name }}</a>
+    }
+  </nav>
+  @for (w of [finance.weddings.active()]; track w?.id) {
+    @switch (section()) {
+      @case ('orcamento') {
+        <oc-budget />
+      }
+      @case ('despesas') {
+        <oc-expense-list />
+      }
+      @case ('fornecedores') {
+        <oc-suppliers-page [embedded]="true" />
+      }
+      @case ('pagamentos') {
+        <oc-payments />
+      }
+      @case ('parcelamentos') {
+        <oc-bills [all]="true" />
+      }
+      @case ('contas') {
+        <oc-bills />
+      }
+      @case ('relatorios') {
+        <oc-finance-reports />
+      }
+      @default {
+        <p class="feedback">Página não encontrada. Escolha uma opção acima.</p>
+      }
+    }
+  }
+  <p class="storage-reminder">
+    Dados financeiros locais e exclusivos deste casamento. Limpar os dados do site pode apagá-los.
+    Exporte os relatórios regularmente.
+  </p>
+} @else {
+  <section class="card empty-state">
+    <h2>Primeiro, escolha o seu casamento</h2>
+    <p>Os dados financeiros serão organizados separadamente para cada casamento.</p>
+    <a class="button primary" routerLink="/casamentos">Meus casamentos</a>
+  </section>
+}

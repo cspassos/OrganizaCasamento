@@ -1,0 +1,710 @@
+﻿<div class="page-heading">
+  <div>
+    <div class="eyebrow">QUEM FAZ PARTE DA NOSSA HISTÓRIA</div>
+    <h1>{{ title() }}</h1>
+    <p class="muted">{{ store.weddings.active()?.name }}</p>
+  </div>
+</div>
+@if (!store.weddings.active()) {
+  <section class="card empty-state">
+    <h2>Selecione um casamento</h2>
+    <a class="button primary" routerLink="/casamentos">Meus casamentos</a>
+  </section>
+} @else if (store.loading()) {
+  <p role="status">Carregando pessoas…</p>
+} @else {
+  @if (store.error()) {
+    <p role="alert" class="feedback error">
+      {{ store.error() }}
+      <button class="button secondary" (click)="store.refresh()">Atualizar dados</button>
+    </p>
+  }
+  @if (error()) {
+    <p role="alert" class="feedback error">{{ error() }}</p>
+  }
+  @if (message()) {
+    <p role="status" class="feedback success">{{ message() }}</p>
+  }
+  <section class="people-stats people-stats-compact" aria-label="Indicadores de pessoas">
+    <div class="card">
+      <small>Pessoas cadastradas</small><strong>{{ store.summary().total }}</strong
+      ><span>{{ store.summary().adults }} adultos · {{ store.summary().children }} crianças</span>
+    </div>
+    <div class="card">
+      <small>Confirmados</small><strong>{{ store.summary().confirmed }}</strong
+      ><span>{{ store.summary().declined }} não comparecerão</span>
+    </div>
+    <div class="card">
+      <small>Aguardando resposta</small><strong>{{ store.summary().pending }}</strong
+      ><span>Sem confirmação ou recusa</span>
+    </div>
+    <div class="card">
+      <small>Convites previstos</small><strong>{{ store.summary().invitations }}</strong
+      ><span>Família e acompanhantes compartilham convite</span>
+    </div>
+  </section>
+  @if (
+    store.weddings.active()?.capacity &&
+    store.summary().confirmed > store.weddings.active()!.capacity!
+  ) {
+    <p class="feedback error">
+      O número de confirmados ultrapassa a capacidade informada do local.
+    </p>
+  }
+  <nav class="people-tabs" aria-label="Pessoas">
+    <a routerLink="/pessoas/convidados" [class.active]="section() === 'convidados'">Convidados</a
+    ><a routerLink="/pessoas/familias" [class.active]="section() === 'familias'"
+      >Famílias e grupos</a
+    >
+    <a routerLink="/pessoas/especiais" [class.active]="section() === 'padrinhos'"
+      >Participações especiais</a
+    >
+  </nav>
+  <div class="people-toolbar">
+    <label
+      >Pesquisar por {{ section() === 'familias' ? 'família ou grupo' : 'nome'
+      }}<input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event); page.set(1)"
+        [placeholder]="
+          section() === 'padrinhos'
+            ? 'Nome ou participação, ex.: noivinha'
+            : 'Digite para pesquisar'
+        "
+    /></label>
+    @if (section() === 'convidados') {
+      <button class="button primary" (click)="quickGuests()">
+        <oc-icon name="person_add" />Adicionar convidados
+      </button>
+    } @else if (section() === 'familias') {
+      <button class="button primary" (click)="edit('family')">Nova família ou grupo</button>
+    } @else {
+      <button class="button primary" (click)="edit('godparent')" [disabled]="!guests().length">
+        Adicionar participação
+      </button>
+    }
+  </div>
+  <details #listOptions class="people-list-options optional-details">
+    <summary>Filtros e outras opções</summary>
+    @if (section() !== 'familias') {
+      <label class="form-field" style="max-width: 320px; margin: 16px 0"
+        >Participação<select
+          [ngModel]="participation()"
+          (ngModelChange)="participation.set($event); page.set(1)"
+        >
+          <option value="">Todas as participações</option>
+          @for (type of participationOptions(); track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select></label
+      >
+    }
+    @if (section() === 'convidados') {
+      <div class="collection-toolbar">
+        <button class="button secondary" (click)="edit('guest')">Novo convidado</button>
+        <button class="button secondary" (click)="toggleBulk(); listOptions.open = false">
+          {{ bulkMode() ? 'Encerrar seleção' : 'Selecionar vários convidados' }}
+        </button>
+      </div>
+    }
+    @if (section() !== 'familias') {
+      <div class="collection-toolbar" role="group" aria-label="Baixar lista">
+        <strong>Baixar lista</strong>
+        <button
+          class="button secondary"
+          (click)="printPdf()"
+          [disabled]="pdfBusy() || store.busy()"
+        >
+          {{ pdfBusy() ? 'Gerando PDF…' : 'Baixar PDF para imprimir' }}
+        </button>
+        @if (section() === 'convidados') {
+          <button class="button secondary" (click)="download()">Baixar planilha (Excel/CSV)</button>
+        }
+      </div>
+    }
+    <div class="collection-toolbar">
+      <strong>Visualização</strong
+      ><button
+        class="button"
+        [class.primary]="view() === 'table'"
+        [attr.aria-pressed]="view() === 'table'"
+        (click)="setView('table')"
+      >
+        Tabela compacta</button
+      ><button
+        class="button"
+        [class.primary]="view() === 'cards'"
+        [attr.aria-pressed]="view() === 'cards'"
+        (click)="setView('cards')"
+      >
+        Cartões
+      </button>
+    </div>
+    @if (section() === 'convidados') {
+      <div class="collection-filters">
+        <section class="card form-section people-filters" aria-label="Filtros de convidados">
+          <label
+            >Família<select [ngModel]="family()" (ngModelChange)="family.set($event); page.set(1)">
+              <option value="">Todas</option>
+              @for (f of store.ledger()?.families; track f.id) {
+                <option [value]="f.id">{{ f.name }}</option>
+              }
+            </select></label
+          >
+          <label
+            >Confirmação<select
+              [ngModel]="status()"
+              (ngModelChange)="status.set($event); page.set(1)"
+            >
+              <option value="">Todas</option>
+              @for (s of statuses; track s) {
+                <option>{{ s }}</option>
+              }
+            </select></label
+          >
+          <label
+            >Faixa etária<select [ngModel]="age()" (ngModelChange)="age.set($event); page.set(1)">
+              <option value="">Todas</option>
+              <option value="adult">Adultos</option>
+              <option value="child">Crianças</option>
+            </select></label
+          >
+          <label
+            >Convite enviado<select
+              [ngModel]="sent()"
+              (ngModelChange)="sent.set($event); page.set(1)"
+            >
+              <option value="">Todos</option>
+              <option value="yes">Sim</option>
+              <option value="no">Não</option>
+            </select></label
+          >
+        </section>
+      </div>
+      <div class="people-toolbar">
+        <button class="button primary clear-filters-button" type="button" (click)="clear()">
+          <oc-icon name="filter_alt_off" />Limpar filtros
+        </button>
+      </div>
+      <section
+        class="card form-section guest-import-guide"
+        aria-label="Adicionar convidados por planilha"
+      >
+        <h2 class="import-guide-heading">
+          <button
+            type="button"
+            class="import-guide-toggle"
+            (click)="importExpanded.set(!importExpanded())"
+            [attr.aria-expanded]="importExpanded()"
+            aria-controls="guest-import-content"
+            [attr.aria-label]="
+              importExpanded() ? 'Recolher cadastro por planilha' : 'Expandir cadastro por planilha'
+            "
+          >
+            <span>Cadastrar vários convidados de uma vez</span
+            ><oc-icon [name]="importExpanded() ? 'expand_less' : 'expand_more'" />
+          </button>
+        </h2>
+        <div id="guest-import-content" [hidden]="!importExpanded()">
+          <p class="muted">
+            Em vez de cadastrar um por um, preencha uma planilha e envie aqui. Cada linha representa
+            uma pessoa.
+          </p>
+          <div class="guest-import-steps">
+            <div>
+              <h3>1. Preencha a planilha</h3>
+              <p>
+                Baixe o arquivo, abra no Excel ou similar e preencha os convidados. Mantenha os
+                títulos das colunas e salve em CSV.
+              </p>
+              <button class="button secondary" (click)="download(true)">
+                <oc-icon name="download" />Baixar planilha para preencher
+              </button>
+            </div>
+            <div>
+              <h3>2. Envie para cadastrar</h3>
+              <p>
+                Escolha a planilha que você preencheu. Vamos conferir os dados e mostrar uma prévia
+                antes de adicionar os convidados.
+              </p>
+              <label class="button primary people-upload"
+                ><oc-icon name="upload_file" />Enviar planilha preenchida<input
+                  type="file"
+                  accept=".csv,text/csv"
+                  (change)="readFile($event)"
+                  aria-label="Enviar planilha preenchida"
+                  [disabled]="readingImport() || store.busy()"
+              /></label>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+  </details>
+  @if (section() === 'convidados') {
+    @if (importFeedback(); as feedback) {
+      <div
+        class="feedback import-feedback"
+        [class.error]="feedback.kind === 'error'"
+        [class.success]="feedback.kind === 'success'"
+        [attr.role]="feedback.kind === 'error' ? 'alert' : 'status'"
+        aria-live="polite"
+      >
+        @if (feedback.kind === 'error') {
+          <strong>Não foi possível adicionar os convidados</strong>
+        }
+        <p>{{ feedback.text }}</p>
+      </div>
+    }
+    @if (preview(); as p) {
+      <section class="card form-section">
+        <h2>Conferir importação</h2>
+        <p class="muted">Arquivo: {{ p.filename }}</p>
+        <p>{{ p.count }} pessoas serão adicionadas. Nenhum cadastro existente será substituído.</p>
+        <p class="muted">
+          Use o modelo CSV. Datas: DD/MM/AAAA ou AAAA-MM-DD. Criança e Convite enviado: Sim/Não.
+          Cada linha representa uma pessoa.
+        </p>
+        <details>
+          <summary>Ver nomes e alertas</summary>
+          @for (n of p.names; track $index) {
+            <p>{{ n }}</p>
+          }
+          @for (w of p.warnings; track $index) {
+            <p class="field-error">{{ w }}</p>
+          }
+        </details>
+        @if (p.warnings.length) {
+          <p class="field-error">
+            {{ p.warnings.length }} possíveis duplicidades. Confira antes de continuar; telefones
+            compartilhados são permitidos.
+          </p>
+        }
+        <div class="people-actions">
+          <button
+            class="button secondary"
+            [disabled]="store.busy()"
+            (click)="preview.set(null); importFeedback.set(null)"
+          >
+            Cancelar importação</button
+          ><button class="button primary" [disabled]="store.busy()" (click)="confirmImport()">
+            Confirmar importação
+          </button>
+        </div>
+      </section>
+    }
+    @if (view() === 'table') {
+      <ng-template #guestActions let-g>
+        <button
+          mat-menu-item
+          class="button secondary"
+          (click)="edit('guest', g)"
+          [attr.aria-label]="'Editar ' + g.name"
+        >
+          Editar
+        </button>
+        <div class="row-menu-group">
+          <div>
+            <button mat-menu-item class="button secondary" (click)="details(g)">Ver dados</button>
+            <button mat-menu-item class="button secondary" (click)="assignParticipation(g)">
+              Definir participação
+            </button>
+            <button mat-menu-item class="button secondary" (click)="duplicate(g)">Duplicar</button>
+            <button
+              mat-menu-item
+              class="button secondary"
+              (click)="edit('guest', undefined, undefined, undefined, g.familyId, g.id)"
+              [disabled]="!!g.companionOf"
+            >
+              Adicionar acompanhante
+            </button>
+            <button mat-menu-item class="button secondary" (click)="remove('guest', g.id, g.name)">
+              Excluir
+            </button>
+          </div>
+        </div>
+      </ng-template>
+      @if (selected().size) {
+        <section class="collection-selection">
+          <label
+            >Alterar confirmação dos selecionados<select
+              [ngModel]="bulkStatus()"
+              (ngModelChange)="bulkStatus.set($event)"
+            >
+              @for (s of statuses; track s) {
+                <option>{{ s }}</option>
+              }
+            </select></label
+          ><button class="button primary" (click)="updateSelected()" [disabled]="store.busy()">
+            Aplicar a {{ selected().size }} pessoas
+          </button>
+        </section>
+      }
+      <ng-template #guestNameCell let-g>
+        <span class="collection-cell">{{ g.name }}</span>
+        @if (guestParticipation(g.id); as p) {
+          <small class="muted" style="display: block; margin-top: 4px"
+            >{{ p.participation
+            }}{{ p.partnerId ? ' · Par: ' + partnerName(p.partnerId) : '' }}</small
+          >
+        }
+      </ng-template>
+      <ng-template #confirmationCell let-g>
+        <select
+          #confirmationControl
+          class="guest-inline-select"
+          [attr.aria-label]="'Confirmação de ' + g.name"
+          [ngModel]="g.status"
+          [disabled]="store.busy()"
+          (ngModelChange)="inlineStatus(g, confirmationControl)"
+        >
+          @for (status of statuses; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </ng-template>
+      <ng-template #sentCell let-g>
+        <select
+          #sentControl
+          class="guest-inline-select guest-inline-sent"
+          [attr.aria-label]="'Convite enviado para ' + g.name"
+          [ngModel]="g.invitationSent ? 'yes' : 'no'"
+          [disabled]="store.busy()"
+          (ngModelChange)="inlineSent(g, sentControl)"
+        >
+          <option value="no">Não</option>
+          <option value="yes">Sim</option>
+        </select>
+      </ng-template>
+      <oc-collection-table
+        label="Convidados"
+        [headers]="['Nome', 'Família', 'Contato', 'Confirmação', 'Convite enviado']"
+        [rows]="guestRows()"
+        [cellTemplates]="{ '0': guestNameCell, '3': confirmationCell, '4': sentCell }"
+        [actions]="guestActions"
+        [selectable]="bulkMode()"
+        [compact]="true"
+        [selected]="selected()"
+        (selectionChange)="setSelection($event)"
+        [disabled]="store.busy()"
+      />
+    } @else {
+      <section class="people-list" aria-label="Lista de convidados">
+        @for (g of visible(); track g.id) {
+          <article class="card people-person">
+            <div class="people-row">
+              <div>
+                <h2>{{ g.name }}</h2>
+                <p class="muted">
+                  {{ familyName(g.familyId) }} · {{ g.side }} · {{ g.child ? 'Criança' : 'Adulto'
+                  }}{{ g.child && g.age !== null ? ' · ' + g.age + ' anos' : '' }}
+                </p>
+                @if (g.companionOf) {
+                  <p>Acompanhante de {{ name(g.companionOf) }}</p>
+                }
+              </div>
+              <span
+                class="people-status"
+                [class.confirmed]="g.status === 'Confirmado'"
+                [class.declined]="g.status === 'Não comparecerá'"
+                >{{ g.status }}</span
+              >
+            </div>
+            <details>
+              <summary>Ver dados do convidado</summary>
+              <dl class="people-data">
+                <div>
+                  <dt>Telefone / WhatsApp</dt>
+                  <dd>{{ g.phone || 'Não informado' }} / {{ g.whatsapp || 'Não informado' }}</dd>
+                </div>
+                <div>
+                  <dt>E-mail</dt>
+                  <dd>{{ g.email || 'Não informado' }}</dd>
+                </div>
+                <div>
+                  <dt>Grupo / Relação</dt>
+                  <dd>
+                    {{ g.group || 'Não informado' }} / {{ g.relationship || 'Não informada' }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Convite enviado</dt>
+                  <dd>
+                    {{ g.invitationSent ? 'Sim' : 'Não'
+                    }}{{ g.sentDate ? ' · ' + date(g.sentDate) : '' }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Alimentação</dt>
+                  <dd>{{ g.diet || 'Sem informação' }}</dd>
+                </div>
+                <div>
+                  <dt>Acessibilidade</dt>
+                  <dd>{{ g.accessibility || 'Sem informação' }}</dd>
+                </div>
+                <div>
+                  <dt>Mesa</dt>
+                  <dd>{{ g.table || 'Não definida' }}</dd>
+                </div>
+                <div>
+                  <dt>Observações</dt>
+                  <dd>{{ g.notes || 'Nenhuma' }}</dd>
+                </div>
+              </dl>
+            </details>
+            <div class="people-actions">
+              <button class="button secondary" (click)="edit('guest', g)">
+                Editar {{ g.name }}</button
+              ><button
+                class="button secondary"
+                (click)="edit('guest', undefined, undefined, undefined, g.familyId, g.id)"
+                [disabled]="!!g.companionOf"
+              >
+                Adicionar acompanhante</button
+              ><button class="button secondary" (click)="remove('guest', g.id, g.name)">
+                Excluir
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <section class="card empty-state">
+            <h2>Nenhum convidado encontrado</h2>
+            <p>Cadastre pessoas ou ajuste os filtros.</p>
+          </section>
+        }
+      </section>
+    }
+  } @else if (section() === 'familias') {
+    <p class="muted">
+      Cada família com integrantes representa um convite. A confirmação continua sendo individual.
+    </p>
+    @if (view() === 'table') {
+      <ng-template #familyActions let-f>
+        <button
+          mat-menu-item
+          class="button secondary"
+          (click)="inspectedFamily.set(f.id); memberQuery.set('')"
+        >
+          Ver integrantes
+        </button>
+        <button
+          mat-menu-item
+          class="button secondary"
+          (click)="edit('guest', undefined, undefined, undefined, f.id)"
+        >
+          Adicionar integrante
+        </button>
+        <div class="row-menu-group">
+          <div>
+            <button mat-menu-item class="button secondary" (click)="edit('family', undefined, f)">
+              Editar família</button
+            ><button
+              mat-menu-item
+              class="button secondary"
+              (click)="remove('family', f.id, f.name)"
+            >
+              Excluir família
+            </button>
+          </div>
+        </div>
+      </ng-template>
+      <oc-collection-table
+        label="Famílias"
+        [headers]="['Família', 'Integrantes / confirmações', 'Observações']"
+        [rows]="familyRows()"
+        [actions]="familyActions"
+      />
+      @if (inspectedFamily()) {
+        <section class="card form-section">
+          <div class="people-row">
+            <h2>{{ familyName(inspectedFamily()) }}</h2>
+            <button class="button secondary" (click)="inspectedFamily.set('')">
+              Fechar integrantes
+            </button>
+          </div>
+          <label class="collection-search"
+            >Buscar integrante<input
+              type="search"
+              [ngModel]="memberQuery()"
+              (ngModelChange)="memberQuery.set($event)"
+          /></label>
+          <ng-template #memberActions let-g
+            ><label class="visually-hidden" [for]="'status-' + g.id"
+              >Confirmação de {{ g.name }}</label
+            ><select
+              [id]="'status-' + g.id"
+              [ngModel]="g.status"
+              (ngModelChange)="changeStatus(g, $event)"
+              [disabled]="store.busy()"
+            >
+              @for (s of statuses; track s) {
+                <option>{{ s }}</option>
+              }</select
+            ><button mat-menu-item class="button secondary" (click)="edit('guest', g)">
+              Editar pessoa</button
+            ><button
+              mat-menu-item
+              class="button secondary"
+              (click)="duplicate(g)"
+              [attr.aria-label]="'Duplicar integrante ' + g.name"
+            >
+              Duplicar integrante
+            </button></ng-template
+          >
+          <oc-collection-table
+            label="Integrantes da família"
+            [headers]="['Nome', 'Faixa etária', 'Confirmação', 'Contato']"
+            [rows]="memberRows()"
+            [actions]="memberActions"
+          />
+        </section>
+      }
+    } @else {
+      @for (f of visibleFamilies(); track f.id) {
+        <section class="card form-section">
+          <div class="people-row">
+            <div>
+              <h2>{{ f.name }}</h2>
+              <p>{{ members(f.id).length }} integrantes · {{ confirmed(f.id) }} confirmados</p>
+              <p class="muted">{{ f.notes }}</p>
+            </div>
+            <div class="people-actions">
+              <button class="button secondary" (click)="edit('family', undefined, f)">
+                Editar família</button
+              ><button class="button secondary" (click)="remove('family', f.id, f.name)">
+                Excluir família
+              </button>
+            </div>
+          </div>
+          @for (g of members(f.id); track g.id) {
+            <div class="people-member">
+              <span>{{ g.name }}{{ g.child ? ' · Criança' : '' }}</span
+              ><label
+                >Confirmação de {{ g.name
+                }}<select
+                  [ngModel]="g.status"
+                  (ngModelChange)="changeStatus(g, $event)"
+                  [disabled]="store.busy()"
+                >
+                  @for (s of statuses; track s) {
+                    <option>{{ s }}</option>
+                  }
+                </select></label
+              >
+              <div class="people-member-actions">
+                <button class="button secondary" (click)="edit('guest', g)">Editar pessoa</button
+                ><button
+                  class="button secondary"
+                  (click)="duplicate(g)"
+                  [attr.aria-label]="'Duplicar integrante ' + g.name"
+                >
+                  Duplicar integrante
+                </button>
+              </div>
+            </div>
+          }
+          <button
+            class="button primary"
+            (click)="edit('guest', undefined, undefined, undefined, f.id)"
+          >
+            Adicionar integrante
+          </button>
+        </section>
+      } @empty {
+        <section class="card empty-state">
+          <h2>Nenhuma família ou grupo encontrado</h2>
+          <p>Crie uma família e adicione os integrantes.</p>
+        </section>
+      }
+    }
+  } @else {
+    <p class="muted">
+      Separe aqui padrinhos, madrinhas, debutantes, noivinhos, noivinhas e outras participações.
+      Escolha quem já está na lista; não é outro cadastro de convidado e não aumenta a quantidade de
+      pessoas.
+    </p>
+    @if (!guests().length) {
+      <section class="card form-section">
+        <h2>Comece pela lista de convidados</h2>
+        <p>
+          Adicione os nomes na aba Convidados. Depois, escolha aqui a participação de cada pessoa.
+        </p>
+        <a class="button primary" routerLink="/pessoas/convidados">Adicionar convidados</a>
+      </section>
+    }
+    <ng-template #gpActions let-p>
+      <button
+        mat-menu-item
+        class="button secondary"
+        (click)="edit('godparent', undefined, undefined, p)"
+      >
+        Editar participação
+      </button>
+      <button mat-menu-item class="button secondary" (click)="edit('guest', guest(p.guestId))">
+        Editar pessoa e confirmação
+      </button>
+      <button
+        mat-menu-item
+        class="button secondary"
+        (click)="remove('godparent', p.id, name(p.guestId))"
+      >
+        Remover participação
+      </button>
+    </ng-template>
+    @if (view() === 'table') {
+      <oc-collection-table
+        label="Participações especiais"
+        [headers]="['Nome', 'Participação', 'Confirmação', 'Contato']"
+        [rows]="godparentRows()"
+        [actions]="gpActions"
+      />
+    } @else {
+      @for (p of visibleGodparents(); track p.id) {
+        @if (guest(p.guestId); as g) {
+          <article class="card form-section">
+            <div class="people-row">
+              <div>
+                <h2>{{ g.name }}</h2>
+                <p>
+                  {{ p.participation
+                  }}{{ p.partnerId ? ' · Par: ' + partnerName(p.partnerId) : '' }}
+                </p>
+              </div>
+              <span class="people-status">{{ g.status }}</span>
+            </div>
+            @if (p.notes) {
+              <p>{{ p.notes }}</p>
+            }
+            <div class="people-actions">
+              <button class="button secondary" (click)="edit('godparent', undefined, undefined, p)">
+                Editar participação</button
+              ><button class="button secondary" (click)="edit('guest', g)">
+                Editar pessoa e confirmação</button
+              ><button class="button secondary" (click)="remove('godparent', p.id, g.name)">
+                Remover participação
+              </button>
+            </div>
+          </article>
+        }
+      } @empty {
+        <p>Nenhuma participação encontrada. Use Adicionar participação para começar.</p>
+      }
+    }
+  }
+  @if (view() === 'cards') {
+    <oc-list-pager
+      [page]="page()"
+      [size]="pageSize()"
+      [total]="
+        section() === 'familias'
+          ? families().length
+          : section() === 'padrinhos'
+            ? godparents().length
+            : filtered().length
+      "
+      (pageChange)="page.set($event)"
+      (sizeChange)="pageSize.set($event)"
+    />
+  }
+}

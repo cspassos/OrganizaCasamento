@@ -1,0 +1,232 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">PARA O NOSSO NOVO LAR</div>
+    <h1>Lista de presentes</h1>
+    <p class="muted">{{ store.weddings.active()?.name }}</p>
+  </div>
+  @if (store.weddings.active()) {
+    <button
+      class="button primary"
+      (click)="export(true)"
+      [disabled]="!shareable() || exporting() || store.busy()"
+    >
+      {{ exporting() ? 'Preparando…' : 'Compartilhar lista' }}
+    </button>
+  }
+</div>
+@if (store.loading()) {
+  <p role="status">Carregando presentes…</p>
+} @else if (!store.weddings.active()) {
+  <section class="card form-section">
+    <h2>Escolha seu casamento</h2>
+    <a class="button primary" routerLink="/casamentos">Meus casamentos</a>
+  </section>
+} @else {
+  @if (store.error() || error()) {
+    <p class="feedback error" role="alert">{{ error() || store.error() }}</p>
+  }
+  @if (message()) {
+    <p class="feedback success" role="status">{{ message() }}</p>
+  }
+  <section class="card gifts-intro">
+    <div>
+      <h2>{{ store.list()?.title }}</h2>
+      <p>{{ store.list()?.message }}</p>
+      <small class="muted"
+        >{{ totals().received }} unidades recebidas · {{ totals().remaining }} unidades faltando ·
+        {{ store.list()?.sites?.length || 0 }} listas de lojas</small
+      >
+    </div>
+  </section>
+  <div class="gifts-toolbar">
+    <label class="search-field"
+      >Buscar presente<input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event); page.set(1)"
+        placeholder="Nome ou descrição"
+    /></label>
+    <button class="button primary" (click)="edit('item')" [disabled]="store.busy()">
+      Adicionar presente
+    </button>
+  </div>
+  <details class="optional-details gifts-options">
+    <summary>Compartilhamento e outras opções</summary>
+    <p>
+      Compartilhe um PDF com fotos, descrições e links clicáveis ou copie uma mensagem com os links.
+      O arquivo é uma cópia da lista no momento do envio; não reserva presentes nem atualiza os
+      arquivos já enviados.
+    </p>
+    <div class="gifts-actions">
+      <button class="button secondary" (click)="export()" [disabled]="!shareable() || exporting()">
+        Baixar PDF da lista
+      </button>
+      <button class="button secondary" (click)="copyMessage()" [disabled]="!shareable()">
+        Copiar mensagem com links
+      </button>
+      <button class="button secondary" (click)="edit('settings')">Personalizar lista</button>
+    </div>
+  </details>
+  <div class="gift-views" role="group" aria-label="Mostrar presentes">
+    <button
+      class="button"
+      [class.primary]="view() === 'remaining'"
+      [attr.aria-pressed]="view() === 'remaining'"
+      (click)="view.set('remaining'); page.set(1)"
+    >
+      Falta receber
+    </button>
+    <button
+      class="button"
+      [class.primary]="view() === 'received'"
+      [attr.aria-pressed]="view() === 'received'"
+      (click)="view.set('received'); page.set(1)"
+    >
+      Já recebidos
+    </button>
+    <button
+      class="button"
+      [class.primary]="view() === 'all'"
+      [attr.aria-pressed]="view() === 'all'"
+      (click)="view.set('all'); page.set(1)"
+    >
+      Todos
+    </button>
+  </div>
+  @if (store.list()?.sites?.length) {
+    <section class="gift-sites" aria-label="Listas de lojas">
+      <h2>Listas nas lojas</h2>
+      <div class="gift-site-grid">
+        @for (site of store.list()!.sites; track site.id) {
+          <article class="card gift-site">
+            <div>
+              <h3>{{ site.name }}</h3>
+              <a [href]="site.url" target="_blank" rel="noopener noreferrer"
+                >Abrir lista na loja ↗</a
+              >
+            </div>
+            <details>
+              <summary>Ações</summary>
+              <button class="button secondary" (click)="edit('site', undefined, site)">
+                Editar lista {{ site.name }}</button
+              ><button class="button secondary" (click)="remove('site', site.id, site.name)">
+                Remover lista {{ site.name }}
+              </button>
+            </details>
+          </article>
+        }
+      </div>
+    </section>
+  }
+  <section class="gifts-grid" aria-label="Presentes">
+    @for (item of visibleItems(); track item.id) {
+      <article class="card gift-card" [class.received]="counts(item).remaining === 0">
+        <div class="gift-image">
+          @if (item.photo) {
+            <img [src]="item.photo" [alt]="item.name" loading="lazy" />
+          } @else {
+            <span aria-hidden="true">♡</span>
+          }
+        </div>
+        <div class="gift-body">
+          <h3 [title]="item.name">{{ item.name }}</h3>
+          <div class="gift-price-slot">
+            @if (item.priceCents !== null) {
+              <strong class="gift-price"
+                >{{ money(item.priceCents) }} <small>aproximadamente</small></strong
+              >
+            }
+          </div>
+          <div class="gift-counts">
+            <strong>Recebemos {{ counts(item).received }} de {{ counts(item).quantity }}</strong>
+            <span>{{
+              counts(item).remaining
+                ? 'Faltam ' + counts(item).remaining
+                : 'Quantidade desejada completa'
+            }}</span>
+          </div>
+          <button
+            class="button secondary"
+            (click)="received(item)"
+            [disabled]="store.busy() || counts(item).received >= 9999"
+          >
+            Registrar 1 recebido
+          </button>
+          <div class="gift-description-slot">
+            @if (description(item.description, item.name)) {
+              <details class="gift-description-details">
+                <summary>Ver descrição do presente</summary>
+                <p class="gift-description">{{ description(item.description, item.name) }}</p>
+              </details>
+            }
+          </div>
+          <div class="gift-card-actions">
+            @if (item.url) {
+              <a
+                class="button secondary"
+                [href]="item.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Ver na loja ↗</a
+              >
+            }
+            <button
+              class="button secondary"
+              [attr.aria-label]="'Editar ' + item.name"
+              (click)="edit('item', item)"
+              [disabled]="store.busy()"
+            >
+              Editar presente
+            </button>
+          </div>
+          <details class="gift-manage">
+            <summary>Gerenciar presente</summary>
+            <div class="gifts-actions">
+              <button
+                class="button secondary"
+                (click)="remove('item', item.id, item.name)"
+                [disabled]="store.busy()"
+              >
+                Remover {{ item.name }}
+              </button>
+            </div>
+          </details>
+        </div>
+      </article>
+    } @empty {
+      <section class="card gifts-empty">
+        <h2>
+          {{
+            query()
+              ? 'Nenhum presente encontrado'
+              : view() === 'received'
+                ? 'Nenhum presente recebido ainda'
+                : store.list()?.items?.length
+                  ? 'Não há presentes faltando nesta visão'
+                  : 'Vamos montar a lista?'
+          }}
+        </h2>
+        <p>
+          {{
+            query()
+              ? 'Tente outro nome ou limpe a busca.'
+              : view() === 'received'
+                ? 'Use Registrar 1 recebido no cartão quando ganhar um presente. Quem foi recebido parcialmente aparece nas duas listas.'
+                : store.list()?.items?.length
+                  ? 'Consulte Já recebidos ou adicione outros presentes.'
+                  : 'Adicione os presentes que vocês gostariam de receber, com foto e link para comprar.'
+          }}
+        </p>
+      </section>
+    }
+  </section>
+  @if (items().length > pageSize()) {
+    <oc-list-pager
+      [total]="items().length"
+      [page]="page()"
+      [size]="pageSize()"
+      (pageChange)="page.set($event)"
+      (sizeChange)="pageSize.set($event); page.set(1)"
+    />
+  }
+}

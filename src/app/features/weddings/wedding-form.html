@@ -1,0 +1,227 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">CADA DETALHE, UM SIM</div>
+    <h1>{{ id ? 'Editar casamento' : 'Novo casamento' }}</h1>
+    <p class="muted">Um planejamento com a história de vocês.</p>
+  </div>
+  <a class="button secondary" routerLink="/casamentos">Voltar aos casamentos</a>
+</div>
+@if (loading()) {
+  <p class="feedback" role="status">Carregando dados…</p>
+} @else if (missing()) {
+  <section class="card empty-state">
+    <h2>Casamento indisponível</h2>
+    <p>Este cadastro não foi encontrado ou está arquivado.</p>
+    <a class="button primary" routerLink="/casamentos">Ver casamentos</a>
+  </section>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="save()" class="wedding-form">
+    @if (error() || store.error()) {
+      <div class="feedback error" role="alert">{{ error() || store.error() }}</div>
+    }
+    <fieldset [disabled]="saving() || !!store.error()">
+      <details class="card form-section optional-details">
+        <summary>Foto dos noivos (opcional)</summary>
+        <p class="muted">Opcional · JPG, PNG ou WebP · até 2 MB</p>
+        <div class="photo-field">
+          @if (photo()) {
+            <img [src]="photo()" alt="Prévia da foto dos noivos" />
+          }
+          <div>
+            <label class="upload-label button secondary"
+              >Selecionar foto<input
+                aria-label="Foto dos noivos"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                [disabled]="photoLoading()"
+                (change)="choosePhoto($event)"
+            /></label>
+            @if (photo()) {
+              <button class="button secondary" type="button" (click)="removePhoto()">
+                Remover foto
+              </button>
+            }
+            @if (photoLoading()) {
+              <p role="status">Processando foto…</p>
+            }
+          </div>
+        </div>
+      </details>
+      @for (section of sections; track section.title) {
+        <section class="card form-section">
+          <h2>{{ section.title }}</h2>
+          <p class="muted">{{ section.description }}</p>
+          <div class="form-grid">
+            @for (field of section.fields; track field.key) {
+              <div class="form-field">
+                <label [for]="field.key">{{ field.label }}{{ field.required ? ' *' : '' }}</label>
+                @if (field.key === 'date') {
+                  <oc-date-picker formControlName="date" />
+                } @else if (field.key === 'ceremonyType') {
+                  <select id="ceremonyType" formControlName="ceremonyType">
+                    @for (type of ceremonyTypes; track type) {
+                      <option [value]="type">{{ type }}</option>
+                    }
+                    @if (!ceremonyTypes.includes(form.controls.ceremonyType.value)) {
+                      <option [value]="form.controls.ceremonyType.value">
+                        {{ form.controls.ceremonyType.value }}
+                      </option>
+                    }
+                  </select>
+                  @if (form.controls.ceremonyType.value === 'Personalizada') {
+                    <label for="ceremonyDescription">Descreva a cerimônia</label
+                    ><input
+                      id="ceremonyDescription"
+                      formControlName="ceremonyDescription"
+                      maxlength="200"
+                      placeholder="Como vocês querem celebrar?"
+                    />
+                  }
+                } @else if (field.key === 'initialBudget') {
+                  <input
+                    id="initialBudget"
+                    type="text"
+                    ocCurrency
+                    formControlName="initialBudget"
+                    aria-label="Orçamento inicial (R$)"
+                    required
+                    [attr.aria-invalid]="invalid(field.key)"
+                    [attr.aria-describedby]="invalid(field.key) ? field.key + '-error' : null"
+                  />
+                } @else {
+                  <input
+                    [id]="field.key"
+                    [attr.aria-label]="field.label"
+                    [type]="field.type === 'date' ? 'text' : field.type"
+                    [attr.placeholder]="
+                      field.key === 'style'
+                        ? 'Ex.: clássico, rústico ou moderno'
+                        : field.key === 'theme'
+                          ? 'Ex.: jardim encantado, praia ou viagem'
+                          : null
+                    "
+                    [attr.maxlength]="field.type === 'date' ? 10 : null"
+                    [formControlName]="field.key"
+                    [attr.list]="field.list ?? null"
+                    [attr.min]="
+                      field.type === 'number' ? 0 : field.type === 'date' ? '1900-01-01' : null
+                    "
+                    [attr.max]="field.type === 'date' ? '2200-12-31' : null"
+                    [attr.step]="
+                      field.key === 'initialBudget' ? '0.01' : field.type === 'number' ? '1' : null
+                    "
+                    [attr.required]="field.required ? '' : null"
+                    [attr.aria-invalid]="invalid(field.key)"
+                    [attr.aria-describedby]="invalid(field.key) ? field.key + '-error' : null"
+                  />
+                }
+                @if (field.key === 'style') {
+                  <small class="muted"
+                    >O estilo define a aparência: clássico, romântico, rústico, moderno, minimalista
+                    ou boho.</small
+                  >
+                }
+                @if (field.key === 'theme') {
+                  <small class="muted"
+                    >O tema é a inspiração da celebração: jardim encantado, praia, viagem, flores ou
+                    estrelas. É opcional.</small
+                  >
+                }
+                @if (field.key === 'colors') {
+                  <div class="palette-picker">
+                    @if (!paletteOpen() && !palette().length) {
+                      <small class="muted">Nenhuma cor definida. Você pode escolher depois.</small
+                      ><button
+                        type="button"
+                        class="button secondary"
+                        (click)="paletteOpen.set(true)"
+                      >
+                        Escolher cores
+                      </button>
+                    }
+                    @if (paletteOpen() || palette().length) {
+                      <div class="palette-add">
+                        <label for="new-color">Escolher uma cor</label
+                        ><input id="new-color" type="color" value="#64765b" #newColor /><button
+                          type="button"
+                          class="button secondary"
+                          [disabled]="palette().length >= 8"
+                          (click)="addColor(newColor.value)"
+                        >
+                          Adicionar cor
+                        </button>
+                      </div>
+                      <small class="muted"
+                        >Opcional: mantenha sem cores ou adicione até 8 cores à paleta.</small
+                      >
+                      <div class="palette-swatches">
+                        @for (color of palette(); track $index; let i = $index) {
+                          <div class="palette-swatch">
+                            <input
+                              type="color"
+                              [value]="color"
+                              [attr.aria-label]="'Cor ' + (i + 1) + ' da paleta'"
+                              (input)="changeColor(i, $any($event.target).value)"
+                            /><span>{{ color }}</span
+                            ><button
+                              type="button"
+                              [attr.aria-label]="'Remover cor ' + (i + 1)"
+                              (click)="removeColor(i)"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        }
+                      </div>
+                      <button type="button" class="button secondary" (click)="clearPalette()">
+                        Deixar sem cores
+                      </button>
+                    }
+                  </div>
+                }
+                @if (invalid(field.key)) {
+                  <small class="field-error" [id]="field.key + '-error'">{{
+                    field.type === 'number'
+                      ? 'Informe um número válido, sem valores negativos.'
+                      : field.type === 'date'
+                        ? 'Informe uma data válida entre 1900 e 2200.'
+                        : 'Preencha este campo com até 120 caracteres.'
+                  }}</small>
+                }
+              </div>
+            }
+            @if (section.title === 'Onde vamos celebrar') {
+              <div class="form-field">
+                <label for="state">Estado</label
+                ><select id="state" formControlName="state">
+                  <option value="">A definir</option>
+                  @for (uf of states; track uf) {
+                    <option [value]="uf">{{ uf }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+        </section>
+      }
+      <details class="card form-section optional-details">
+        <summary>Observações (opcional)</summary>
+        <div class="form-field">
+          <label for="notes">Observações</label
+          ><textarea id="notes" formControlName="notes" rows="5" maxlength="4000"></textarea
+          ><small class="muted">Até 4.000 caracteres.</small>
+        </div>
+      </details>
+    </fieldset>
+    <div class="form-actions">
+      <a class="button secondary" routerLink="/casamentos">Cancelar</a
+      ><button
+        class="button primary"
+        type="submit"
+        [disabled]="saving() || photoLoading() || !!store.error()"
+      >
+        {{ saving() ? 'Salvando…' : 'Salvar casamento' }}
+      </button>
+    </div>
+  </form>
+}

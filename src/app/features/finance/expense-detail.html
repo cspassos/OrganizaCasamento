@@ -1,0 +1,194 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">FINANCEIRO · DESPESAS</div>
+    <h1>Detalhes da despesa</h1>
+    <p class="muted">{{ finance.weddings.active()?.name }}</p>
+  </div>
+  <a class="button secondary" routerLink="/financeiro/despesas">Voltar às despesas</a>
+</div>
+@if (finance.loading()) {
+  <p role="status">Carregando…</p>
+} @else if (expense(); as e) {
+  @if (error() || finance.error()) {
+    <p class="feedback error" role="alert">{{ error() || finance.error() }}</p>
+  }
+  @if (message()) {
+    <p class="feedback success" role="status">
+      {{ message() }} <a routerLink="/financeiro/pagamentos">Ver histórico de pagamentos →</a>
+    </p>
+  }
+  <section class="card form-section">
+    @if (e.status === 'cancelled') {
+      <p class="feedback" role="status">
+        <strong>Gasto cancelado — não há valor a pagar.</strong> Os valores originais e os
+        lançamentos abaixo são mantidos apenas como histórico.
+      </p>
+    }
+    <div class="section-heading">
+      <h2>{{ e.description }}</h2>
+      <span class="pill" [class.danger-pill]="e.situation === 'Vencida'">{{ e.situation }}</span>
+    </div>
+    <p class="muted">{{ e.supplier || 'Fornecedor não informado' }} · {{ e.method }}</p>
+    <div class="finance-metrics">
+      <div>
+        <small>Previsto</small><strong>{{ money(e.plannedCents) }}</strong>
+      </div>
+      <div>
+        <small>{{
+          e.status === 'cancelled' ? 'Valor original (histórico)' : 'Valor total'
+        }}</small><strong>{{ money(e.due) }}</strong>
+      </div>
+      <div>
+        <small>Já pago</small><strong>{{ money(e.paid) }}</strong>
+      </div>
+      <div>
+        <small>Falta pagar</small><strong>{{ money(e.open) }}</strong>
+      </div>
+    </div>
+    @if (e.status !== 'planned') {
+      <p class="muted">
+        Contratação: {{ date(e.contractDate) }} · Referência:
+        {{ e.contractReference || 'Não informada' }}
+      </p>
+    }
+    @if (e.notes) {
+      <p class="preserve-lines">{{ e.notes }}</p>
+    }
+    @if (e.attachment) {
+      <button class="button secondary" (click)="download(e.attachment)">
+        Baixar {{ e.attachment.name }}
+      </button>
+    }
+    <div class="card-actions">
+      @if (e.status !== 'cancelled') {
+        <a class="button secondary" [routerLink]="['/financeiro/despesas', e.id, 'editar']"
+          >Editar despesa</a
+        >
+        @if (e.status === 'contracted') {
+          <button class="button primary" [disabled]="finance.busy()" (click)="operation()">
+            Registrar pagamento
+          </button>
+          @if (e.open > 0) {
+            <button
+              class="button secondary"
+              [disabled]="finance.busy()"
+              (click)="operation(undefined, true)"
+            >
+              Pagar saldo restante
+            </button>
+          }
+        }
+        @if (e.status === 'planned' && !e.contractId && !e.professionalId) {
+          <button class="button secondary" [disabled]="finance.busy()" (click)="removeResearch()">
+            Excluir pesquisa de preço
+          </button>
+        }
+        @if (e.contractId) {
+          <a
+            class="button secondary"
+            routerLink="/fornecedores/contratos"
+            [queryParams]="{ contrato: e.contractId }"
+            >Ver ou cancelar contrato vinculado</a
+          >
+        } @else {
+          <button class="button secondary" [disabled]="finance.busy()" (click)="cancel()">
+            Cancelar despesa
+          </button>
+        }
+      }
+    </div>
+  </section>
+  <section class="card form-section">
+    <h2>Parcelas e vencimentos</h2>
+    @for (i of installments(); track i.id) {
+      <div class="bill-row" [class.overdue-row]="isOverdue(i)">
+        <div>
+          <strong>{{ i.label }}</strong>
+          @if (isOverdue(i)) {
+            <span class="pill danger-pill">Vencida</span>
+          }
+          @if (e.status === 'contracted' && balance(i).open === 0) {
+            <span class="pill paid-pill">Pago</span>
+          }
+          <small
+            >Valor {{ money(balance(i).due) }} · pago {{ money(balance(i).paid) }} · saldo
+            {{ money(balance(i).open) }}</small
+          >
+        </div>
+        <div class="bill-due">
+          @if (e.status === 'cancelled') {
+            <span class="pill">Cancelada</span
+            ><small>Vencimento original: {{ date(i.dueDate) }}</small>
+          } @else {
+            <label [for]="'due-' + i.id">Vencimento</label
+            ><oc-date-picker
+              [iso]="true"
+              label="Vencimento"
+              [inputId]="'due-' + i.id"
+              [ngModel]="i.dueDate"
+              #dueDate="ngModel"
+              [disabled]="finance.busy()"
+            /><button
+              class="button secondary"
+              [disabled]="finance.busy() || dueDate.value === i.dueDate"
+              (click)="due(i.id, dueDate.value)"
+            >
+              Salvar vencimento
+            </button>
+          }
+        </div>
+        @if (e.status === 'contracted' && balance(i).open > 0) {
+          <button class="button secondary" [disabled]="finance.busy()" (click)="operation(i.id)">
+            Registrar
+          </button>
+        }
+      </div>
+    } @empty {
+      <p class="muted">
+        Despesas planejadas não geram contas a pagar. Edite a despesa quando houver contratação.
+      </p>
+    }
+  </section>
+  <section class="card form-section">
+    <h2>Pagamentos e ajustes</h2>
+    @for (t of transactions(); track t.id) {
+      <div class="transaction-row" [class.voided]="t.voidedAt">
+        <div>
+          <strong>{{ labels[t.kind] }} · {{ money(t.amountCents) }}</strong
+          ><small>{{ date(t.date) }} · {{ t.method }}</small>
+          @if (t.notes) {
+            <p>{{ t.notes }}</p>
+          }
+          @if (t.voidedAt) {
+            <small>Desfeita: {{ t.voidReason }}</small>
+          }
+        </div>
+        <div class="card-actions">
+          @if (t.attachment) {
+            <button class="button secondary" (click)="download(t.attachment)">Comprovante</button>
+          }
+          @if (!t.voidedAt && e.status !== 'cancelled') {
+            <button class="button secondary" [disabled]="finance.busy()" (click)="undo(t.id)">
+              Desfazer
+            </button>
+          }
+        </div>
+      </div>
+    } @empty {
+      <p class="muted">
+        Nenhuma operação registrada. A geração das parcelas não é considerada pagamento.
+      </p>
+    }
+  </section>
+  <details class="card form-section">
+    <summary>Histórico de alterações</summary>
+    @for (a of audit(); track a.id) {
+      <p class="audit-line">{{ timestamp(a.at) }} · {{ a.action }}</p>
+    }
+  </details>
+} @else {
+  <section class="card empty-state">
+    <h2>Despesa não encontrada</h2>
+    <p>Selecione o casamento ao qual esta despesa pertence.</p>
+  </section>
+}

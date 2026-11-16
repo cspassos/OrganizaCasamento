@@ -1,0 +1,155 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">UM NOVO CAPÍTULO</div>
+    <h1>Meus casamentos</h1>
+    <p class="muted">Cada história tem seu próprio espaço.</p>
+  </div>
+  <a class="button primary" routerLink="/casamentos/novo"><oc-icon name="add" />Novo casamento</a>
+</div>
+<oc-temporary-data-panel />
+@if (message()) {
+  <p class="feedback success" role="status">{{ message() }}</p>
+}
+@if (error() || store.error()) {
+  <p class="feedback error" role="alert">{{ error() || store.error() }}</p>
+}
+@if (store.loading()) {
+  <p class="feedback" role="status">Carregando casamentos…</p>
+} @else {
+  <div class="list-toolbar">
+    <label class="search-field"
+      >Pesquisar casamento<input
+        type="search"
+        placeholder="Nome do casamento ou dos noivos"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)" /></label
+    ><button class="button secondary" (click)="showArchived.set(!showArchived())">
+      {{ showArchived() ? 'Ver ativos' : 'Ver arquivados' }} ({{
+        showArchived() ? store.weddings().length : store.archived().length
+      }})
+    </button>
+  </div>
+  <div class="collection-toolbar">
+    <button class="button secondary" (click)="view.set('table')">Tabela compacta</button
+    ><button class="button secondary" (click)="view.set('cards')">Cartões com foto</button>
+  </div>
+  @if (view() === 'table') {
+    <ng-template #weddingActions let-w>
+      @if (!w.archived) {
+        <button mat-menu-item class="button primary" [disabled]="store.busy()" (click)="select(w)">
+          Selecionar</button
+        ><a mat-menu-item class="button secondary" [routerLink]="['/casamentos', w.id, 'editar']"
+          >Editar</a
+        >
+      }
+      <button mat-menu-item class="button secondary" [disabled]="store.busy()" (click)="archive(w)">
+        {{ w.archived ? 'Restaurar' : 'Arquivar' }}
+      </button>
+      <button mat-menu-item class="destructive" [disabled]="store.busy()" (click)="remove(w)">
+        Excluir definitivamente
+      </button></ng-template
+    ><oc-collection-table
+      label="Casamentos"
+      [headers]="[
+        'Casamento',
+        'Noivos',
+        'Data',
+        'Cidade',
+        'Orçamento inicial',
+        'Convidados',
+        'Situação',
+      ]"
+      [rows]="tableRows()"
+      [actions]="weddingActions"
+    />
+  } @else {
+    <div class="wedding-grid">
+      @for (w of cards(); track w.id) {
+        <article class="card wedding-card">
+          @if (w.photo) {
+            <img class="wedding-cover" [src]="w.photo" [alt]="'Foto de ' + w.name" />
+          } @else {
+            <div class="wedding-cover cover-placeholder" aria-hidden="true">♡</div>
+          }
+          <div class="wedding-card-body">
+            <div class="section-heading">
+              <h2>{{ w.name }}</h2>
+              @if (store.active()?.id === w.id) {
+                <span class="pill">Selecionado</span>
+              }
+            </div>
+            <p class="muted">{{ w.brideName }} & {{ w.groomName }}</p>
+            <p><oc-icon name="calendar_today" /> {{ date(w.date) }}</p>
+            <p class="muted">
+              {{ w.city || 'Cidade a definir' }}{{ w.state ? ' / ' + w.state : '' }}
+            </p>
+            <div class="wedding-summary">
+              <span
+                >Orçamento inicial<strong>{{
+                  w.initialBudget ?? 0 | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                }}</strong></span
+              ><span
+                >Convidados estimados<strong>{{ w.estimatedGuests ?? 0 }}</strong></span
+              >
+            </div>
+            <div class="card-actions">
+              @if (!w.archived) {
+                <button class="button primary" [disabled]="store.busy()" (click)="select(w)">
+                  Selecionar</button
+                ><a class="button secondary" [routerLink]="['/casamentos', w.id, 'editar']"
+                  >Editar</a
+                >
+              }
+              <button class="button secondary" [disabled]="store.busy()" (click)="archive(w)">
+                {{ w.archived ? 'Restaurar' : 'Arquivar' }}
+              </button>
+              <button
+                class="button secondary destructive"
+                [disabled]="store.busy()"
+                (click)="remove(w)"
+              >
+                Excluir definitivamente
+              </button>
+            </div>
+          </div>
+        </article>
+      } @empty {
+        <section class="card empty-state wide">
+          <span class="large-icon"><oc-icon name="favorite_border" /></span>
+          <h2>
+            {{
+              query()
+                ? 'Nenhum casamento encontrado'
+                : showArchived()
+                  ? 'Nenhum casamento arquivado'
+                  : 'Vamos começar a sua história?'
+            }}
+          </h2>
+          <p>
+            {{
+              query()
+                ? 'Tente outro nome na pesquisa.'
+                : showArchived()
+                  ? 'Os casamentos arquivados aparecerão aqui.'
+                  : 'Cadastre os dados do casamento para personalizar seu planejamento.'
+            }}
+          </p>
+          @if (!showArchived() && !query()) {
+            <a class="button primary" routerLink="/casamentos/novo">Cadastrar meu casamento</a>
+          }
+        </section>
+      }
+    </div>
+    <oc-list-pager
+      [total]="visible().length"
+      [page]="page()"
+      [size]="pageSize()"
+      (pageChange)="page.set($event)"
+      (sizeChange)="pageSize.set($event)"
+    />
+  }
+}
+<p class="storage-reminder">
+  <oc-icon name="info" />Os dados ficam neste navegador. Limpar os dados do site pode apagá-los.
+  Backup será disponibilizado em uma próxima etapa.
+</p>

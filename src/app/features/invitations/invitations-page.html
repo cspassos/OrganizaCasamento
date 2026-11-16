@@ -1,0 +1,623 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">O PRIMEIRO ENCONTRO COM O GRANDE DIA</div>
+    <h1>{{ title() }}</h1>
+    <p class="muted">{{ store.weddings.active()?.name }}</p>
+  </div>
+  @if (section() === 'modelos') {
+    <a class="button primary" routerLink="/convites/criar">Criar convite personalizado</a>
+  }
+</div>
+@if (!store.weddings.active()) {
+  <section class="card empty-state">
+    <h2>Selecione um casamento para começar</h2>
+    <a routerLink="/casamentos" class="button primary">Meus casamentos</a>
+  </section>
+} @else if (store.loading() || store.people.loading()) {
+  <p role="status">Carregando convites…</p>
+} @else {
+  <p class="notice invitation-local-note">
+    Teste local: os links e as respostas funcionam somente neste navegador e neste endereço. Para
+    convidar de verdade agora, baixe a imagem ou PDF e envie o arquivo. Links públicos serão
+    disponibilizados na integração final.
+  </p>
+  @if (error() || store.error()) {
+    <p class="feedback error" role="alert">{{ error() || store.error() }}</p>
+  }
+  @if (message()) {
+    <p class="feedback success" role="status">{{ message() }}</p>
+  }
+  <nav class="people-tabs" aria-label="Convites">
+    <a routerLink="/convites/modelos" [class.active]="section() === 'modelos'">Modelos</a
+    ><a routerLink="/convites/enviados" [class.active]="section() === 'enviados'"
+      >Convites enviados</a
+    ><a routerLink="/convites/whatsapp" [class.active]="section() === 'whatsapp'">WhatsApp</a
+    ><a routerLink="/convites/confirmacoes" [class.active]="section() === 'confirmacoes'"
+      >Confirmações</a
+    >
+  </nav>
+  @if (section() === 'modelos') {
+    <h2>Escolha o seu estilo</h2>
+    <p class="muted">
+      Os exemplos usam os dados do seu casamento. Clique em Personalizar para editar e salvar.
+    </p>
+    <section class="invitation-gallery" aria-label="Estilos de convite">
+      @for (d of samples(); track d.style) {
+        <article class="card invitation-model-card">
+          <oc-invitation-preview [design]="d" />
+          <h3>{{ d.style }}</h3>
+          <a
+            class="button secondary"
+            routerLink="/convites/criar"
+            [queryParams]="{ estilo: d.style }"
+            >Personalizar {{ d.style }}</a
+          >
+        </article>
+      }
+    </section>
+    <h2>Seus convites salvos</h2>
+    <label class="collection-search"
+      >Buscar modelo salvo<input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+    /></label>
+    <div class="collection-toolbar">
+      <button class="button secondary" (click)="setView('table')">Tabela compacta</button
+      ><button class="button secondary" (click)="setView('cards')">Ver modelos em galeria</button>
+    </div>
+    @if (view() === 'table') {
+      <ng-template #designActions let-d
+        ><a
+          mat-menu-item
+          class="button secondary"
+          [routerLink]="['/convites/modelos', d.id, 'editar']"
+          >Editar convite</a
+        ><button mat-menu-item class="button primary" (click)="issueBatch(d.id)">
+          Criar para convidados
+        </button>
+        <div class="row-menu-group">
+          <div>
+            <button
+              mat-menu-item
+              class="button secondary"
+              (click)="export(d, 'png')"
+              [disabled]="working()"
+            >
+              Baixar imagem</button
+            ><button
+              mat-menu-item
+              class="button secondary"
+              (click)="export(d, 'pdf')"
+              [disabled]="working()"
+            >
+              Baixar PDF</button
+            ><button
+              mat-menu-item
+              class="button secondary"
+              (click)="duplicate(d)"
+              [disabled]="working()"
+            >
+              Duplicar</button
+            ><button
+              mat-menu-item
+              class="button secondary"
+              (click)="removeDesign(d)"
+              [disabled]="working()"
+            >
+              Excluir modelo
+            </button>
+          </div>
+        </div></ng-template
+      >
+      <oc-collection-table
+        label="Modelos salvos"
+        [headers]="['Modelo', 'Estilo', 'Data', 'Local']"
+        [rows]="savedRows()"
+        [actions]="designActions"
+      />
+    } @else {
+      <section class="invitation-gallery saved-designs">
+        @for (d of savedCards(); track d.id) {
+          <article class="card invitation-model-card">
+            <oc-invitation-preview [design]="d" />
+            <h3>{{ d.title }}</h3>
+            <div class="people-actions">
+              <a class="button primary" [routerLink]="['/convites/modelos', d.id, 'editar']"
+                >Editar convite</a
+              ><button
+                class="button secondary"
+                (click)="issue(d.id)"
+                [disabled]="!store.people.summary().total || working()"
+              >
+                Criar para convidados</button
+              ><button class="button secondary" [disabled]="working()" (click)="export(d, 'png')">
+                Baixar imagem</button
+              ><button class="button secondary" [disabled]="working()" (click)="export(d, 'pdf')">
+                Baixar PDF</button
+              ><button class="button secondary" [disabled]="working()" (click)="duplicate(d)">
+                Duplicar</button
+              ><button class="button secondary" [disabled]="working()" (click)="removeDesign(d)">
+                Excluir modelo
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <p class="muted">Nenhum convite salvo. Escolha um estilo acima para começar.</p>
+        }
+      </section>
+      <oc-list-pager
+        [total]="savedRows().length"
+        [page]="page()"
+        [size]="pageSize()"
+        (pageChange)="page.set($event)"
+        (sizeChange)="pageSize.set($event)"
+      />
+    }
+  } @else if (section() === 'enviados') {
+    <div class="people-toolbar">
+      <label
+        >Pesquisar convite<input
+          type="search"
+          [ngModel]="query()"
+          (ngModelChange)="query.set($event); page.set(1)"
+          placeholder="Nome da pessoa, família ou convite" /></label
+      ><button
+        class="button primary"
+        [disabled]="!designs().length || !store.people.summary().total || working()"
+        (click)="issue()"
+      >
+        Criar convite para convidados
+      </button>
+    </div>
+    @if (!designs().length || !store.people.summary().total) {
+      <p class="feedback">
+        Primeiro salve um modelo e cadastre seus convidados.
+        <a routerLink="/convites/modelos">Escolher modelo</a> ·
+        <a routerLink="/pessoas/convidados">Cadastrar convidados</a>
+      </p>
+    }
+    <label class="invitation-filter"
+      >Mostrar<select [ngModel]="filter()" (ngModelChange)="filter.set($event); page.set(1)">
+        <option value="">Todos</option>
+        <option value="active">Links ativos</option>
+        <option value="sent">Envio registrado</option>
+        <option value="answered">Com respostas</option>
+        <option value="inactive">Desativados</option>
+      </select></label
+    >
+    @if (copiedLink()) {
+      <label class="invitation-copy-link"
+        >Link apenas para teste neste navegador<input
+          readonly
+          [value]="copiedLink()"
+          (click)="$any($event.target).select()"
+      /></label>
+    }
+    <div class="collection-toolbar">
+      <button class="button secondary" (click)="setView('table')">Tabela compacta</button
+      ><button class="button secondary" (click)="setView('cards')">Cartões</button
+      ><button
+        class="button primary"
+        (click)="issueBatch()"
+        [disabled]="!designs().length || working()"
+      >
+        Criar vários convites
+      </button>
+    </div>
+    @if (view() === 'table') {
+      @if (selected().size) {
+        <div class="collection-selection">
+          <button class="button primary" (click)="bulk('sent')" [disabled]="working()">
+            Registrar {{ selected().size }} envios</button
+          ><button class="button secondary" (click)="exportBatch('png')" [disabled]="working()">
+            Baixar imagens em ZIP</button
+          ><button class="button secondary" (click)="exportBatch('pdf')" [disabled]="working()">
+            Baixar PDFs em ZIP</button
+          ><button class="button secondary" (click)="bulk('revoke')" [disabled]="working()">
+            Desativar selecionados
+          </button>
+        </div>
+      }
+      <ng-template #issueActions let-i>
+        <button mat-menu-item class="button secondary" (click)="issueDetails(i)">
+          Ver pessoas e respostas
+        </button>
+        <div class="row-menu-group">
+          <div>
+            <a
+              mat-menu-item
+              class="button secondary"
+              [routerLink]="['/convite', i.token]"
+              target="_blank"
+              rel="noopener"
+              >{{ i.active ? 'Simular confirmação' : 'Consultar link desativado' }}</a
+            >
+            <button
+              mat-menu-item
+              class="button secondary"
+              (click)="export(i.design, 'png', i.recipientLabel)"
+              [disabled]="working()"
+            >
+              Baixar imagem</button
+            ><button
+              mat-menu-item
+              class="button secondary"
+              (click)="export(i.design, 'pdf', i.recipientLabel)"
+              [disabled]="working()"
+            >
+              Baixar PDF
+            </button>
+            @if (i.active) {
+              <button
+                mat-menu-item
+                class="button secondary"
+                (click)="copyLink(i)"
+                [disabled]="working()"
+              >
+                Copiar link de teste</button
+              ><button
+                mat-menu-item
+                class="button secondary"
+                (click)="showQr(i)"
+                [disabled]="working()"
+              >
+                QR de teste</button
+              ><button
+                mat-menu-item
+                class="button secondary"
+                (click)="markSent(i)"
+                [disabled]="working() || !!i.sentAt"
+              >
+                Marcar como enviado</button
+              ><button
+                mat-menu-item
+                class="button secondary"
+                (click)="revoke(i)"
+                [disabled]="working()"
+              >
+                Desativar link
+              </button>
+            }
+          </div>
+        </div>
+      </ng-template>
+      <oc-collection-table
+        label="Convites enviados"
+        [headers]="['Destinatário', 'Modelo', 'Pessoas', 'Situação', 'Criado em', 'Envio']"
+        [rows]="issueRows()"
+        [actions]="issueActions"
+        [selectable]="true"
+        [selected]="selected()"
+        (selectionChange)="selected.set(toSet($event))"
+        [disabled]="working() || store.busy()"
+      />
+      @if (qr()) {
+        <div class="invitation-qr">
+          <img [src]="qr()!.src" alt="QR Code do link de teste local" /><button
+            class="button secondary"
+            (click)="downloadQr()"
+          >
+            Baixar QR de teste</button
+          ><button class="button secondary" (click)="qr.set(null)">Fechar QR</button>
+        </div>
+      }
+    } @else {
+      @for (i of visibleIssues(); track i.id) {
+        <article class="card form-section issued-invitation">
+          <div class="people-row">
+            <div>
+              <h2>{{ i.recipientLabel }}</h2>
+              <p>{{ i.design.title }} · {{ i.recipients.length }} pessoas</p>
+            </div>
+            <span class="people-status">{{
+              !i.active
+                ? 'Desativado'
+                : i.responses.length
+                  ? 'Resposta registrada'
+                  : i.sentAt
+                    ? 'Envio registrado'
+                    : 'Preparado'
+            }}</span>
+          </div>
+          <p class="muted">
+            Criado em {{ date(i.createdAt) }} ·
+            {{ i.sentAt ? 'Enviado em ' + date(i.sentAt) : 'Envio ainda não registrado' }}
+          </p>
+          <details class="optional-details">
+            <summary>Quem está neste convite e respostas</summary>
+            @for (r of i.recipients; track r.guestId) {
+              <p>{{ r.name }} — {{ guestStatus(r.guestId) }}</p>
+            }
+            @for (response of i.responses; track $index) {
+              <p>
+                <strong>Resposta local em {{ date(response.at) }}</strong>
+              </p>
+              @for (a of response.answers; track a.guestId) {
+                <p>
+                  {{ guestName(a.guestId) }}: {{ a.attending ? 'Confirmou' : 'Não comparecerá' }}
+                </p>
+              }
+            }
+          </details>
+          <div class="people-actions">
+            <a
+              class="button primary"
+              [routerLink]="['/convite', i.token]"
+              target="_blank"
+              rel="noopener"
+              >{{ i.active ? 'Simular confirmação' : 'Consultar link desativado' }}</a><button
+              class="button secondary"
+              [disabled]="working()"
+              (click)="export(i.design, 'png', i.recipientLabel)"
+            >
+              Baixar imagem</button
+            ><button
+              class="button secondary"
+              [disabled]="working()"
+              (click)="export(i.design, 'pdf', i.recipientLabel)"
+            >
+              Baixar PDF
+            </button>
+            @if (i.active) {
+              <button class="button secondary" (click)="copyLink(i)" [disabled]="working()">
+                Copiar link de teste</button
+              ><button class="button secondary" (click)="showQr(i)" [disabled]="working()">
+                QR de teste
+              </button>
+              @if (!i.sentAt) {
+                <button class="button secondary" (click)="markSent(i)" [disabled]="store.busy()">
+                  Marcar como enviado
+                </button>
+              }
+              <button class="button secondary" (click)="revoke(i)" [disabled]="store.busy()">
+                Desativar link
+              </button>
+            }
+          </div>
+          @if (qr()?.id === i.id) {
+            <div class="invitation-qr">
+              <img [src]="qr()!.src" alt="QR Code do link de teste local" />
+              <p>
+                QR apenas para teste. Outro dispositivo não tem acesso aos dados locais deste
+                navegador.
+              </p>
+              <button class="button secondary" (click)="downloadQr()">Baixar QR de teste</button>
+            </div>
+          }
+        </article>
+      } @empty {
+        <section class="card empty-state">
+          <h2>Nenhum convite encontrado</h2>
+          <p>Crie um convite para uma pessoa ou família, ou ajuste o filtro.</p>
+        </section>
+      }
+    }
+  } @else if (section() === 'whatsapp') {
+    <oc-whatsapp-batch />
+    <section class="card form-section">
+      <h2>Prepare o convite e a mensagem</h2>
+      <p class="muted">
+        Escolha a pessoa e o modelo. Prepare o arquivo para compartilhar ou abra somente o texto no
+        WhatsApp. Você revisa e confirma o envio no aplicativo.
+      </p>
+      <div class="people-form">
+        <oc-guest-picker
+          class="full"
+          [ngModel]="personId()"
+          (ngModelChange)="personId.set($event)"
+          [guests]="store.people.ledger()?.guests ?? []"
+          [families]="store.people.ledger()?.families ?? []"
+        />
+        <label
+          >O que deseja enviar?<select
+            [ngModel]="action()"
+            (ngModelChange)="action.set($event); messageTemplate.set(null)"
+          >
+            @for (a of actions; track a.id) {
+              <option [value]="a.id">{{ a.label }}</option>
+            }
+          </select></label
+        >
+        @if (designs().length) {
+          <label
+            >Qual modelo de convite deseja enviar?<select
+              [ngModel]="messageDesign()!.id"
+              (ngModelChange)="designId.set($event)"
+            >
+              @for (d of designs(); track d.id) {
+                <option [value]="d.id">{{ d.title }}</option>
+              }
+            </select></label
+          >
+        }
+        <details class="full optional-details">
+          <summary>Personalizar o texto da mensagem</summary>
+          <label
+            >Texto padrão<textarea
+              [ngModel]="text()"
+              (ngModelChange)="messageTemplate.set($event)"
+              rows="5"
+              maxlength="2500"
+            ></textarea>
+          </label>
+          <p class="muted">
+            Use {{ '{nome}' }} para a pessoa, {{ '{noivos}' }}, {{ '{data}' }}, {{ '{hora}' }},
+            {{ '{local}' }}, {{ '{endereco}' }} ou {{ '{mapa}' }}. Não há link público de
+            confirmação nesta fase.
+          </p>
+          <button class="button secondary" (click)="saveMessage()" [disabled]="working()">
+            Salvar texto desta ação
+          </button>
+        </details>
+        @if (person()) {
+          <label class="full"
+            >Mensagem que será aberta no WhatsApp<textarea
+              readonly
+              [value]="renderedMessage()"
+              rows="6"
+              (click)="$any($event.target).select()"
+            ></textarea>
+          </label>
+        }
+      </div>
+      @if (person() && designs().length && action() === 'invite') {
+        <section class="whatsapp-invite-card" aria-label="Enviar o modelo do convite">
+          <h3>Envie o convite escolhido</h3>
+          <div class="whatsapp-invite-grid">
+            <oc-invitation-preview [design]="messageDesign()!" [recipient]="person()!.name" />
+            <div>
+              <p>
+                Este é o modelo personalizado para {{ person()!.name }}. Prepare o arquivo para
+                compartilhar ou anexar à conversa.
+              </p>
+              <label class="invitation-filter"
+                >Formato do convite<select
+                  [ngModel]="shareFormat()"
+                  (ngModelChange)="shareFormat.set($event)"
+                >
+                  <option value="png">Imagem PNG — aparece como imagem</option>
+                  <option value="pdf">PDF — enviar como documento</option>
+                </select></label
+              >
+              <div class="people-actions">
+                <button class="button primary" [disabled]="working()" (click)="prepareShare()">
+                  {{ working() ? 'Preparando…' : 'Preparar convite para envio' }}
+                </button>
+              </div>
+              @if (prepared()) {
+                @if (canSharePrepared()) {
+                  <p>
+                    Na janela de compartilhamento, escolha o WhatsApp, se disponível, e depois a
+                    conversa da pessoa. Confira a mensagem no aplicativo.
+                  </p>
+                  <button class="button primary" [disabled]="working()" (click)="sharePrepared()">
+                    Compartilhar convite e mensagem
+                  </button>
+                } @else {
+                  <p>
+                    Este navegador não oferece compartilhamento direto de arquivos. Baixe o convite
+                    e anexe na conversa do WhatsApp.
+                  </p>
+                }
+                <div class="people-actions">
+                  <button
+                    class="button secondary"
+                    (click)="downloadPrepared()"
+                    [disabled]="working()"
+                  >
+                    Baixar convite para anexar
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        </section>
+      } @else if (action() === 'invite' && !designs().length) {
+        <p class="feedback">
+          Para enviar o modelo visual, primeiro
+          <a routerLink="/convites/modelos">crie e salve um convite</a>.
+        </p>
+      }
+      @if (person() && !whatsappLink()) {
+        <p class="feedback error">
+          Esta pessoa não tem telefone/WhatsApp válido. Atualize o cadastro em
+          <a routerLink="/pessoas/convidados">Convidados</a>.
+        </p>
+      }
+      <div class="people-actions">
+        @if (whatsappLink()) {
+          <a
+            class="button primary"
+            [href]="whatsappLink()"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{
+              action() === 'invite' ? 'Abrir WhatsApp só com texto' : 'Abrir WhatsApp com mensagem'
+            }}</a
+          >
+        }
+        <button
+          class="button secondary"
+          [disabled]="!renderedMessage() || working()"
+          (click)="copyMessage()"
+        >
+          Copiar mensagem
+        </button>
+      </div>
+      <p class="muted">
+        O atalho do WhatsApp abre a conversa com o texto preenchido, sem anexar o arquivo. Para
+        incluir a imagem ou o PDF, use as opções acima. Depois registre o envio em Convites
+        enviados. O link de teste local não deve ser enviado como confirmação pública.
+      </p>
+    </section>
+  } @else if (section() === 'confirmacoes') {
+    <section class="people-stats">
+      <div class="card">
+        <small>Confirmados</small><strong>{{ store.people.summary().confirmed }}</strong>
+      </div>
+      <div class="card">
+        <small>Sem resposta</small><strong>{{ store.people.summary().pending }}</strong>
+      </div>
+      <div class="card">
+        <small>Não comparecerão</small><strong>{{ store.people.summary().declined }}</strong>
+      </div>
+      <div class="card">
+        <small>Convites criados</small><strong>{{ store.ledger()?.issues?.length ?? 0 }}</strong>
+      </div>
+    </section>
+    <div class="people-toolbar">
+      <label
+        >Pesquisar convidado<input
+          type="search"
+          [ngModel]="query()"
+          (ngModelChange)="query.set($event); page.set(1)" /></label
+      ><label
+        >Confirmação<select [ngModel]="filter()" (ngModelChange)="filter.set($event); page.set(1)">
+          <option value="">Todas</option>
+          <option value="confirmed">Confirmados</option>
+          <option value="pending">Sem resposta</option>
+          <option value="declined">Não comparecerão</option>
+        </select></label
+      >
+    </div>
+    <div class="collection-toolbar">
+      <button class="button secondary" (click)="setView('table')">Tabela compacta</button
+      ><button class="button secondary" (click)="setView('cards')">Cartões</button>
+    </div>
+    @if (view() === 'table') {
+      <oc-collection-table
+        label="Confirmações"
+        [headers]="['Nome', 'Família', 'Confirmação', 'Contato', 'Convite enviado']"
+        [rows]="guestRows()"
+      />
+    } @else {
+      @for (g of visibleGuests(); track g.id) {
+        <article class="card people-person people-row">
+          <div>
+            <h2>{{ g.name }}</h2>
+            <p class="muted">{{ family(g.familyId) }}{{ g.child ? ' · Criança' : '' }}</p>
+          </div>
+          <span class="people-status" [class.confirmed]="g.status === 'Confirmado'">{{
+            g.status
+          }}</span>
+        </article>
+      } @empty {
+        <p class="card form-section">Nenhum convidado neste filtro.</p>
+      }
+    }
+    <p class="muted">
+      As respostas da simulação local aparecem aqui e em Convidados. Para testar, abra um convite em
+      <a routerLink="/convites/enviados">Convites enviados</a>.
+    </p>
+  }
+  @if (view() === 'cards' && (section() === 'enviados' || section() === 'confirmacoes')) {
+    <oc-list-pager
+      [page]="page()"
+      [size]="pageSize()"
+      [total]="rows()"
+      (pageChange)="page.set($event)"
+      (sizeChange)="pageSize.set($event)"
+    />
+  }
+}

@@ -1,0 +1,149 @@
+<section class="card form-section">
+  <h2>Relatórios financeiros</h2>
+  <div class="finance-filters">
+    <div class="form-field">
+      <label for="reportKind">Relatório</label
+      ><select id="reportKind" [ngModel]="kind()" (ngModelChange)="kind.set($event); reset()">
+        @for (k of kinds; track k) {
+          <option [value]="k">{{ names[k] }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="reportCategory">Categoria</label
+      ><select
+        id="reportCategory"
+        [ngModel]="category()"
+        (ngModelChange)="category.set($event); reset()"
+      >
+        <option value="">Todas</option>
+        @for (c of finance.ledger()?.categories; track c.id) {
+          <option [value]="c.id">{{ c.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="reportStatus">Situação da despesa</label
+      ><select
+        id="reportStatus"
+        [disabled]="kind() === 'budget'"
+        [ngModel]="status()"
+        (ngModelChange)="status.set($event); reset()"
+      >
+        <option value="">Todas</option>
+        @for (
+          s of ['Planejada', 'Contratada', 'Parcialmente paga', 'Paga', 'Vencida', 'Cancelada'];
+          track s
+        ) {
+          <option>{{ s }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="reportFrom">De</label
+      ><oc-date-picker
+        [iso]="true"
+        label="De"
+        inputId="reportFrom"
+        [disabled]="kind() === 'budget'"
+        [ngModel]="from()"
+        (ngModelChange)="from.set($event); reset()"
+      />
+    </div>
+    <div class="form-field">
+      <label for="reportTo">Até</label
+      ><oc-date-picker
+        [iso]="true"
+        label="Até"
+        inputId="reportTo"
+        [disabled]="kind() === 'budget'"
+        [ngModel]="to()"
+        (ngModelChange)="to.set($event); reset()"
+      />
+    </div>
+  </div>
+  <div class="card-actions">
+    <button class="button primary" [disabled]="exporting() || !!invalidPeriod()" (click)="pdf()">
+      {{ exporting() ? 'Gerando PDF…' : 'Baixar PDF' }}</button><button
+      class="button secondary"
+      (click)="csv()"
+      [disabled]="!!invalidPeriod()"
+    >
+      Baixar planilha
+    </button>
+  </div>
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (invalidPeriod()) {
+    <p class="feedback error" role="alert">{{ invalidPeriod() }}</p>
+  }
+</section>
+<section class="card form-section report-preview">
+  <h2>{{ report().title }}</h2>
+  <p>
+    <strong>{{ report().totalLabel }}: {{ money(report().totalCents) }}</strong>
+  </p>
+  <p class="muted">{{ report().notes }}</p>
+  <section class="report-kpis" aria-label="Resumo acumulado das despesas selecionadas">
+    @for (item of report().summary; track item.label) {
+      <div>
+        <small>{{ item.label }}</small><strong>{{ item.value }}</strong>
+      </div>
+    }
+  </section>
+  <div class="report-table" role="region" aria-label="Prévia do relatório" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          @for (col of report().columns; track col) {
+            <th>{{ col }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track $index) {
+          <tr>
+            @for (cell of row; track $index) {
+              <td [attr.data-label]="report().columns[$index]">{{ cell }}</td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="report().columns.length">
+              Nenhum registro para os filtros selecionados.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <button class="button secondary" [disabled]="page() === 0" (click)="page.set(page() - 1)">
+      Anterior</button
+    ><span>Página {{ page() + 1 }} · {{ report().rows.length }} registros</span
+    ><button
+      class="button secondary"
+      [disabled]="(page() + 1) * 15 >= report().rows.length"
+      (click)="page.set(page() + 1)"
+    >
+      Próxima
+    </button>
+  </div>
+</section>
+@if (report().sections?.length) {
+  <div class="report-details-heading">
+    <h2>Detalhamento e histórico</h2>
+    <button class="button secondary" (click)="expanded.set(!expanded())">
+      {{ expanded() ? 'Recolher detalhes' : 'Expandir detalhes' }}
+    </button>
+  </div>
+  @for (section of report().sections; track $index) {
+    <details class="card form-section report-detail" [open]="expanded()">
+      <summary>
+        {{ section.title }} <span class="muted">· {{ section.rows.length }} registros</span>
+      </summary>
+      <oc-report-table [section]="section" />
+    </details>
+  }
+}

@@ -1,0 +1,115 @@
+<a class="skip-link" href="#content">Pular para o conteúdo</a>
+<div class="app-shell" [class.compact]="prefs.collapsed()">
+  @if (mobile()) {
+    <button class="scrim" aria-label="Fechar menu" (click)="mobile.set(false)"></button>
+  }
+  <aside class="sidebar" [class.mobile-open]="mobile()" aria-label="Menu principal">
+    <a routerLink="/dashboard" class="brand"
+      ><span class="brand-mark">♡</span
+      ><span class="brand-text"
+        >organiza<span>casamento</span><small>CADA DETALHE, UM SIM.</small></span
+      ></a
+    >
+    <div class="workspace">
+      <span class="avatar"><oc-icon name="favorite_border" /></span>
+      <div class="workspace-selection">
+        @if (weddings.weddings().length) {
+          <label for="active-wedding">Casamento selecionado</label
+          ><select
+            id="active-wedding"
+            [ngModel]="weddings.active()?.id ?? ''"
+            #weddingSelector="ngModel"
+            [disabled]="weddings.loading() || weddings.busy()"
+            (ngModelChange)="selectWedding($event, weddingSelector)"
+          >
+            @for (w of weddings.weddings(); track w.id) {
+              <option [value]="w.id">{{ w.name }}</option>
+            }
+          </select>
+        } @else {
+          <strong>Seu casamento</strong
+          ><small>{{ weddings.loading() ? 'Carregando…' : 'Comece uma nova história' }}</small>
+        }
+        <a routerLink="/casamentos" (click)="mobile.set(false)">Gerenciar casamentos</a>
+      </div>
+    </div>
+    <nav aria-label="Seções do casamento">
+      @for (item of nav; track item.path) {
+        <a
+          class="nav-heading simple-nav-link"
+          [attr.aria-label]="item.title"
+          [title]="item.title"
+          [routerLink]="menuDestination(item.path)"
+          [class.selected]="selectedPath(item.path)"
+          [attr.aria-current]="selectedPath(item.path) ? 'page' : null"
+          (click)="mobile.set(false)"
+        >
+          <oc-icon [name]="item.icon" /><span>{{ item.title }}</span>
+        </a>
+      }
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="local-note">
+        <oc-icon name="shield" />
+        <div>
+          <strong>Seu planejamento, com você</strong><small>Dados salvos neste navegador.</small>
+        </div>
+      </div>
+      <button
+        class="collapse-button"
+        [disabled]="!prefs.ready()"
+        (click)="prefs.toggleSidebar()"
+        [attr.aria-label]="prefs.collapsed() ? 'Expandir menu' : 'Recolher menu'"
+      >
+        <oc-icon name="left_panel_close" /><span>Recolher menu</span>
+      </button>
+    </div>
+  </aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div class="breadcrumb">
+        <button
+          mat-icon-button
+          class="mobile-toggle"
+          aria-label="Abrir menu"
+          (click)="mobile.set(true)"
+        >
+          <oc-icon name="menu" /></button
+        ><span>{{ pageTitle() }} / {{ weddings.active()?.name ?? 'OrganizaCasamento' }}</span>
+      </div>
+      <div class="header-actions">
+        <span class="local-badge"><i></i> Ambiente local</span
+        ><button
+          mat-icon-button
+          [disabled]="!prefs.ready()"
+          [attr.aria-label]="prefs.dark() ? 'Ativar tema claro' : 'Ativar tema escuro'"
+          (click)="prefs.toggleTheme()"
+        >
+          <oc-icon [name]="prefs.dark() ? 'light_mode' : 'dark_mode'" /></button
+        ><button
+          mat-icon-button
+          aria-label="Informações sobre os dados locais"
+          (click)="info.set(!info())"
+        >
+          <oc-icon name="info" /></button
+        ><a class="avatar small" routerLink="/casamentos" aria-label="Meus casamentos"
+          ><oc-icon name="favorite_border"
+        /></a>
+      </div>
+    </header>
+    @if (info()) {
+      <div class="notice" role="status">
+        Os dados ficam apenas neste navegador e podem ser perdidos ao limpar os dados do site.
+        Backup e sincronização serão implementados nas próximas etapas.
+      </div>
+    }
+    @if (prefs.error()) {
+      <div class="notice error" role="alert">{{ prefs.error() }}</div>
+    }
+    @if (selectionError()) {
+      <div class="notice error" role="alert">{{ selectionError() }}</div>
+    }
+    <main id="content" tabindex="-1"><router-outlet /></main>
+    <footer>Feito para celebrar o que importa.<span>OrganizaCasamento</span></footer>
+  </div>
+</div>

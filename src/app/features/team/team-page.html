@@ -1,0 +1,265 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">QUEM FAZ O GRANDE DIA ACONTECER</div>
+    <h1>{{ section() === 'escalas' ? 'Escalas de trabalho' : 'Equipe de trabalho' }}</h1>
+    <p class="muted">{{ store.weddings.active()?.name }}</p>
+  </div>
+</div>
+@if (!store.weddings.active()) {
+  <section class="card empty-state">
+    <h2>Selecione um casamento</h2>
+    <a class="button primary" routerLink="/casamentos">Meus casamentos</a>
+  </section>
+} @else if (store.loading() || store.finance.loading()) {
+  <p role="status">Carregando equipe…</p>
+} @else {
+  @if (error() || store.error()) {
+    <p class="feedback error" role="alert">
+      {{ error() || store.error() }}
+      <button class="button secondary" (click)="store.refresh()">Atualizar dados</button>
+    </p>
+  }
+  @if (message()) {
+    <p class="feedback success" role="status">{{ message() }}</p>
+  }
+  <section class="people-stats">
+    <div class="card">
+      <small>Profissionais</small><strong>{{ store.summary().professionals }}</strong>
+    </div>
+    <div class="card">
+      <small>A confirmar</small><strong>{{ store.summary().unconfirmed }}</strong>
+    </div>
+    <div class="card">
+      <small>Escalas de hoje</small><strong>{{ store.summary().today }}</strong>
+    </div>
+    <div class="card">
+      <small>Funções na equipe</small><strong>{{ roles().length }}</strong>
+    </div>
+  </section>
+  <nav class="people-tabs" aria-label="Equipe">
+    <a routerLink="/equipe/profissionais" [class.active]="section() === 'profissionais'"
+      >Profissionais</a
+    ><a routerLink="/equipe/escalas" [class.active]="section() === 'escalas'">Escalas e presença</a
+    ><a routerLink="/fornecedores/cadastro">Fornecedores</a>
+  </nav>
+  <div class="people-toolbar">
+    <label
+      >Buscar
+      {{
+        section() === 'escalas'
+          ? 'por profissional, local ou tarefa'
+          : 'por nome, função, empresa ou contato'
+      }}<input type="search" [ngModel]="query()" (ngModelChange)="query.set($event)"
+    /></label>
+    @if (section() === 'profissionais') {
+      <button class="button primary" (click)="edit()">Novo profissional</button>
+    } @else {
+      <button class="button primary" (click)="shift()" [disabled]="!store.summary().professionals">
+        Nova escala
+      </button>
+    }
+  </div>
+  <div class="collection-toolbar">
+    <label
+      >Situação<select [ngModel]="status()" (ngModelChange)="status.set($event)">
+        <option value="">Todas</option>
+        @for (s of statuses(); track s[0]) {
+          <option [value]="s[0]">{{ s[1] }}</option>
+        }
+      </select></label
+    >
+    @if (section() === 'profissionais') {
+      <label
+        >Função<select [ngModel]="role()" (ngModelChange)="role.set($event)">
+          <option value="">Todas</option>
+          @for (r of roles(); track r) {
+            <option>{{ r }}</option>
+          }
+        </select></label
+      >
+    }
+    <button class="button primary" (click)="clear()">Limpar filtros</button
+    ><button class="button secondary" (click)="export()">Baixar lista do filtro</button>
+  </div>
+  @if (section() === 'profissionais') {
+    <p class="muted">
+      Equipe incluída em contrato de fornecedor não gera outra despesa. Pagamentos individuais são
+      acompanhados na despesa vinculada, sem marcar “pago” manualmente neste cadastro.
+    </p>
+    @if (selected().size) {
+      <div class="collection-selection">
+        <strong>{{ selected().size }} profissionais selecionados</strong
+        ><button
+          class="button primary"
+          [disabled]="store.busy()"
+          (click)="shift(undefined, undefined, selectedIds())"
+        >
+          Criar escala para os selecionados
+        </button>
+      </div>
+    }
+    <ng-template #professionalActions let-p
+      ><button mat-menu-item class="button secondary" (click)="edit(p)">Editar profissional</button>
+      <div class="row-menu-group">
+        <div>
+          <button mat-menu-item class="button secondary" (click)="details(p)">Ver dados</button
+          ><button
+            mat-menu-item
+            class="button secondary"
+            (click)="shift(undefined, p.id)"
+            [disabled]="p.status === 'unavailable'"
+          >
+            Criar escala
+          </button>
+          @if (p.expenseId) {
+            <a
+              mat-menu-item
+              class="button primary"
+              [routerLink]="['/financeiro/despesas', p.expenseId]"
+              >Abrir despesa individual</a
+            >
+          } @else if (p.paymentMode === 'individual') {
+            <a
+              mat-menu-item
+              class="button primary"
+              routerLink="/financeiro/despesas/nova"
+              [queryParams]="{ profissional: p.id }"
+              >Criar despesa individual</a
+            >
+          }
+          @if (p.paymentMode === 'supplier' && p.supplierId) {
+            <a
+              mat-menu-item
+              class="button secondary"
+              routerLink="/fornecedores/pagamentos"
+              [queryParams]="{ fornecedor: p.supplierId }"
+              >Pagamentos do fornecedor</a
+            >
+          }
+          <button
+            mat-menu-item
+            class="button secondary"
+            (click)="remove('professional', p.id, p.name)"
+          >
+            Excluir profissional
+          </button>
+        </div>
+      </div></ng-template
+    >
+    <oc-collection-table
+      label="Profissionais da equipe"
+      [headers]="[
+        'Nome',
+        'Função',
+        'Fornecedor / empresa',
+        'Contato',
+        'Situação',
+        'Valor combinado',
+        'Pagamento',
+        'Próxima escala',
+      ]"
+      [rows]="professionalRows()"
+      [actions]="professionalActions"
+      [selectable]="true"
+      [selected]="selected()"
+      (selectionChange)="selected.set(toSet($event))"
+      [disabled]="store.busy()"
+    />
+    <details class="optional-details">
+      <summary>Quantidade de profissionais por função</summary>
+      <oc-collection-table
+        label="Equipe por função"
+        [headers]="['Função', 'Total', 'Confirmados']"
+        [rows]="roleRows()"
+      />
+    </details>
+  } @else {
+    <div class="people-form">
+      <label
+        >Escalas a partir de<oc-date-picker
+          [iso]="true"
+          label="Escalas a partir de"
+          [ngModel]="from()"
+          (ngModelChange)="from.set($event)" /></label
+      ><label
+        >Escalas até<oc-date-picker
+          [iso]="true"
+          label="Escalas até"
+          [ngModel]="to()"
+          (ngModelChange)="to.set($event)"
+      /></label>
+    </div>
+    <ng-template #shiftActions let-s
+      ><button mat-menu-item class="button secondary" (click)="expandedShift.set(s.id)">
+        Ver tarefas e presença
+      </button>
+      <div class="row-menu-group">
+        <div>
+          <button mat-menu-item class="button secondary" (click)="shift(s)">Editar escala</button>
+          @if (s.status !== 'cancelled' && !s.arrivedAt) {
+            <button mat-menu-item class="button primary" (click)="presence(s, 'arrival')">
+              Registrar chegada</button
+            ><button mat-menu-item class="button secondary" (click)="cancel(s)">
+              Cancelar escala
+            </button>
+          }
+          @if (s.arrivedAt && !s.leftAt && s.status !== 'cancelled') {
+            <button mat-menu-item class="button primary" (click)="presence(s, 'departure')">
+              Registrar saída
+            </button>
+          }
+          @if (!s.arrivedAt) {
+            <button
+              mat-menu-item
+              class="button secondary"
+              (click)="remove('shift', s.id, professionalName(s.professionalId))"
+            >
+              Excluir escala
+            </button>
+          }
+        </div>
+      </div></ng-template
+    >
+    <oc-collection-table
+      label="Escalas de trabalho"
+      [headers]="[
+        'Profissional',
+        'Início',
+        'Término',
+        'Duração',
+        'Local',
+        'Situação',
+        'Chegada real',
+        'Saída real',
+        'Tarefas',
+      ]"
+      [rows]="shiftRows()"
+      [actions]="shiftActions"
+    />
+    @if (currentShift(); as s) {
+      <section class="card form-section">
+        <div class="people-row">
+          <h2>{{ professionalName(s.professionalId) }}</h2>
+          <button class="button secondary" (click)="expandedShift.set('')">Fechar detalhes</button>
+        </div>
+        <p>
+          {{ datetime(s.start) }} → {{ datetime(s.end) }} · {{ s.location || 'Local a definir' }}
+        </p>
+        <p>Chegada: {{ datetime(s.arrivedAt) }} · Saída: {{ datetime(s.leftAt) }}</p>
+        <p class="muted">{{ s.notes }}</p>
+        @for (t of tasks(s.tasks); track t) {
+          <label class="shift-task"
+            ><input
+              type="checkbox"
+              [checked]="s.completedTasks.includes(t)"
+              [disabled]="store.busy() || s.status === 'cancelled'"
+              (change)="task(s, t, $any($event.target).checked)"
+            />{{ t }}</label
+          >
+        } @empty {
+          <p class="muted">Nenhuma tarefa atribuída a esta escala.</p>
+        }
+      </section>
+    }
+  }
+}

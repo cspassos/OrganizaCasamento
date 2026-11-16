@@ -1,0 +1,288 @@
+﻿<h2 mat-dialog-title>{{ title }}</h2>
+<mat-dialog-content>
+  @if (data.kind === 'supplier') {
+    <p>
+      Este cadastro guarda o contato. Valores, parcelas e pagamentos ficam em
+      <strong>Gastos e pagamentos</strong>.
+    </p>
+  }
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (savedCount()) {
+    <p class="feedback success" role="status">
+      {{ savedCount() }} cadastro(s) salvo(s). Preencha o próximo ou conclua.
+    </p>
+  }
+  <form class="people-form" [formGroup]="form" id="supplier-entity-form" (ngSubmit)="save()">
+    <fieldset class="people-form full editor-fields" [disabled]="saving()">
+      @if (data.kind === 'review') {
+        <p class="full">{{ form.controls.name.value }}</p>
+        <label
+          >Nota<select formControlName="rating">
+            <option [ngValue]="0">Ainda não avaliado</option>
+            <option [ngValue]="1">1 — Muito insatisfeito</option>
+            <option [ngValue]="2">2 — Insatisfeito</option>
+            <option [ngValue]="3">3 — Regular</option>
+            <option [ngValue]="4">4 — Satisfeito</option>
+            <option [ngValue]="5">5 — Muito satisfeito</option>
+          </select></label
+        >
+        <label class="full"
+          >Sua avaliação<textarea formControlName="review" rows="4" maxlength="2000"></textarea>
+        </label>
+      } @else {
+        @if (data.kind !== 'quote') {
+          <label class="full"
+            >{{ data.kind === 'supplier' ? 'Nome do fornecedor' : 'Nome do profissional' }} *<input
+              formControlName="name"
+              maxlength="180"
+          /></label>
+        }
+        @if (data.kind === 'supplier') {
+          <label
+            >Categoria *<select [formControl]="categoryChoice" (change)="changeCategory()">
+              @for (c of categories(); track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+              <option value="__custom">Adicionar outra categoria…</option>
+            </select>
+          </label>
+          @if (categoryChoice.value === '__custom') {
+            <label class="full"
+              >Nome da nova categoria *<input
+                formControlName="category"
+                maxlength="100"
+                placeholder="Ex.: iluminação cênica"
+              />
+              @if (form.controls.category.invalid && form.controls.category.touched) {
+                <small class="field-error">Informe o nome da categoria.</small>
+              }
+            </label>
+          }
+          <label class="full"
+            >Serviço oferecido<input
+              formControlName="service"
+              maxlength="300"
+              placeholder="Ex.: fotografia da cerimônia e recepção"
+          /></label>
+        } @else {
+          <oc-search-picker
+            class="full"
+            formControlName="supplierId"
+            [label]="
+              data.kind === 'quote' ? 'Fornecedor *' : 'Fornecedor / empresa responsável (opcional)'
+            "
+            [required]="data.kind === 'quote'"
+            [options]="supplierOptions()"
+          />
+        }
+        @if (data.kind === 'professional') {
+          <label
+            >Função *<select [formControl]="roleChoice" (change)="changeRole()">
+              @for (r of roles(); track r) {
+                <option [value]="r">{{ r }}</option>
+              }
+              <option value="__custom">Adicionar outra função…</option>
+            </select></label
+          >
+          @if (roleChoice.value === '__custom') {
+            <label
+              >Nome da nova função *<input
+                formControlName="role"
+                maxlength="100"
+                placeholder="Ex.: intérprete de Libras"
+              />
+              @if (form.controls.role.invalid && form.controls.role.touched) {
+                <small class="field-error">Informe o nome da função.</small>
+              }
+            </label>
+          }
+          <label
+            >Situação<select formControlName="status">
+              @for (s of statuses; track s[0]) {
+                <option [value]="s[0]">{{ s[1] }}</option>
+              }
+            </select></label
+          >
+        }
+        @if (data.kind !== 'quote') {
+          <label
+            >WhatsApp<input
+              ocPhone
+              type="tel"
+              formControlName="whatsapp"
+              placeholder="(11) 99999-8888"
+          /></label>
+          <details class="full optional-details">
+            <summary>Outros contatos (opcional)</summary>
+            <div class="people-form">
+              <label
+                >Telefone<input
+                  ocPhone
+                  type="tel"
+                  formControlName="phone"
+                  placeholder="(11) 3456-7890"
+              /></label>
+              <label
+                >E-mail<input
+                  type="email"
+                  formControlName="email"
+                  placeholder="nome@empresa.com"
+                  maxlength="254"
+              /></label>
+              @if (data.kind === 'supplier') {
+                <label>Empresa<input formControlName="company" maxlength="180" /></label>
+              }
+            </div>
+          </details>
+        }
+        @if (data.kind === 'supplier') {
+          <label
+            >Situação<select formControlName="status">
+              @for (s of statuses; track s[0]) {
+                <option [value]="s[0]">{{ s[1] }}</option>
+              }
+            </select></label
+          >
+          <small class="full muted"
+            >“Já recebi o preço” significa que o fornecedor informou o valor, mas você ainda não
+            fechou com ele.</small
+          >
+          <details class="full optional-details">
+            <summary>Anexar documento (opcional)</summary>
+            <oc-attachment [value]="attachment" (changed)="file($event)" />
+          </details>
+        }
+        @if (data.kind === 'quote') {
+          <label class="full"
+            >Serviço orçado *<input
+              formControlName="service"
+              maxlength="200"
+              placeholder="Ex.: fotografia por 8 horas"
+          /></label>
+          <label>Valor da proposta (R$) *<input ocCurrency formControlName="amount" /></label>
+          <label
+            >Situação<select formControlName="status">
+              @for (s of statuses; track s[0]) {
+                <option [value]="s[0]">{{ s[1] }}</option>
+              }
+            </select></label
+          >
+          <label
+            >Validade da proposta<oc-date-picker
+              [iso]="true"
+              label="Validade da proposta"
+              formControlName="validUntil"
+          /></label>
+          <label
+            >Prazo de entrega<oc-date-picker
+              [iso]="true"
+              label="Prazo de entrega"
+              formControlName="deliveryDate"
+          /></label>
+          <label class="full"
+            >Serviços e itens incluídos<textarea
+              formControlName="included"
+              rows="3"
+              maxlength="4000"
+              placeholder="Ex.: 2 fotógrafos, álbum, fotos digitais"
+            ></textarea>
+          </label>
+          <label class="full"
+            >Condições da proposta<textarea
+              formControlName="conditions"
+              rows="2"
+              maxlength="2000"
+              placeholder="Ex.: entrada de 20%, restante em 4 parcelas"
+            ></textarea>
+          </label>
+          <details class="full optional-details">
+            <summary>Anexar proposta (opcional)</summary>
+            <oc-attachment [value]="attachment" (changed)="file($event)" />
+          </details>
+        }
+        @if (data.kind === 'professional') {
+          <label
+            >Como será o pagamento?<select
+              formControlName="paymentMode"
+              [attr.aria-readonly]="lockedPayment"
+            >
+              <option value="undecided">A definir / sem custo informado</option>
+              <option value="supplier">Incluído no contrato do fornecedor</option>
+              <option value="individual">Pagamento individual</option>
+            </select></label
+          >
+          <label
+            >Valor combinado (R$)<input
+              ocCurrency
+              formControlName="amount"
+              [readOnly]="lockedPayment"
+          /></label>
+          @if (form.controls.paymentMode.value === 'supplier') {
+            <p class="full muted">
+              Este valor é apenas uma referência. O pagamento será acompanhado no contrato do
+              fornecedor, sem criar outra despesa por profissional.
+            </p>
+          }
+          @if (form.controls.paymentMode.value === 'individual') {
+            <p class="full muted">
+              Você pode vincular uma despesa já contratada do mesmo valor. Se ainda não tiver uma,
+              salve o profissional e use “Criar despesa” na lista. Salvar este cadastro não registra
+              pagamento.
+            </p>
+            @if (!lockedPayment) {
+              <oc-search-picker
+                class="full"
+                label="Despesa individual existente (opcional)"
+                placeholder="Buscar despesa pelo nome"
+                formControlName="expenseId"
+                [options]="expenseOptions()"
+              />
+            } @else {
+              <p class="full muted">
+                Despesa vinculada. Consulte o Financeiro para pagamentos ou ajustes; o vínculo e o
+                valor serão preservados.
+              </p>
+            }
+          }
+          <details class="full optional-details">
+            <summary>Empresa, responsabilidades e observações</summary>
+            <div class="people-form">
+              <label class="full"
+                >Empresa (caso não esteja cadastrada como fornecedor)<input
+                  formControlName="company"
+                  maxlength="180" /></label
+              ><label class="full"
+                >Responsabilidades<textarea
+                  formControlName="responsibilities"
+                  rows="3"
+                  maxlength="4000"
+                ></textarea></label
+              ><label class="full"
+                >Observações<textarea formControlName="notes" rows="3" maxlength="4000"></textarea>
+              </label>
+            </div>
+          </details>
+        } @else {
+          <label class="full"
+            >Observações<textarea formControlName="notes" rows="2" maxlength="4000"></textarea>
+          </label>
+        }
+      }
+    </fieldset>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end"
+  ><button class="button secondary" [disabled]="saving()" (click)="cancel()">
+    {{ savedCount() ? 'Concluir' : 'Cancelar' }}
+  </button>
+  @if (!source && data.kind !== 'review') {
+    <button class="button secondary" [disabled]="saving()" (click)="save(true)">
+      Salvar e adicionar outro
+    </button>
+  }
+  <button class="button primary" type="submit" form="supplier-entity-form" [disabled]="saving()">
+    {{ saving() ? 'Salvando…' : 'Salvar' }}
+  </button></mat-dialog-actions
+>

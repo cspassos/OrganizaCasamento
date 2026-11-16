@@ -1,0 +1,187 @@
+﻿<h2 mat-dialog-title>
+  {{
+    data.kind === 'guest'
+      ? data.guest
+        ? 'Editar convidado'
+        : data.copyFrom
+          ? 'Duplicar integrante'
+          : 'Novo convidado'
+      : data.kind === 'family'
+        ? data.family
+          ? 'Editar família ou grupo'
+          : 'Nova família ou grupo'
+        : data.godparent
+          ? 'Editar participação'
+          : 'Adicionar participação especial'
+  }}
+</h2>
+<mat-dialog-content>
+  @if (data.copyFrom) {
+    <p class="feedback success">
+      Todos os dados de {{ data.copyFrom.name }} foram copiados, exceto o nome. Preencha o novo
+      nome, confira os campos e clique em Salvar para criar a nova pessoa.
+    </p>
+  }
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (data.kind === 'guest') {
+    <p class="muted">
+      Cada pessoa conta uma vez, inclusive crianças e acompanhantes. Campos com * são obrigatórios.
+    </p>
+    <form [formGroup]="guestForm" class="people-form" (ngSubmit)="save()" id="person-form">
+      <label class="full"
+        >Nome completo *<input
+          id="guest-name"
+          formControlName="name"
+          maxlength="180"
+          autocomplete="name"
+          (focus)="data.copyFrom && $any($event.target).select()"
+      /></label>
+      <label
+        >WhatsApp (opcional)<input
+          ocPhone
+          formControlName="whatsapp"
+          type="tel"
+          placeholder="(11) 99999-8888"
+        />
+        @if (guestForm.controls.whatsapp.invalid && guestForm.controls.whatsapp.touched) {
+          <small class="field-error">Informe um número válido com DDD ou deixe vazio.</small>
+        }
+      </label>
+      <label
+        >Confirmação<select formControlName="status">
+          @for (s of statuses; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select></label
+      >
+      <label class="people-check"><input type="checkbox" formControlName="child" />É criança</label>
+      <details class="full optional-details">
+        <summary>Família, acompanhante e outros contatos (opcional)</summary>
+        <div class="people-form">
+          <label class="full"
+            >Família / convite compartilhado<select
+              formControlName="familyId"
+              [attr.disabled]="guestForm.controls.companionOf.value ? '' : null"
+            >
+              <option value="">Individual</option>
+              @for (f of families; track f.id) {
+                <option [value]="f.id">{{ f.name }}</option>
+              }
+            </select></label
+          >
+          <label class="full"
+            >Acompanhante de<select formControlName="companionOf" (change)="hostChanged()">
+              <option value="">Não é acompanhante</option>
+              @for (g of hosts; track g.id) {
+                <option [value]="g.id">{{ g.name }}</option>
+              }
+            </select></label
+          >
+          <label
+            >Telefone<input
+              ocPhone
+              formControlName="phone"
+              type="tel"
+              placeholder="(11) 3456-7890"
+            />
+            @if (guestForm.controls.phone.invalid && guestForm.controls.phone.touched) {
+              <small class="field-error" id="phone-help"
+                >Informe um número válido com DDD ou deixe vazio.</small
+              >
+            }
+          </label>
+          <label
+            >E-mail<input formControlName="email" type="email" placeholder="nome@exemplo.com" />
+            @if (guestForm.controls.email.invalid && guestForm.controls.email.touched) {
+              <small class="field-error" id="email-help"
+                >Informe um e-mail válido ou deixe vazio.</small
+              >
+            }
+          </label>
+          <label class="full"
+            >Observações<textarea formControlName="notes" rows="2"></textarea>
+          </label>
+        </div>
+      </details>
+    </form>
+  } @else if (data.kind === 'family') {
+    <p class="muted">
+      Os integrantes compartilham um convite, mas cada um possui sua própria confirmação.
+    </p>
+    <form [formGroup]="familyForm" class="people-form" (ngSubmit)="save()" id="person-form">
+      <label class="full"
+        >Nome da família ou grupo *<input
+          formControlName="name"
+          maxlength="180"
+          placeholder="Ex.: Família Souza"
+      /></label>
+      <label class="full">Observações<textarea formControlName="notes" rows="4"></textarea></label>
+    </form>
+  } @else {
+    <p class="muted">
+      Escolha uma pessoa da lista de convidados e informe a participação. Ela continua contando uma
+      única vez no casamento. Se o nome não aparecer, adicione a pessoa primeiro na aba Convidados.
+    </p>
+    <form [formGroup]="godparentForm" class="people-form" (ngSubmit)="save()" id="person-form">
+      <oc-guest-picker
+        class="full"
+        formControlName="guestId"
+        [guests]="candidates"
+        [families]="families"
+      />
+      <label
+        >Tipo de participação *<select
+          [formControl]="participationChoice"
+          (change)="changeParticipation()"
+        >
+          @for (type of participationTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+          <option value="__custom">Outra participação</option>
+        </select></label
+      >
+      @if (participationChoice.value === '__custom') {
+        <label
+          >Descreva a participação *<input
+            formControlName="participation"
+            placeholder="Ex.: celebrante"
+        /></label>
+      }
+      @if (participationChoice.value === 'Padrinho' || participationChoice.value === 'Madrinha') {
+        <oc-search-picker
+          class="full"
+          label="Par na cerimônia (opcional)"
+          placeholder="Buscar padrinho ou madrinha pelo nome"
+          clearLabel="Sem par / escolher depois"
+          formControlName="partnerId"
+          [options]="partnerOptions"
+        />
+        <small class="full muted"
+          >Escolha outro padrinho ou madrinha já adicionado em Participações especiais. Se for o
+          primeiro, salve sem par; ao adicionar a outra pessoa, você poderá formar o par.</small
+        >
+      }
+      <label class="full">Observações<textarea formControlName="notes" rows="2"></textarea></label>
+    </form>
+  }
+</mat-dialog-content>
+@if (savedCount()) {
+  <p role="status" class="feedback success">
+    {{ savedCount() }} cadastro(s) salvo(s). Você pode cadastrar o próximo ou concluir.
+  </p>
+}
+<mat-dialog-actions align="end"
+  ><button type="button" class="button secondary" [disabled]="saving()" (click)="cancel()">
+    {{ savedCount() ? 'Concluir' : 'Cancelar' }}
+  </button>
+  @if (!data.guest && !data.family && !data.godparent) {
+    <button type="button" class="button secondary" [disabled]="saving()" (click)="save(true)">
+      Salvar e adicionar outro
+    </button>
+  }
+  <button class="button primary" type="submit" form="person-form" [disabled]="saving()">
+    {{ saving() ? 'Salvando…' : 'Salvar' }}
+  </button></mat-dialog-actions
+>

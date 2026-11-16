@@ -1,0 +1,122 @@
+@if (error()) {
+  <p class="feedback error" role="alert">{{ error() }}</p>
+}
+@if (message()) {
+  <p class="feedback success" role="status">{{ message() }}</p>
+}
+<section class="card form-section">
+  <h2>Orçamento geral</h2>
+  <p class="muted">
+    {{ finance.summary()!.used.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) }}% do
+    orçamento comprometido em contratações.
+  </p>
+  <p class="muted">
+    O orçamento inicial do casamento é o ponto de partida. Aqui você pode atualizar a meta e separar
+    uma reserva para imprevistos.
+  </p>
+  <form [formGroup]="form" (ngSubmit)="budget()">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="budgetTotal">Orçamento geral *</label
+        ><input id="budgetTotal" type="text" ocCurrency formControlName="total" />
+      </div>
+      <div class="form-field">
+        <label for="budgetReserve">Reserva para imprevistos</label
+        ><input id="budgetReserve" type="text" ocCurrency formControlName="reserve" /><small
+          >Opcional: deixe R$ 0,00 se não quiser separar uma reserva.</small
+        >
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="button primary" [disabled]="finance.busy()">Salvar orçamento</button>
+    </div>
+  </form>
+</section>
+<details class="optional-details">
+  <summary>Organizar o orçamento por categoria (opcional)</summary>
+  <section class="card form-section">
+    <h2>{{ editing() ? 'Editar categoria' : 'Nova categoria' }}</h2>
+    <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="categoryName">Nome da categoria *</label
+          ><input id="categoryName" formControlName="name" maxlength="100" />
+        </div>
+        <div class="form-field">
+          <label for="categoryBudget">Orçamento da categoria *</label
+          ><input id="categoryBudget" type="text" ocCurrency formControlName="budget" />
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="button primary" [disabled]="finance.busy()">Salvar categoria</button>
+        @if (editing()) {
+          <button class="button secondary" type="button" (click)="cancelEdit()">
+            Cancelar edição
+          </button>
+        }
+      </div>
+    </form>
+  </section>
+  <section class="card form-section">
+    <h2>Distribuição por categoria</h2>
+    <p class="muted">
+      Alocado: {{ money(allocated()) }} · disponível para distribuir:
+      {{ money(finance.summary()!.budget - finance.summary()!.reserve - allocated()) }}
+    </p>
+    @if (allocated() > finance.summary()!.budget - finance.summary()!.reserve) {
+      <p class="feedback error">
+        A soma das categorias ultrapassa o orçamento disponível após a reserva.
+      </p>
+    }
+    <label class="collection-search"
+      >Buscar categoria<input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)" /></label
+    ><ng-template #categoryActions let-c
+      ><button mat-menu-item class="button secondary" (click)="edit(c)" [disabled]="finance.busy()">
+        Editar {{ c.name }}</button
+      ><button
+        mat-menu-item
+        class="button secondary"
+        (click)="remove(c)"
+        [disabled]="finance.busy()"
+      >
+        Excluir
+      </button></ng-template
+    ><oc-collection-table
+      label="Categorias do orçamento"
+      [headers]="['Categoria', 'Meta', 'Previsto', 'Contratado', 'Situação']"
+      [rows]="tableRows()"
+      [actions]="categoryActions"
+    />
+  </section>
+</details>
+<div class="dashboard-grid">
+  <section class="card form-section">
+    <h2>Contratado por categoria</h2>
+    @if (chartValues().length) {
+      <oc-finance-chart
+        [labels]="chartLabels()"
+        [values]="chartValues()"
+        label="Contratado por categoria"
+      />
+    } @else {
+      <p class="muted">Registre despesas contratadas para visualizar o gráfico.</p>
+    }
+  </section>
+  <section class="card form-section">
+    <h2>Previsto, contratado e pago</h2>
+    <oc-finance-chart
+      type="bar"
+      [labels]="['Previsto', 'Contratado', 'Pago', 'Em aberto']"
+      [values]="[
+        finance.summary()!.planned,
+        finance.summary()!.contracted,
+        finance.summary()!.paid,
+        finance.summary()!.open,
+      ]"
+      label="Resumo financeiro"
+    />
+  </section>
+</div>

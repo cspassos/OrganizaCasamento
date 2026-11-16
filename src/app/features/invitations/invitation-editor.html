@@ -1,0 +1,135 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">UM CONVITE PARA CELEBRAR</div>
+    <h1>Personalizar convite</h1>
+    <p class="muted">Edite os detalhes e acompanhe a prévia.</p>
+  </div>
+  <a class="button secondary" routerLink="/convites/modelos">Voltar aos convites</a>
+</div>
+@if (error()) {
+  <p class="feedback error" role="alert">{{ error() }}</p>
+}
+@if (message()) {
+  <p class="feedback success" role="status">{{ message() }}</p>
+}
+@if (loading()) {
+  <p role="status">Carregando convite…</p>
+} @else if (design(); as d) {
+  <div class="invitation-editor-grid">
+    <form [formGroup]="form" class="card form-section" (ngSubmit)="save()">
+      <div class="people-form">
+        <label class="full"
+          >Nome deste convite *<input
+            formControlName="title"
+            maxlength="100"
+            placeholder="Ex.: Convite da cerimônia"
+        /></label>
+        <label
+          >Modelo<select formControlName="style" (change)="changeStyle()">
+            @for (style of styles; track style) {
+              <option [value]="style">{{ style }}</option>
+            }
+          </select></label
+        >
+        <label
+          >Fonte<select formControlName="font">
+            <option value="serif">Clássica</option>
+            <option value="italic">Clássica em itálico</option>
+            <option value="sans">Moderna</option>
+          </select></label
+        >
+        <label>Nome da noiva *<input formControlName="bride" maxlength="80" /></label
+        ><label>Nome do noivo *<input formControlName="groom" maxlength="80" /></label>
+        <div>
+          <label for="invitation-date">Data do casamento</label
+          ><oc-date-picker
+            inputId="invitation-date"
+            label="Data do casamento"
+            formControlName="date"
+            [iso]="true"
+          />
+        </div>
+        <label>Horário da cerimônia<input type="time" lang="pt-BR" formControlName="time" /></label>
+        <label class="full"
+          >Mensagem do convite<textarea
+            formControlName="message"
+            rows="3"
+            maxlength="240"
+          ></textarea>
+        </label>
+        <label class="full"
+          >Local da cerimônia<input formControlName="venue" maxlength="110"
+        /></label>
+        <label class="full">Endereço<input formControlName="address" maxlength="180" /></label>
+        <details class="full optional-details">
+          <summary>Cores, foto e outros detalhes</summary>
+          <div class="people-form">
+            <label>Cor de fundo<input type="color" formControlName="background" /></label
+            ><label>Cor do texto<input type="color" formControlName="color" /></label
+            ><label>Cor dos detalhes<input type="color" formControlName="accent" /></label>
+            <div class="full">
+              <p>Imagem de fundo (opcional)</p>
+              <label class="button secondary invitation-photo-upload"
+                >{{ form.controls.photo.value ? 'Trocar imagem' : 'Escolher imagem'
+                }}<input
+                  type="file"
+                  aria-label="Imagem de fundo (opcional)"
+                  accept="image/png,image/jpeg,image/webp"
+                  (change)="photo($event)"
+              /></label>
+              <p class="muted">
+                JPG, PNG ou WebP, até 2 MB. A imagem fica suave para facilitar a leitura.
+              </p>
+            </div>
+            <div class="full people-actions">
+              @if (store.weddings.active()?.photo) {
+                <button type="button" class="button secondary" (click)="useWeddingPhoto()">
+                  Usar foto dos noivos
+                </button>
+              }
+              @if (form.controls.photo.value) {
+                <button
+                  type="button"
+                  class="button secondary"
+                  (click)="form.controls.photo.setValue(''); form.markAsDirty()"
+                >
+                  Remover imagem
+                </button>
+              }
+            </div>
+            <label>Local da recepção<input formControlName="reception" maxlength="110" /></label
+            ><label
+              >Horário da recepção<input type="time" lang="pt-BR" formControlName="receptionTime"
+            /></label>
+            <label class="full"
+              >Mensagem final<textarea formControlName="footer" rows="2" maxlength="130"></textarea>
+            </label>
+          </div>
+        </details>
+      </div>
+      <div class="people-actions">
+        <button class="button primary" [disabled]="busy() || store.busy()" type="submit">
+          {{ busy() ? 'Preparando…' : 'Salvar convite' }}</button><a
+          routerLink="/convites/modelos"
+          class="button secondary"
+          >Cancelar</a
+        >
+      </div>
+    </form>
+    <section class="invitation-editor-preview">
+      <h2>Prévia do convite</h2>
+      <oc-invitation-preview [design]="d" />
+      <div class="people-actions">
+        <button class="button secondary" [disabled]="busy()" (click)="export('png')">
+          Baixar imagem PNG</button
+        ><button class="button secondary" [disabled]="busy()" (click)="export('pdf')">
+          Baixar PDF
+        </button>
+      </div>
+      <p class="muted">
+        Convite de 14 × 20 cm. Para confirmar presenças, salve e crie um convite para a pessoa ou
+        família.
+      </p>
+    </section>
+  </div>
+}

@@ -1,0 +1,101 @@
+import { InjectionToken } from '@angular/core';
+import { FinanceLedger } from '../models/finance';
+import { SuppliersLedger } from '../models/suppliers';
+import { IndexedDbRepository, LOCAL_DB_VERSION } from './indexed-db.repository';
+import { emptyLedger, validateLedger } from '../utils/finance';
+import { emptySuppliers, validateSuppliers } from '../utils/suppliers';
+
+export interface PlanningRecords {
+  suppliers: SuppliersLedger;
+  finance: FinanceLedger;
+}
+export interface SuppliersRepository {
+  list(): Promise<SuppliersLedger[]>;
+  update(
+    weddingId: string,
+    action: (suppliers: SuppliersLedger, finance: FinanceLedger) => void,
+    fallback?: FinanceLedger,
+  ): Promise<PlanningRecords>;
+}
+// Both repositories use this transaction so financial edits cannot lose or bypass supplier links.
+export async function updatePlanning(
+  weddingId: string,
+  action: (suppliers: SuppliersLedger, finance: FinanceLedger, existingFinance: boolean) => void,
+  fallback?: FinanceLedger,
+  requireWedding = true,
+): Promise<PlanningRecords> {
+  await new IndexedDbRepository<SuppliersLedger>('suppliers').list();
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('organiza-casamento', LOCAL_DB_VERSION);
+    request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error('Feche as outras abas e tente novamente.'));
+    request.onsuccess = () => {
+      const db = request.result,
+        tx = db.transaction(['suppliers', 'finance', 'weddings', 'preferences'], 'readwrite');
+      const sr = tx.objectStore('suppliers').get(weddingId),
+        fr = tx.objectStore('finance').get(weddingId),
+        wr = tx.objectStore('weddings').get(weddingId),
+        deleted = tx.objectStore('preferences').get(`deleted-wedding:${weddingId}`);
+      let remaining = 4,
+        result: PlanningRecords,
+        failure: unknown;
+      const ready = () => {
+        if (--remaining) return;
+        try {
+          if (deleted.result)
+            throw new Error('Este casamento foi excluído. Volte à lista de casamentos.');
+          if ((requireWedding && !wr.result) || wr.result?.archived)
+            throw new Error('Casamento não encontrado ou arquivado.');
+          const suppliers: SuppliersLedger = structuredClone(
+            sr.result ?? emptySuppliers(weddingId),
+          );
+          const finance: FinanceLedger = structuredClone(
+            fr.result ?? fallback ?? emptyLedger(weddingId),
+          );
+          action(suppliers, finance, !!fr.result);
+          validateLedger(finance);
+          validateSuppliers(suppliers, finance);
+          tx.objectStore('suppliers').put(suppliers);
+          tx.objectStore('finance').put(finance);
+          result = { suppliers, finance };
+        } catch (e) {
+          failure = e;
+          tx.abort();
+        }
+      };
+      sr.onsuccess = ready;
+      fr.onsuccess = ready;
+      wr.onsuccess = ready;
+      deleted.onsuccess = ready;
+      tx.oncomplete = () => {
+        db.close();
+        resolve(result);
+      };
+      tx.onabort = () => {
+        db.close();
+        reject(failure ?? tx.error);
+      };
+      tx.onerror = () => {
+        db.close();
+        reject(failure ?? tx.error);
+      };
+    };
+  });
+}
+export class LocalSuppliersRepository implements SuppliersRepository {
+  private base = new IndexedDbRepository<SuppliersLedger>('suppliers');
+  list() {
+    return this.base.list();
+  }
+  update(
+    weddingId: string,
+    action: (s: SuppliersLedger, f: FinanceLedger) => void,
+    fallback?: FinanceLedger,
+  ) {
+    return updatePlanning(weddingId, action, fallback);
+  }
+}
+export const SUPPLIERS_REPOSITORY = new InjectionToken<SuppliersRepository>('SuppliersRepository', {
+  providedIn: 'root',
+  factory: () => new LocalSuppliersRepository(),
+});

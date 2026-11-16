@@ -1,0 +1,293 @@
+﻿<h2 mat-dialog-title>{{ source ? 'Editar contrato' : 'Novo contrato' }}</h2>
+<mat-dialog-content>
+  @if (issues().length) {
+    <section class="feedback error" role="alert">
+      <strong>Não foi possível salvar. Corrija os campos abaixo:</strong>
+      <ul>
+        @for (issue of issues(); track $index) {
+          <li>
+            <button
+              type="button"
+              class="contract-validation-link"
+              (click)="focusField(issue.field)"
+            >
+              {{ issue.message }}
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+  @if (error()) {
+    <p class="feedback error" role="alert">{{ error() }}</p>
+  }
+  @if (savedCount()) {
+    <p class="feedback success" role="status">
+      {{ savedCount() }} contrato(s) salvo(s). Cadastre o próximo ou conclua.
+    </p>
+  }
+  <form class="people-form" id="contract-form" [formGroup]="form" (ngSubmit)="save()">
+    <fieldset class="people-form full editor-fields" [disabled]="saving()">
+      <oc-search-picker
+        class="full"
+        label="Fornecedor do contrato *"
+        formControlName="supplierId"
+        [required]="true"
+        [options]="supplierOptions()"
+      />
+      <label class="full"
+        >Título do contrato *<input
+          formControlName="title"
+          maxlength="200"
+          placeholder="Ex.: fotografia da cerimônia e recepção"
+      /></label>
+      <label
+        >Valor contratado (R$) *<input ocCurrency formControlName="amount" [readOnly]="locked"
+      /></label>
+      <label
+        >Situação<select formControlName="status">
+          @if (!locked) {
+            <option value="draft">Rascunho — ainda não assinado</option>
+          }
+          <option value="signed">Assinado — compromisso assumido</option>
+        </select></label
+      >
+      <label
+        >Data da assinatura<oc-date-picker
+          [iso]="true"
+          label="Data da assinatura"
+          formControlName="signedDate"
+      /></label>
+      @if (value().status === 'signed') {
+        @if (locked) {
+          <section class="full feedback success">
+            <strong>Entrada e parcelas cadastradas</strong>
+            <p>
+              Para consultar os vencimentos, alterar o parcelamento ou registrar pagamentos, acesse
+              Financeiro &rarr; Despesas.
+            </p>
+            @for (i of installments(); track i.id) {
+              <p>
+                {{ i.label }} &middot; {{ money(i.amountCents) }} &middot;
+                {{ i.dueDate.split('-').reverse().join('/') }}
+              </p>
+            }
+            <button
+              type="button"
+              class="button secondary"
+              [disabled]="saving()"
+              (click)="openPayments()"
+            >
+              Salvar e ver parcelas e pagamentos
+            </button>
+          </section>
+        } @else {
+          <p class="full muted">
+            Ao salvar, o sistema organiza este contrato no financeiro automaticamente. Preencha
+            abaixo como vocês combinaram pagar. O pagamento só será registrado quando você informar
+            que pagou.
+          </p>
+          <section class="full feedback">
+            <strong>Esse gasto já está na sua lista?</strong>
+            <p>
+              Se já cadastrou o valor em Gastos e pagamentos, escolha o gasto existente. Assim ele
+              não será lançado duas vezes.
+            </p>
+            <label class="full"
+              >Como acompanhar no financeiro?<select formControlName="mode">
+                <option value="create">
+                  Ainda não cadastrei — adicionar junto com este contrato
+                </option>
+                <option value="link">Já cadastrei — usar o gasto existente</option>
+              </select></label
+            >
+          </section>
+          @if (value().mode === 'link') {
+            <oc-search-picker
+              class="full"
+              label="Despesa contratada existente *"
+              placeholder="Buscar despesa pelo nome"
+              formControlName="expenseId"
+              [required]="true"
+              [options]="expenseOptions()"
+            />
+            <p class="full muted">
+              A despesa deve ter o mesmo valor contratado e não pode estar vinculada a outro
+              contrato ou profissional. Os pagamentos e as parcelas existentes serão preservados.
+            </p>
+          } @else {
+            <section class="full contract-payment-section">
+              <h3>Entrada e parcelas — defina antes de salvar</h3>
+              <p>
+                Como vocês combinaram pagar este contrato? Ao salvar, os vencimentos serão criados
+                automaticamente em Financeiro → Despesas. As consultas e alterações serão feitas por
+                lá.
+              </p>
+              <label for="contract-payment-choice"
+                >Como será o pagamento? *<select
+                  id="contract-payment-choice"
+                  formControlName="paymentChoice"
+                >
+                  <option value="">Selecione como vai pagar</option>
+                  <option value="integral">Pagamento integral — tudo de uma vez</option>
+                  <option value="installments">Entrada e/ou parcelas</option>
+                </select></label
+              >
+              <div class="people-form">
+                <label
+                  >Prazo de entrega<oc-date-picker
+                    [iso]="true"
+                    label="Prazo de entrega"
+                    formControlName="deliveryDate"
+                /></label>
+
+                <label
+                  >Categoria financeira<select formControlName="categoryId">
+                    @for (c of store.finance.ledger()?.categories; track c.id) {
+                      <option [value]="c.id">{{ c.name }}</option>
+                    }
+                  </select></label
+                >
+                <label
+                  >Forma de pagamento<select formControlName="method">
+                    @for (m of methods; track m) {
+                      <option>{{ m }}</option>
+                    }
+                  </select></label
+                >
+                @if (value().paymentChoice === 'installments') {
+                  <label
+                    >Entrada (R$)<input ocCurrency formControlName="entry" /><small
+                      >Sem entrada, informe R$ 0,00.</small
+                    ></label
+                  >
+                }
+                <label
+                  >Vencimento da entrada / integral<oc-date-picker
+                    [iso]="true"
+                    label="Vencimento da entrada / integral"
+                    formControlName="dueDate"
+                /></label>
+                @if (value().paymentChoice === 'installments') {
+                  <label
+                    >Quantidade de parcelas restantes<input
+                      type="number"
+                      min="1"
+                      max="120"
+                      formControlName="count"
+                    /><small
+                      >Informe quantas parcelas terão o valor restante. Os vencimentos seguintes
+                      serão mensais.</small
+                    ></label
+                  >
+                  <label
+                    >Primeira parcela restante<oc-date-picker
+                      [iso]="true"
+                      label="Primeira parcela restante"
+                      formControlName="firstDueDate"
+                  /></label>
+                }
+              </div>
+              <p class="muted">
+                Salvar o contrato e criar parcelas não registra pagamento. Quando pagar, registre o
+                valor na despesa correspondente.
+              </p>
+            </section>
+          }
+        }
+      } @else {
+        <p class="full muted">
+          Rascunhos não geram despesas nem pagamentos. Ao assinar, você poderá criar a despesa ou
+          vincular uma existente.
+        </p>
+      }
+      <details class="full optional-details">
+        <summary>Proposta, referência, serviços e documentos</summary>
+        <div class="people-form">
+          <label
+            >Prazo de entrega<oc-date-picker
+              [iso]="true"
+              label="Prazo de entrega"
+              formControlName="deliveryDate"
+          /></label>
+
+          <oc-search-picker
+            class="full"
+            label="Proposta de origem (opcional)"
+            formControlName="quoteId"
+            placeholder="Buscar proposta deste fornecedor"
+            [options]="quoteOptions()"
+          />
+          <p class="full muted">
+            Escolha um orçamento já cadastrado para este fornecedor, como “Fotografia por 8 horas”.
+            Se não houver uma proposta cadastrada, pode deixar em branco.
+          </p>
+          <label class="full"
+            >Referência do contrato<input
+              formControlName="reference"
+              maxlength="150"
+              placeholder="Ex.: FOT-2027-015 ou Contrato Jardim Fotos"
+              aria-describedby="contract-reference-help"
+            /><small id="contract-reference-help"
+              >Use o número ou um nome que ajude a encontrar o documento. Se o contrato não tiver
+              identificação, pode deixar em branco.</small
+            ></label
+          >
+          <label class="full"
+            >Serviços contratados<textarea
+              formControlName="scope"
+              rows="3"
+              maxlength="4000"
+              placeholder="Ex.: cobertura de 8 horas, 2 fotógrafos, fotos digitais e 1 álbum impresso."
+              aria-describedby="contract-scope-help"
+            ></textarea>
+            <small id="contract-scope-help"
+              >Descreva o que está incluído: serviços, quantidades, duração e itens que o fornecedor
+              vai entregar.</small
+            >
+          </label>
+          <label class="full"
+            >Condições combinadas<textarea
+              formControlName="conditions"
+              rows="2"
+              maxlength="2000"
+              placeholder="Ex.: entrada de 20%, restante em 4 parcelas e entrega das fotos em até 30 dias."
+              aria-describedby="contract-conditions-help"
+            ></textarea>
+            <small id="contract-conditions-help"
+              >Registre os prazos e as condições acertadas. Escrever aqui não cria parcelas nem
+              registra pagamentos no financeiro.</small
+            >
+          </label>
+          <label class="full"
+            >Observações<textarea
+              formControlName="notes"
+              rows="2"
+              maxlength="4000"
+              placeholder="Ex.: confirmar o endereço do evento uma semana antes; contato no dia: Ana."
+              aria-describedby="contract-notes-help"
+            ></textarea
+            ><small id="contract-notes-help"
+              >Use para lembretes e informações extras que não entraram nos campos anteriores. É
+              opcional.</small
+            >
+          </label>
+          <oc-attachment class="full" [value]="attachment" (changed)="file($event)" />
+        </div>
+      </details>
+    </fieldset>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end"
+  ><button class="button secondary" [disabled]="saving()" (click)="cancel()">
+    {{ savedCount() ? 'Concluir' : 'Cancelar' }}
+  </button>
+  @if (!source) {
+    <button class="button secondary" [disabled]="saving()" (click)="save(true)">
+      Salvar e adicionar outro
+    </button>
+  }
+  <button class="button primary" type="submit" form="contract-form" [disabled]="saving()">
+    {{ saving() ? 'Salvando…' : 'Salvar contrato' }}
+  </button></mat-dialog-actions
+>

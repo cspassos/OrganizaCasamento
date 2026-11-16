@@ -1,0 +1,232 @@
+﻿<div class="page-heading">
+  <div>
+    <div class="eyebrow">CONTROLE DO CASAMENTO</div>
+    <h1>
+      {{ paymentSetup ? 'Entrada e parcelas' : editing ? 'Editar gasto' : 'Adicionar gasto' }}
+    </h1>
+    <p class="muted">{{ finance.weddings.active()?.name }}</p>
+  </div>
+  <a class="button secondary" routerLink="/financeiro/despesas">Voltar aos gastos</a>
+</div>
+@if (loading()) {
+  <p role="status">Carregando…</p>
+} @else if (!weddingId()) {
+  <section class="card form-section">
+    <h2>Selecione um casamento</h2>
+    <a routerLink="/casamentos">Meus casamentos</a>
+  </section>
+} @else if (missing()) {
+  <section class="card form-section">
+    <h2>Gasto indisponível</h2>
+    <p>Este gasto não foi encontrado ou está cancelado.</p>
+  </section>
+} @else {
+  <form class="wedding-form" [formGroup]="form" (ngSubmit)="save()">
+    @if (message()) {
+      <p class="feedback success" role="status">{{ message() }}</p>
+    }
+    @if (error() || finance.error()) {
+      <p class="feedback error" role="alert">{{ error() || finance.error() }}</p>
+    }
+    @if (changedWedding()) {
+      <p class="feedback error" role="alert">
+        O casamento selecionado mudou. Volte à lista e abra o gasto novamente.
+      </p>
+    }
+    <fieldset [disabled]="finance.busy() || changedWedding() || !!finance.error()">
+      @if (!paymentSetup) {
+        <section class="card form-section">
+          <h2>Qual é o gasto?</h2>
+          <p class="muted">
+            Escolha quem vai receber e informe o valor. O contato e o gasto são salvos juntos.
+          </p>
+          <div class="form-grid">
+            <label class="form-field full"
+              >Fornecedor ou quem vai receber *
+              <input
+                id="supplier"
+                aria-label="Fornecedor ou quem vai receber *"
+                formControlName="supplier"
+                maxlength="180"
+                placeholder="Escolha um contato ou digite um novo. Ex.: Buffet da Ana, Cartório"
+                [matAutocomplete]="recipientChoices"
+                [readOnly]="!!contractId || !!professionalId"
+                aria-describedby="recipient-help"
+              />
+              <small id="recipient-help"
+                >Se for novo, o contato será salvo junto com o gasto. Não precisa cadastrar
+                antes.</small
+              >
+              @if (form.controls.supplier.invalid && form.controls.supplier.touched) {
+                <small class="field-error" role="alert">Informe quem vai receber este valor.</small>
+              }
+            </label>
+            <mat-autocomplete
+              #recipientChoices="matAutocomplete"
+              (optionSelected)="chooseSupplier($event.option.id)"
+            >
+              @for (s of matchingSuppliers(); track s.id) {
+                <mat-option [id]="s.id" [value]="s.name">{{ s.name }} · {{ s.detail }}</mat-option>
+              }
+            </mat-autocomplete>
+            <label class="form-field"
+              >Descrição *<input
+                id="description"
+                formControlName="description"
+                maxlength="200"
+                placeholder="Ex.: buffet, decoração ou fotografia"
+            /></label>
+            <label class="form-field"
+              >Categoria *<select id="categoryId" formControlName="categoryId">
+                @for (c of finance.ledger()?.categories; track c.id) {
+                  <option [value]="c.id">{{ c.name }}</option>
+                }
+              </select></label
+            >
+            <label class="form-field"
+              >Situação<select id="status" formControlName="status">
+                <option value="contracted">Já combinei / contratei</option>
+                <option value="planned">Só estou pesquisando o preço</option>
+              </select></label
+            >
+            @if (form.controls.status.value === 'planned') {
+              <label class="form-field"
+                >Valor estimado *<input id="planned" ocCurrency formControlName="planned"
+              /></label>
+            } @else {
+              <label class="form-field"
+                >Valor total combinado *<input
+                  id="contracted"
+                  ocCurrency
+                  formControlName="contracted"
+                  [readOnly]="hasHistory()"
+              /></label>
+            }
+          </div>
+        </section>
+      } @else {
+        <section class="card form-section">
+          <h2>{{ form.controls.description.value }}</h2>
+          <p>Confira como foi combinado o pagamento.</p>
+        </section>
+      }
+      @if (form.controls.status.value === 'contracted') {
+        <section class="card form-section">
+          <h2>Como vai pagar?</h2>
+          @if (hasHistory()) {
+            <p>
+              Já existem pagamentos ou ajustes neste gasto. As parcelas serão mantidas. Você pode
+              ajustar os vencimentos no detalhe do gasto.
+            </p>
+          } @else {
+            <div class="form-grid">
+              <label class="form-field"
+                >Vencimento / data da entrada *<oc-date-picker
+                  [iso]="true"
+                  label="Vencimento / data da entrada *"
+                  inputId="dueDate"
+                  formControlName="dueDate"
+              /></label>
+              <label class="form-field"
+                >Forma de pagamento<select id="method" formControlName="method">
+                  @for (m of methods; track m) {
+                    <option [value]="m">{{ m }}</option>
+                  }
+                </select></label
+              >
+              <label class="form-field"
+                >Entrada / sinal<input
+                  id="entry"
+                  aria-label="Entrada / sinal"
+                  ocCurrency
+                  formControlName="entry"
+                /><small>Sem entrada? Deixe R$ 0,00.</small></label
+              >
+              <label class="form-field"
+                >Parcelas do restante<input
+                  id="count"
+                  aria-label="Parcelas do restante"
+                  type="number"
+                  formControlName="count"
+                  min="1"
+                  max="120"
+                  step="1"
+                /><small>Pagamento único? Deixe 1 parcela e entrada zero.</small></label
+              >
+              @if (form.controls.entry.value > 0 || form.controls.count.value > 1) {
+                <label class="form-field"
+                  >Primeiro vencimento do restante<oc-date-picker
+                    [iso]="true"
+                    label="Primeiro vencimento do restante"
+                    inputId="firstDueDate"
+                    formControlName="firstDueDate"
+                /></label>
+              }
+            </div>
+            <p class="muted">
+              Isso organiza as contas a pagar. Depois de pagar, use Registrar pagamento.
+            </p>
+          }
+        </section>
+      }
+      @if (!paymentSetup) {
+        <details class="card form-section optional-details">
+          <summary>Contrato, comprovante e observações (opcional)</summary>
+          <div class="form-grid">
+            @if (form.controls.status.value === 'contracted') {
+              <label class="form-field"
+                >Data da contratação<oc-date-picker
+                  [iso]="true"
+                  label="Data da contratação"
+                  inputId="contractDate"
+                  formControlName="contractDate"
+              /></label>
+              <label class="form-field"
+                >Referência do contrato<input
+                  id="contractReference"
+                  formControlName="contractReference"
+                  maxlength="200"
+                  placeholder="Se tiver, informe o número ou nome do contrato"
+              /></label>
+            }
+            <label class="form-field full"
+              >Observações<textarea
+                id="notes"
+                formControlName="notes"
+                rows="2"
+                maxlength="4000"
+              ></textarea>
+            </label>
+            <p class="full muted">
+              Anexe o contrato ou comprovante aqui, se tiver. Ele também ficará acessível no
+              fornecedor. Não é necessário cadastrar um contrato separado.
+            </p>
+            <oc-attachment class="full" [value]="attachment()" (changed)="file($event)" />
+          </div>
+        </details>
+      }
+    </fieldset>
+    <div class="form-actions">
+      <a class="button secondary" routerLink="/financeiro/despesas">Cancelar</a>
+      @if (!editing && !professionalId) {
+        <button
+          class="button secondary"
+          type="button"
+          (click)="save(true)"
+          [disabled]="finance.busy() || changedWedding() || !!finance.error()"
+        >
+          Salvar e adicionar outro
+        </button>
+      }
+      <button
+        class="button primary"
+        type="submit"
+        [disabled]="finance.busy() || changedWedding() || !!finance.error()"
+      >
+        {{
+          finance.busy() ? 'Salvando…' : paymentSetup ? 'Salvar entrada e parcelas' : 'Salvar gasto'
+        }}
+      </button>
+    </div>
+  </form>
+}
