@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { unsavedWeddingGuard } from './core/guards/unsaved-wedding';
 import { MainLayout } from './layout/main-layout';
 import { authGuard } from './core/guards/auth';
+import { administrationGuard } from './core/guards/administration';
 const applicationRoutes: Routes = [
   {
     path: 'presentes',
@@ -123,11 +124,29 @@ const applicationRoutes: Routes = [
   { path: '**', redirectTo: 'dashboard' },
 ];
 export const routes: Routes = [
-  {path:'acesso/:action',loadComponent:()=>import('./features/auth/auth-page').then(m=>m.AuthPage)},
-  {path:'importar-dados',canActivate:[authGuard],loadComponent:()=>import('./features/auth/import-local-page').then(m=>m.ImportLocalPage)},
+  {
+    path: 'administracao',
+    canActivate: [authGuard, administrationGuard],
+    loadComponent: () =>
+      import('./features/administration/administration-page').then((m) => m.AdministrationPage),
+  },
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./features/home/home-page').then((m) => m.HomePage),
+  },
+  {
+    path: 'acesso/:action',
+    loadComponent: () => import('./features/auth/auth-page').then((m) => m.AuthPage),
+  },
+  {
+    path: 'importar-dados',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/auth/import-local-page').then((m) => m.ImportLocalPage),
+  },
   {
     path: 'convite/:token',
     loadComponent: () => import('./features/invitations/local-rsvp').then((m) => m.LocalRsvp),
   },
-  { path: '', component: MainLayout, canActivate:[authGuard], children: applicationRoutes },
+  { path: '', component: MainLayout, canActivate: [authGuard], children: applicationRoutes },
 ];

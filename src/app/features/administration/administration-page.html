@@ -1,0 +1,301 @@
+<div class="admin-page">
+  <header>
+    <a routerLink="/">♡ OrganizaCasamento</a>
+    <nav>
+      <a routerLink="/dashboard">Meu casamento</a
+      ><button class="button secondary" (click)="logout()">Sair</button>
+    </nav>
+  </header>
+  <main>
+    <div class="admin-heading">
+      <p class="eyebrow">ACESSO RESTRITO</p>
+      <h1>Administração</h1>
+      <p>Usuários, recuperação de acesso e consulta dos casamentos.</p>
+    </div>
+    @if (error()) {
+      <p class="feedback error" role="alert">{{ error() }}</p>
+    }
+    @if (message()) {
+      <p class="feedback success" role="status">{{ message() }}</p>
+    }
+    @if (admin.mustChangePassword()) {
+      <section class="card password-setup">
+        <h2>Primeiro, escolha uma senha só sua</h2>
+        <p>
+          A senha inicial serve apenas para o primeiro acesso. Crie uma nova senha para liberar a
+          administração.
+        </p>
+        <form (ngSubmit)="initialPassword()">
+          <label
+            >Nova senha<input
+              type="password"
+              name="password"
+              [(ngModel)]="password"
+              autocomplete="new-password"
+              minlength="12"
+              maxlength="128"
+              required /></label
+          ><small>Use pelo menos 12 caracteres, incluindo letras e números.</small
+          ><label
+            >Confirme a nova senha<input
+              type="password"
+              name="confirm"
+              [(ngModel)]="confirm"
+              autocomplete="new-password"
+              required /></label
+          ><button class="button primary" [disabled]="busy()">
+            {{ busy() ? 'Salvando…' : 'Salvar nova senha e continuar' }}
+          </button>
+        </form>
+      </section>
+    } @else {
+      <section class="card users-section">
+        <div class="section-heading">
+          <div>
+            <h2>Usuários do sistema</h2>
+            <p>
+              {{ total() }} conta(s) cadastrada(s). Os dados privados são consultados apenas para
+              suporte.
+            </p>
+          </div>
+        </div>
+        <form class="admin-search" (ngSubmit)="load()">
+          <label
+            >Buscar por e-mail<input
+              name="query"
+              [(ngModel)]="query"
+              placeholder="Digite o e-mail ou parte dele"
+              type="search" /></label
+          ><button class="button primary" [disabled]="busy()">Buscar</button>
+        </form>
+        <p class="table-hint">Deslize a tabela para ver as outras colunas e ações.</p>
+        <div class="admin-table">
+          <table>
+            <thead>
+              <tr>
+                <th>E-mail</th>
+                <th>Cadastro</th>
+                <th>Confirmação</th>
+                <th>Casamentos</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users(); track user.id) {
+                <tr>
+                  <td>
+                    <strong>{{ user.email }}</strong>
+                    @if (user.administrator) {
+                      <small>Administrador</small>
+                    }
+                  </td>
+                  <td>{{ date(user.created_at) }}</td>
+                  <td>{{ user.email_confirmed_at ? 'Confirmado' : 'Aguardando confirmação' }}</td>
+                  <td>{{ user.weddings }}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="button secondary" [disabled]="busy()" (click)="inspect(user)">
+                        Ver casamentos</button
+                      ><button
+                        class="button secondary"
+                        [disabled]="busy()"
+                        (click)="recovery.set(null); selected.set(user)"
+                      >
+                        Recuperar acesso
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5">
+                    {{ busy() ? 'Carregando contas…' : 'Nenhum usuário encontrado.' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <button
+            class="button secondary"
+            [disabled]="busy() || page() === 1"
+            (click)="load(page() - 1)"
+          >
+            Anterior</button
+          ><span>Página {{ page() }} de {{ Math.ceil(total() / 25) || 1 }}</span
+          ><button
+            class="button secondary"
+            [disabled]="busy() || page() * 25 >= total()"
+            (click)="load(page() + 1)"
+          >
+            Próxima
+          </button>
+        </div>
+      </section>
+      @if (selected() && !selected().wedding_id) {
+        <section class="card recovery-box">
+          <h2>Recuperar acesso de {{ selected().email }}</h2>
+          <p>
+            Gere um link de uso único para a pessoa escolher uma nova senha. A senha atual não será
+            exibida. Nenhum e-mail será enviado automaticamente.
+          </p>
+          <div class="row-actions">
+            <button
+              class="button primary"
+              [disabled]="busy()"
+              (click)="generateRecovery(selected())"
+            >
+              Gerar link de recuperação</button
+            ><button class="button secondary" (click)="selected.set(null); recovery.set(null)">
+              Fechar
+            </button>
+          </div>
+          @if (recovery()) {
+            <label
+              >Link para {{ recovery()!.email
+              }}<input [value]="recovery()!.link" readonly (focus)="$any($event.target).select()"
+            /></label>
+            <p>
+              Este link permite alterar a senha. Compartilhe somente com a pessoa titular da conta,
+              após confirmar a identidade dela.
+            </p>
+            <button class="button primary" (click)="copy()">Copiar link</button>
+          }
+        </section>
+      }
+      @if (account()) {
+        <section class="card account-box">
+          <div class="section-heading">
+            <h2>Casamentos de {{ account().email }}</h2>
+            <button class="button secondary" (click)="account.set(null)">Fechar consulta</button>
+          </div>
+          @for (w of account().workspaces; track w.wedding_id) {
+            <details class="account-wedding">
+              <summary>
+                {{ w.wedding.name }} <span>{{ w.wedding.archived ? 'Arquivado' : 'Ativo' }}</span>
+              </summary>
+              <p>
+                Noivos: {{ w.wedding.brideName }} e {{ w.wedding.groomName }} · Data:
+                {{ w.wedding.date || 'A definir' }}
+              </p>
+              @if (w.finance) {
+                <div class="admin-metrics">
+                  <div>
+                    Orçamento<strong>{{ money(w.finance.budgetCents ?? 0) }}</strong>
+                  </div>
+                  <div>
+                    Convidados<strong>{{ w.people?.guests?.length ?? 0 }}</strong>
+                  </div>
+                  <div>
+                    Gastos<strong>{{ w.finance.expenses.length }}</strong>
+                  </div>
+                  <div>
+                    Presentes<strong>{{ w.gifts?.items?.length ?? 0 }}</strong>
+                  </div>
+                </div>
+                <details>
+                  <summary>Gastos e pagamentos</summary>
+                  <div class="admin-table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Gasto</th>
+                          <th>Fornecedor</th>
+                          <th>Valor combinado</th>
+                          <th>Situação</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (e of w.finance.expenses; track e.id) {
+                          <tr>
+                            <td>{{ e.description }}</td>
+                            <td>{{ e.supplier }}</td>
+                            <td>{{ money(e.contractedCents) }}</td>
+                            <td>
+                              {{
+                                e.status === 'cancelled'
+                                  ? 'Cancelado'
+                                  : e.status === 'planned'
+                                    ? 'Pesquisando preço'
+                                    : 'Contratado'
+                              }}
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                  <h3>Operações registradas</h3>
+                  <div class="admin-table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Data</th>
+                          <th>Operação</th>
+                          <th>Valor</th>
+                          <th>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (t of w.finance.transactions; track t.id) {
+                          <tr>
+                            <td>{{ t.date }}</td>
+                            <td>{{ transactionName(t.kind) }}</td>
+                            <td>{{ money(t.amountCents) }}</td>
+                            <td>{{ t.voidedAt ? 'Desfeita' : 'Ativa' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+              }
+              <details>
+                <summary>Convidados ({{ w.people?.guests?.length ?? 0 }})</summary>
+                <div class="admin-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Nome</th>
+                        <th>Contato</th>
+                        <th>Confirmação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (g of w.people?.guests ?? []; track g.id) {
+                        <tr>
+                          <td>{{ g.name }}</td>
+                          <td>{{ g.whatsapp || g.phone || g.email || 'Não informado' }}</td>
+                          <td>{{ g.status }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+              <details>
+                <summary>Convites e presentes</summary>
+                <p>
+                  {{ w.invitations?.issues?.length ?? 0 }} convite(s) ·
+                  {{ w.gifts?.items?.length ?? 0 }} presente(s).
+                </p>
+                <ul>
+                  @for (g of w.gifts?.items ?? []; track g.id) {
+                    <li>
+                      {{ g.name }} — Recebidos {{ g.receivedQuantity ?? 0 }} de
+                      {{ g.quantity ?? 1 }}
+                    </li>
+                  }
+                </ul>
+              </details>
+            </details>
+          } @empty {
+            <p>Esta conta ainda não cadastrou um casamento.</p>
+          }
+        </section>
+      }
+    }
+  </main>
+  <footer>OrganizaCasamento · Área administrativa</footer>
+</div>

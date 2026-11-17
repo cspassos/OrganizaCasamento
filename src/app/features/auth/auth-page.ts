@@ -4,12 +4,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { cloudClient } from '../../core/repositories/cloud-backend';
 import { AuthService } from '../../core/services/auth';
 import { validEmail } from '../../core/utils/contact';
+import { AdministrationService } from '../../core/services/administration';
 
 @Component({
   imports: [FormsModule, RouterLink],
   template: `<main class="access-page">
     <section class="access-card card">
-      <a class="access-brand" routerLink="/acesso/entrar">♡ organiza casamento</a>
+      <a class="access-brand" routerLink="/">♡ organiza casamento</a>
       <h1>
         {{
           mode === 'criar-conta'
@@ -110,11 +111,27 @@ import { validEmail } from '../../core/utils/contact';
           <a routerLink="/acesso/entrar">Voltar para entrar</a>
         }
       </nav>
+      <div class="access-help">
+        <a routerLink="/">Voltar ao site</a><a routerLink="/" fragment="ajuda">Precisa de ajuda?</a>
+      </div>
     </section>
   </main>`,
   styles: `
     :host {
       display: block;
+    }
+    .access-help {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      margin-top: 22px;
+      font-size: 12px;
+    }
+    .access-help a {
+      color: var(--sage);
+      text-decoration: none;
     }
     .access-page {
       min-height: 100dvh;
@@ -186,6 +203,7 @@ export class AuthPage {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   auth = inject(AuthService);
+  administration = inject(AdministrationService);
   mode = 'entrar';
   email = '';
   password = '';
@@ -295,7 +313,10 @@ export class AuthPage {
           password: this.password,
         });
         if (error) throw error;
-        await this.router.navigateByUrl('/dashboard');
+        await this.administration.load(true);
+        await this.router.navigateByUrl(
+          this.administration.isAdmin() ? '/administracao' : '/dashboard',
+        );
       }
     } catch (e: any) {
       const m = String(e?.message ?? '');

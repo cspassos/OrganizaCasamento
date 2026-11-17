@@ -8,6 +8,48 @@ export type Database = {
   };
   public: {
     Tables: {
+      administration_audit: {
+        Row: {
+          action: string;
+          administrator_id: string;
+          created_at: string;
+          id: string;
+          target_user_id: string | null;
+        };
+        Insert: {
+          action: string;
+          administrator_id: string;
+          created_at?: string;
+          id?: string;
+          target_user_id?: string | null;
+        };
+        Update: {
+          action?: string;
+          administrator_id?: string;
+          created_at?: string;
+          id?: string;
+          target_user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      app_administrators: {
+        Row: {
+          created_at: string;
+          must_change_password: boolean;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          must_change_password?: boolean;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          must_change_password?: boolean;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       expenses: {
         Row: {
           attachment_path: string | null;
@@ -1165,6 +1207,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      administration_accounts: {
+        Args: { p_page?: number; p_query?: string };
+        Returns: Json;
+      };
       delete_workspace: { Args: { p_id: string }; Returns: undefined };
       import_workspace: {
         Args: { p_data: Json; p_hash: string; p_id: string };

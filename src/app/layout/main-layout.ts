@@ -10,6 +10,7 @@ import { WeddingsService } from '../core/services/weddings';
 import { FormsModule, NgModel } from '@angular/forms';
 import { AuthService } from '../core/services/auth';
 import { cloudEnabled } from '../core/repositories/cloud-backend';
+import { AdministrationService } from '../core/services/administration';
 @Component({
   selector: 'oc-layout',
   imports: [RouterLink, RouterOutlet, Icon, MatButtonModule, FormsModule],
@@ -19,6 +20,7 @@ import { cloudEnabled } from '../core/repositories/cloud-backend';
 export class MainLayout {
   cloud = cloudEnabled;
   auth = inject(AuthService);
+  administration = inject(AdministrationService);
   async signOut() {
     try {
       await this.auth.signOut();

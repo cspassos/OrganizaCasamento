@@ -43,6 +43,8 @@ async function backend(page: Page) {
         body: JSON.stringify(value),
       });
     if (request.method() === 'OPTIONS') return reply({});
+    if (path.endsWith('/functions/v1/administration'))
+      return reply({ isAdmin: false, mustChangePassword: false });
     if (path.endsWith('/token'))
       return reply({
         access_token: token(),

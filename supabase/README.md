@@ -9,7 +9,7 @@ Projeto: `luhamomwwsiqxodwjodo` (`https://luhamomwwsiqxodwjodo.supabase.co`). Mi
 
 ## Persistência e segurança
 
-São 24 tabelas com RLS por proprietário. `wedding_workspaces` preserva os agregados usados pelas regras existentes (casamento, financeiro, pessoas, fornecedores, convites e presentes). Cada gravação sincroniza as tabelas relacionais na mesma transação. Isso mantém IDs e dados legados sem reintroduzir contratos/equipe no fluxo simplificado.
+São 26 tabelas com RLS por proprietário. `wedding_workspaces` preserva os agregados usados pelas regras existentes (casamento, financeiro, pessoas, fornecedores, convites e presentes). Cada gravação sincroniza as tabelas relacionais na mesma transação. Isso mantém IDs e dados legados sem reintroduzir contratos/equipe no fluxo simplificado.
 
 Clientes leem apenas seus registros. Escritas passam por RPCs; CRUD direto nas tabelas de negócio está revogado. Funções públicas são `SECURITY INVOKER`; operações privilegiadas ficam em `app_private` e conferem explicitamente `auth.uid()`. Não usam metadados editáveis para autorização.
 

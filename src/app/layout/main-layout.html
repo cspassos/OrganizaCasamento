@@ -34,6 +34,11 @@
       </div>
     </div>
     <nav aria-label="Seções do casamento">
+      @if (administration.isAdmin()) {
+        <a class="nav-heading simple-nav-link" routerLink="/administracao"
+          ><oc-icon name="admin_panel_settings" /><span>Administração</span></a
+        >
+      }
       @for (item of nav; track item.path) {
         <a
           class="nav-heading simple-nav-link"

@@ -19,7 +19,7 @@ test('menu direto destaca o destino em acesso direto, atualização e volta', as
   await expect(menu.getByRole('link')).toHaveCount(7);
 });
 test('tema e menu recolhido persistem no navegador', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/dashboard');
   await page.getByRole('button', { name: 'Ativar tema escuro', exact: true }).click();
   await expect(page.locator('html')).toHaveClass('dark');
   await expect

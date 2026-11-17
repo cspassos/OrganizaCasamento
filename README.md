@@ -76,6 +76,10 @@ No uso normal, os repositórios usam Supabase e Storage privado, com transaçõe
 
 `.gitignore` exclui dependências, build, caches, evidências, backups, arquivos `.env`, chaves privadas, configuração MCP local e Vercel. `.env.local` e `src/environments/cloud.generated.ts` são ignorados. O repositório contém código, testes, lockfile e licenças, não os cadastros.
 
-O projeto Supabase OrganizaCasamento (`luhamomwwsiqxodwjodo`) possui 24 tabelas com RLS, RPCs transacionais, importação idempotente e buckets privados. Tipos gerados em `src/app/core/models/database.types.ts`; detalhes em `supabase/README.md`.
+O projeto Supabase OrganizaCasamento (`luhamomwwsiqxodwjodo`) possui 26 tabelas com RLS, RPCs transacionais, importação idempotente e buckets privados. Tipos gerados em `src/app/core/models/database.types.ts`; detalhes em `supabase/README.md`.
 
 **Novos cadastros usam Supabase; os antigos só passam a ser usados na nuvem após a importação.** Para isso, entre na conta correta e escolha os casamentos no navegador original. Criar a estrutura não transfere automaticamente o IndexedDB.
+
+## Página pública e administração
+
+A página inicial apresenta o sistema, exemplo ilustrativo sem criar cadastros, ajuda e contato. O acesso continua em `/acesso/entrar`. Administradores têm consulta de usuários/casamentos e recuperação de acesso em `/administracao`, com permissão conferida no servidor e troca obrigatória da senha inicial. Veja [detalhes de administração](supabase/ADMINISTRACAO.md).
