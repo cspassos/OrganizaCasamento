@@ -15,7 +15,7 @@ import { BatchExportDialog } from './batch-export-dialog';
   selector: 'oc-whatsapp-batch',
   imports: [FormsModule, CollectionTable],
   template: `<section class="card form-section">
-    <h2>Enviar para várias pessoas</h2>
+    <h2>Escolha quem vai receber</h2>
     <p class="muted">
       Selecione os destinatários e prepare uma fila de conversas. Você confirma cada envio no
       WhatsApp.
@@ -162,6 +162,7 @@ import { BatchExportDialog } from './batch-export-dialog';
         [selected]="selected()"
         (selectionChange)="selected.set(toSet($event))"
         [disabled]="busy() || !!pending()"
+        [compact]="true"
       />
       <p>
         {{ plan().entries.length }} conversas serão preparadas para {{ selected().size }} pessoas

@@ -14,6 +14,10 @@ export interface InvitationDesign extends WeddingEntity {
   title: string;
   style: InvitationStyle;
   font: 'serif' | 'italic' | 'sans';
+  nameOrder?: 'bride-first' | 'groom-first';
+  namesLayout?: 'together' | 'separate';
+  textWeight?: 'normal' | 'bold';
+  textSize?: 'small' | 'normal' | 'large';
   bride: string;
   groom: string;
   date: string;

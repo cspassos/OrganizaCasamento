@@ -35,6 +35,10 @@ export function newDesign(w: Wedding, style: InvitationStyle = 'Clássico'): Inv
     title: `Convite ${style.toLowerCase()}`,
     style,
     font: 'serif',
+    nameOrder: 'bride-first',
+    namesLayout: 'together',
+    textWeight: 'normal',
+    textSize: 'normal',
     bride: w.brideName ?? '',
     groom: w.groomName ?? '',
     date: w.date,
@@ -53,6 +57,15 @@ export function newDesign(w: Wedding, style: InvitationStyle = 'Clássico'): Inv
   };
 }
 export function validateDesign(d: InvitationDesign) {
+  for (const [value, allowed] of [
+    [d.nameOrder, ['bride-first', 'groom-first']],
+    [d.namesLayout, ['together', 'separate']],
+    [d.textWeight, ['normal', 'bold']],
+    [d.textSize, ['small', 'normal', 'large']],
+  ] as const) {
+    if (value !== undefined && !(allowed as readonly string[]).includes(value))
+      throw new Error('Escolha uma formatação de texto válida.');
+  }
   if (!invitationStyles.includes(d.style)) throw new Error('Escolha um modelo válido.');
   for (const [label, value, max] of [
     ['Título', d.title, 100],
@@ -140,10 +153,13 @@ export function mapsUrl(address: string, app: 'google' | 'waze' = 'google') {
     ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address)
     : 'https://waze.com/ul?q=' + encodeURIComponent(address) + '&navigate=yes';
 }
+export function invitationNames(d: InvitationDesign) {
+  return d.nameOrder === 'groom-first' ? [d.groom, d.bride] : [d.bride, d.groom];
+}
 export function renderMessage(template: string, g: Guest, d: InvitationDesign) {
   const values: Record<string, string> = {
     nome: g.name,
-    noivos: `${d.bride} e ${d.groom}`,
+    noivos: invitationNames(d).join(' e '),
     data: formatCalendarDate(d.date),
     hora: d.time || 'horário a definir',
     local: d.venue || 'local a definir',

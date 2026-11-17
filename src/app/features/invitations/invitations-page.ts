@@ -66,6 +66,14 @@ export class InvitationsPage {
   );
   query = signal('');
   filter = signal('');
+  deliverySummary = computed(() => {
+    const issues = this.store.ledger()?.issues ?? [];
+    return {
+      total: issues.length,
+      sent: issues.filter((i) => !!i.sentAt).length,
+      pending: issues.filter((i) => i.active && !i.sentAt).length,
+    };
+  });
   page = signal(1);
   private preferences = inject(PreferencesService);
   view = this.preferences.invitationsView;

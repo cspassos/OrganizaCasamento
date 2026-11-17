@@ -1,5 +1,6 @@
 import { InvitationDesign } from '../models/invitations';
 import { formatCalendarDate } from './wedding';
+import { invitationNames } from './invitations';
 const escape = (s: string) =>
   s.replace(
     /[&<>"']/g,
@@ -22,10 +23,11 @@ function wrap(text: string, width: number) {
   return lines;
 }
 export function invitationSvg(d: InvitationDesign, recipient = '') {
+  const textScale = d.textSize === 'large' ? 1.12 : d.textSize === 'small' ? 0.9 : 1;
   const description = [
     d.title,
     recipient ? `Convite para ${recipient}` : '',
-    `${d.bride} e ${d.groom}`,
+    invitationNames(d).join(' e '),
     formatCalendarDate(d.date),
     d.time,
     d.venue,
@@ -56,6 +58,7 @@ export function invitationSvg(d: InvitationDesign, recipient = '') {
     extra = '',
     height = Infinity,
   ) => {
+    size *= textScale;
     const rows = wrap(text, width),
       spacing = Math.min(gap, height / Math.max(1, rows.length - 1));
     const fontSize = spacing < gap ? Math.min(size, spacing * 0.9) : size;
@@ -83,21 +86,25 @@ export function invitationSvg(d: InvitationDesign, recipient = '') {
     decoration = `<rect x="40" y="40" rx="160" width="760" height="1120" fill="none" stroke="${accent}" stroke-width="2"/><path transform="translate(0,-35)" d="M420 96C375 50 355 125 420 158C485 125 465 50 420 96" fill="${accent}" opacity=".35"/>`;
   if (d.style === 'Elegante')
     decoration += `<path d="M72 90H210M72 90V240M768 1110H630M768 1110V960" stroke="${accent}" stroke-width="4"/>`;
-  const names = wrap(d.bride + ' & ' + d.groom, 30),
-    nameSize = names.length >= 4 ? Math.min(40, 176 / names.length) : 46,
+  const orderedNames = invitationNames(d);
+  const names =
+      d.namesLayout === 'separate'
+        ? [...wrap(orderedNames[0], 30), '&', ...wrap(orderedNames[1], 30)]
+        : wrap(orderedNames.join(' & '), 30),
+    nameSize = (names.length >= 4 ? Math.min(40, 176 / names.length) : 46) * textScale,
     nameGap = names.length >= 4 ? Math.min(44, 180 / (names.length - 1)) : 54;
   const nameY = names.length >= 4 ? 235 : 282 - ((names.length - 1) * nameGap) / 2;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="840" height="1200" viewBox="0 0 840 1200" role="img" aria-label="${e(description)}">
     <rect width="840" height="1200" fill="${e(d.background)}"/>
     ${d.photo ? `<image href="${e(d.photo)}" width="840" height="1200" preserveAspectRatio="xMidYMid slice" opacity=".16"/>` : ''}
     ${decoration}
-    <g text-anchor="middle" fill="${e(d.color)}" font-family="${font}"${d.font === 'italic' ? ' font-style="italic"' : ''}>
+    <g text-anchor="middle" fill="${e(d.color)}" font-family="${font}" font-weight="${d.textWeight === 'bold' ? '700' : '400'}"${d.font === 'italic' ? ' font-style="italic"' : ''}>
       ${lines(recipient || 'COM ALEGRIA, CONVIDAMOS VOCÊ', 150, 52, 14, 20, 'letter-spacing="2"', 40)}
       ${names.map((line, i) => `<text x="420" y="${nameY + i * nameGap}" font-size="${nameSize}" ${fit(line, nameSize)}>${e(line)}</text>`).join('')}
       <path d="M345 430H495" stroke="${accent}"/>
       ${lines(d.message, 475, 52, 22, 29, '', 110)}
-      <text x="420" y="650" font-size="34" letter-spacing="3">${e(formatCalendarDate(d.date))}</text>
-      <text x="420" y="702" font-size="20" letter-spacing="2">${d.time ? 'CERIMÔNIA ÀS ' + e(d.time) : 'HORÁRIO A DEFINIR'}</text>
+      <text x="420" y="650" font-size="${34 * textScale}" letter-spacing="3">${e(formatCalendarDate(d.date))}</text>
+      <text x="420" y="702" font-size="${20 * textScale}" letter-spacing="2">${d.time ? 'CERIMÔNIA ÀS ' + e(d.time) : 'HORÁRIO A DEFINIR'}</text>
       ${lines(d.venue || 'Local a definir', 770, 44, 28, 30, '', 60)}
       ${lines(d.address, 870, 60, 19, 25, '', 60)}
       ${d.reception ? lines('Recepção: ' + d.reception + (d.receptionTime ? ' · ' + d.receptionTime : ''), 985, 60, 19, 25, '', 50) : ''}

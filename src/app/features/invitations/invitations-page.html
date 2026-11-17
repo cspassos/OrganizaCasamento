@@ -18,8 +18,8 @@
 } @else {
   <p class="notice invitation-local-note">
     @if (cloud) {
-      As respostas dos convidados ficam salvas na sua conta. Para compartilhar com outras pessoas,
-      publique o site em um endereço acessível pela internet.
+      Personalize seu modelo, escolha os convidados e compartilhe o convite. Os envios e as
+      respostas ficam salvos na sua conta.
     } @else {
       Teste local: os links e as respostas funcionam somente neste navegador e neste endereço. Para
       convidar de verdade agora, baixe a imagem ou PDF e envie o arquivo. Links públicos serão
@@ -160,6 +160,21 @@
       />
     }
   } @else if (section() === 'enviados') {
+    <section class="invitation-delivery-summary" aria-label="Resumo dos convites">
+      <div>
+        <strong>{{ deliverySummary().total }}</strong><span>Convites criados</span>
+      </div>
+      <div>
+        <strong>{{ deliverySummary().sent }}</strong><span>Envios registrados</span>
+      </div>
+      <div>
+        <strong>{{ deliverySummary().pending }}</strong><span>Ainda não enviados</span>
+      </div>
+    </section>
+    <p class="muted">
+      Criar o convite prepara o arquivo. Depois de compartilhar, marque como enviado para acompanhar
+      quem já recebeu.
+    </p>
     <div class="people-toolbar">
       <label
         >Pesquisar convite<input
@@ -177,27 +192,30 @@
     </div>
     @if (!designs().length || !store.people.summary().total) {
       <p class="feedback">
-        Primeiro salve um modelo e cadastre seus convidados.
-        <a routerLink="/convites/modelos">Escolher modelo</a> ·
-        <a routerLink="/pessoas/convidados">Cadastrar convidados</a>
+        Para começar, você precisa de um modelo salvo e de convidados na sua lista.
+        <a class="button secondary" routerLink="/convites/modelos">1. Salvar um modelo</a>
+        <a class="button secondary" routerLink="/pessoas/convidados">2. Adicionar convidados</a>
       </p>
     }
-    <label class="invitation-filter"
-      >Mostrar<select [ngModel]="filter()" (ngModelChange)="filter.set($event); page.set(1)">
-        <option value="">Todos</option>
-        <option value="active">Links ativos</option>
-        <option value="sent">Envio registrado</option>
-        <option value="answered">Com respostas</option>
-        <option value="inactive">Desativados</option>
-      </select></label
-    >
+    <details class="optional-details invitation-list-options">
+      <summary>Filtrar convites</summary>
+      <label class="invitation-filter"
+        >Mostrar<select [ngModel]="filter()" (ngModelChange)="filter.set($event); page.set(1)">
+          <option value="">Todos</option>
+          <option value="active">Links ativos</option>
+          <option value="sent">Envio registrado</option>
+          <option value="answered">Com respostas</option>
+          <option value="inactive">Desativados</option>
+        </select></label
+      >
+    </details>
     @if (copiedLink()) {
       <label class="invitation-copy-link"
         >{{ cloud ? 'Link do convite' : 'Link apenas para teste neste navegador'
         }}<input readonly [value]="copiedLink()" (click)="$any($event.target).select()"
       /></label>
     }
-    <div class="collection-toolbar">
+    <div class="collection-toolbar invitation-create-toolbar">
       <button class="button secondary" (click)="setView('table')">Tabela compacta</button
       ><button class="button secondary" (click)="setView('cards')">Cartões</button
       ><button
@@ -234,7 +252,13 @@
               [routerLink]="['/convite', i.token]"
               target="_blank"
               rel="noopener"
-              >{{ i.active ? 'Simular confirmação' : 'Consultar link desativado' }}</a
+              >{{
+                i.active
+                  ? cloud
+                    ? 'Abrir convite'
+                    : 'Simular confirmação'
+                  : 'Consultar link desativado'
+              }}</a
             >
             <button
               mat-menu-item
@@ -258,14 +282,13 @@
                 (click)="copyLink(i)"
                 [disabled]="working()"
               >
-                Copiar link de teste</button
-              ><button
+                {{ cloud ? 'Copiar link do convite' : 'Copiar link de teste' }}</button><button
                 mat-menu-item
                 class="button secondary"
                 (click)="showQr(i)"
                 [disabled]="working()"
               >
-                QR de teste</button
+                {{ cloud ? 'QR Code do convite' : 'QR de teste' }}</button
               ><button
                 mat-menu-item
                 class="button secondary"
@@ -294,6 +317,7 @@
         [selected]="selected()"
         (selectionChange)="selected.set(toSet($event))"
         [disabled]="working() || store.busy()"
+        [compact]="true"
       />
       @if (qr()) {
         <div class="invitation-qr">
@@ -351,7 +375,13 @@
               [routerLink]="['/convite', i.token]"
               target="_blank"
               rel="noopener"
-              >{{ i.active ? 'Simular confirmação' : 'Consultar link desativado' }}</a><button
+              >{{
+                i.active
+                  ? cloud
+                    ? 'Abrir convite'
+                    : 'Simular confirmação'
+                  : 'Consultar link desativado'
+              }}</a><button
               class="button secondary"
               [disabled]="working()"
               (click)="export(i.design, 'png', i.recipientLabel)"
@@ -366,9 +396,12 @@
             </button>
             @if (i.active) {
               <button class="button secondary" (click)="copyLink(i)" [disabled]="working()">
-                Copiar link de teste</button
-              ><button class="button secondary" (click)="showQr(i)" [disabled]="working()">
-                QR de teste
+                {{ cloud ? 'Copiar link do convite' : 'Copiar link de teste' }}</button><button
+                class="button secondary"
+                (click)="showQr(i)"
+                [disabled]="working()"
+              >
+                {{ cloud ? 'QR Code do convite' : 'QR de teste' }}
               </button>
               @if (!i.sentAt) {
                 <button class="button secondary" (click)="markSent(i)" [disabled]="store.busy()">
@@ -402,9 +435,19 @@
       }
     }
   } @else if (section() === 'whatsapp') {
-    <oc-whatsapp-batch />
-    <section class="card form-section">
-      <h2>Prepare o convite e a mensagem</h2>
+    <div class="invitation-send-guide">
+      <strong>Como enviar pelo WhatsApp</strong>
+      <p>
+        1. Escolha a pessoa e o modelo. 2. Baixe o convite. 3. Abra a conversa e anexe o arquivo.
+      </p>
+      <small>Você confirma o envio no WhatsApp. O sistema não envia mensagens sozinho.</small>
+    </div>
+    <details class="card invitation-batch-options" [open]="!!store.ledger()?.whatsappQueue">
+      <summary>Enviar para várias pessoas</summary>
+      <oc-whatsapp-batch />
+    </details>
+    <section class="card form-section whatsapp-single">
+      <h2>Enviar para uma pessoa ou família</h2>
       <p class="muted">
         Escolha a pessoa e o modelo. Prepare o arquivo para compartilhar ou abra somente o texto no
         WhatsApp. Você revisa e confirma o envio no aplicativo.

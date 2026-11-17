@@ -38,6 +38,30 @@ describe('Convites, renderização e mensagens', () => {
     expect(a).toHaveLength(64);
     expect(a).not.toBe(b);
   });
+  it('respeita ordem, linhas e formatação na arte e na mensagem, mantendo modelos antigos', () => {
+    const d = {
+      ...newDesign(wedding),
+      nameOrder: 'groom-first' as const,
+      namesLayout: 'separate' as const,
+      textWeight: 'bold' as const,
+      textSize: 'large' as const,
+    };
+    const svg = invitationSvg(d);
+    expect(svg).toContain('font-weight="700"');
+    expect(Number(svg.match(/y="650" font-size="([\d.]+)"/)?.[1])).toBeGreaterThan(34);
+    expect(svg.indexOf('>João</text>')).toBeLessThan(svg.indexOf('>Ana</text>'));
+    expect(renderMessage('{noivos}', newGuest('w'), d)).toBe('João e Ana');
+    const legacy = {
+      ...d,
+      nameOrder: undefined,
+      namesLayout: undefined,
+      textWeight: undefined,
+      textSize: undefined,
+    };
+    expect(() => validateDesign(legacy)).not.toThrow();
+    expect(invitationSvg(legacy)).toContain('Ana &amp; João');
+    expect(() => validateDesign({ ...d, textWeight: 'invalid' as any })).toThrow();
+  });
   it('substitui dados pessoais na mensagem e gera URL oficial sem abrir ou marcar envio', () => {
     const g = { ...newGuest('w'), name: 'Maria & José', phone: '(11) 99999-8888' },
       d = newDesign(wedding);

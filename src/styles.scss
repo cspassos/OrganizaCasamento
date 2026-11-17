@@ -3469,3 +3469,30 @@ button.mat-mdc-unelevated-button.destructive { background: #ae302b !important; c
 
 .dashboard-grid > *, .bottom-grid > * { min-width: 0; }
 @media (max-width: 700px) { .dashboard-grid { grid-template-columns: minmax(0, 1fr); } }
+.invitation-delivery-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 24px 0 14px; }
+.invitation-delivery-summary > div { padding: 18px 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.invitation-delivery-summary strong { display: block; font-size: 28px; color: var(--text); }
+.invitation-delivery-summary span { display: block; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.invitation-list-options { margin: 16px 0; }
+.invitation-create-toolbar { gap: 8px; margin-bottom: 18px; }
+.invitation-send-guide { padding: 20px 24px; background: var(--sage-light); border-radius: 12px; margin: 20px 0; }
+.invitation-send-guide strong { font-size: 18px; }
+.invitation-send-guide p { line-height: 1.7; margin: 8px 0; }
+.invitation-send-guide small { color: var(--muted); }
+.invitation-batch-options { padding: 20px; margin: 20px 0; }
+.invitation-batch-options > summary { font-size: 16px; font-weight: 600; color: var(--sage); }
+.invitation-batch-options oc-whatsapp-batch > section { margin: 18px 0 0; padding: 18px 0 0; border: 0; box-shadow: none; }
+.people-form label.check-label { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.6; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+.people-form label.check-label > input { width: 18px; height: 18px; min-width: 18px; flex: 0 0 18px; margin: 2px 0 0; accent-color: var(--sage); }
+@media (max-width: 600px) {
+ .invitation-delivery-summary { gap: 8px; }
+ .invitation-delivery-summary > div { padding: 12px 9px; }
+ .invitation-delivery-summary strong { font-size: 24px; }
+ .invitation-delivery-summary span { font-size: 11px; }
+ .invitation-send-guide, .invitation-batch-options { padding: 18px 14px; }
+}
+.whatsapp-invite-grid > * { min-width: 0; max-width: 100%; }
+.whatsapp-invite-grid oc-invitation-preview { width: 100%; }
+.whatsapp-invite-grid .invitation-filter select { width: 100%; max-width: 100%; min-width: 0; }
+.whatsapp-invite-card .button { max-width: 100%; white-space: normal; }
+@media (max-width: 600px) { .whatsapp-invite-card { padding: 16px 12px; } }

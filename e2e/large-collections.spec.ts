@@ -134,9 +134,11 @@ test('lote cria 63 convites familiares, exporta ZIP e fila WhatsApp retoma após
   await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
   await page.goto('/convites/whatsapp');
   const batch = page.locator('oc-whatsapp-batch');
+  await page.locator('.invitation-batch-options > summary').click();
   await batch
     .getByRole('combobox', { name: 'Modelo do convite', exact: true })
     .selectOption({ label: 'Modelo para lote' });
+  await batch.getByRole('checkbox', { name: 'Selecionar esta página', exact: true }).check();
   await batch
     .getByRole('button', { name: 'Selecionar todos os 125 do filtro', exact: true })
     .click();

@@ -136,6 +136,48 @@ async function issue(page: Page) {
     .getByRole('link', { name: 'Simular confirmação', exact: true })
     .getAttribute('href')) as string;
 }
+
+test('ordem dos nomes e formato persistem na prévia, no arquivo e no WhatsApp', async ({
+  page,
+}) => {
+  await setup(page);
+  await design(page);
+  await page.getByLabel('Quem aparece primeiro?').selectOption('groom-first');
+  await page.getByLabel('Como mostrar os nomes?').selectOption('separate');
+  await page.getByText('Formato do texto', { exact: true }).click();
+  await page.getByLabel('Destaque do texto').selectOption('bold');
+  await page.getByLabel('Tamanho do texto').selectOption('large');
+  const preview = page.locator('.invitation-editor-preview svg');
+  await expect(preview.locator('text').filter({ hasText: /^Lucas Santos$/ })).toBeVisible();
+  await expect(preview.locator('g').last()).toHaveAttribute('font-weight', '700');
+  await page.getByRole('button', { name: 'Salvar convite', exact: true }).click();
+  await expect(page.locator('form.card')).toHaveClass(/ng-pristine/);
+  await page.reload();
+  await expect(page.getByLabel('Quem aparece primeiro?')).toHaveValue('groom-first');
+  await expect(page.getByLabel('Como mostrar os nomes?')).toHaveValue('separate');
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Baixar imagem PNG', exact: true }).click();
+  expect((await download).suggestedFilename()).toBe('convite.png');
+  await page.setViewportSize({ width: 320, height: 740 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.locator('.sidebar').evaluate(async (el) => {
+    await Promise.all(el.getAnimations().map((animation) => animation.finished));
+  });
+  await page.screenshot({ path: 'artifacts/convite-formatado-celular.png', fullPage: true });
+  await page.goto('/convites/whatsapp');
+  await page.getByLabel('Pessoa da lista de convidados').fill('Maria');
+  await page.getByRole('option').filter({ hasText: 'Maria Silva' }).click();
+  await expect(page.getByLabel('Mensagem que será aberta no WhatsApp')).toHaveValue(
+    /Lucas Santos e Clara Oliveira/,
+  );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('heading', { name: 'WhatsApp', exact: true }).click();
+  await page.screenshot({ path: 'artifacts/whatsapp-simplificado-celular.png', fullPage: true });
+  await issue(page);
+  await page.getByRole('button', { name: 'Tabela compacta', exact: true }).click();
+  await expect(page.getByLabel('Resumo dos convites')).toContainText('1');
+  await page.screenshot({ path: 'artifacts/convites-enviados-celular.png', fullPage: true });
+});
 test('editor persiste, exporta PNG/PDF e mantém prévia responsiva', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));

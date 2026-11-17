@@ -40,6 +40,39 @@
         >
         <label>Nome da noiva *<input formControlName="bride" maxlength="80" /></label
         ><label>Nome do noivo *<input formControlName="groom" maxlength="80" /></label>
+        <label
+          >Quem aparece primeiro?<select formControlName="nameOrder">
+            <option value="bride-first">Noiva primeiro</option>
+            <option value="groom-first">Noivo primeiro</option>
+          </select></label
+        >
+        <label
+          >Como mostrar os nomes?<select formControlName="namesLayout">
+            <option value="together">Juntos, na mesma frase</option>
+            <option value="separate">Um nome em cada linha</option>
+          </select></label
+        >
+        <details class="full optional-details">
+          <summary>Formato do texto</summary>
+          <div class="people-form">
+            <label
+              >Destaque do texto<select formControlName="textWeight">
+                <option value="normal">Normal</option>
+                <option value="bold">Negrito</option>
+              </select></label
+            >
+            <label
+              >Tamanho do texto<select formControlName="textSize">
+                <option value="small">Menor</option>
+                <option value="normal">Padrão</option>
+                <option value="large">Maior</option>
+              </select></label
+            >
+          </div>
+          <p class="muted">
+            A fonte escolhida acima e estes ajustes aparecem na prévia e nos arquivos baixados.
+          </p>
+        </details>
         <div>
           <label for="invitation-date">Data do casamento</label
           ><oc-date-picker
