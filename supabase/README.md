@@ -32,7 +32,7 @@ Agregados guardam referências, não base64. O adaptador carrega os binários au
 
 A tabela relacional guarda o hash do token. O agregado privado do proprietário mantém o token para permitir copiar o link novamente; nenhuma leitura anônima desse agregado é permitida. Tokens locais existentes já são aleatórios de 256 bits e permanecem nos convites selecionados para importação.
 
-Fotos são acessíveis com o token somente se o caminho coincide com a foto daquele convite ativo. Demais arquivos continuam privados. Links `localhost` não podem ser usados por outras pessoas: falta publicar o frontend.
+Fotos são acessíveis com o token somente se o caminho coincide com a foto daquele convite ativo. Demais arquivos continuam privados. Gere links a partir de `https://organizacasamento.vercel.app`; links antigos de `localhost` não podem ser usados por outras pessoas.
 
 ## Auth e configuração
 
@@ -42,11 +42,11 @@ Configure `.env.local` a partir de `.env.example`: somente URL e chave **public�
 
 No painel remoto, conferir Authentication → URL Configuration:
 
-- Site URL: `http://localhost:4200` durante o desenvolvimento.
-- Redirect URLs: `http://localhost:4200/**` e `http://127.0.0.1:4200/**`.
-- Na publicação, configurar domínio real e retornos `/acesso/confirmar` e `/acesso/nova-senha`.
+- Site URL: `https://organizacasamento.vercel.app`.
+- Redirect URLs: `https://organizacasamento.vercel.app/acesso/confirmar` e `https://organizacasamento.vercel.app/acesso/nova-senha`.
+- Mantenha `http://localhost:4200/**` e `http://127.0.0.1:4200/**` para desenvolvimento.
 
-O conector não permite editar configurações remotas do Auth. A confirmação dessas URLs e o teste de entrega de e-mail estão pendentes de ação no painel. Não foram enviados e-mails de teste. SMTP próprio, Google OAuth e hospedagem não configurados. `config.toml` representa apenas o Supabase local.
+O conector não permite editar configurações remotas do Auth. A confirmação dessas URLs e o teste de entrega de e-mail estão pendentes de ação no painel. Não foram enviados e-mails de teste. SMTP próprio e Google OAuth não configurados. O frontend está publicado na Vercel. `config.toml` representa apenas o Supabase local.
 
 ## Importação
 

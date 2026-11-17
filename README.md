@@ -4,7 +4,11 @@ Aplicação para acompanhar o orçamento, os gastos, os pagamentos, os convidado
 
 ## Estado atual
 
-Angular 21, TypeScript, SCSS e Angular Material, com login por e-mail/senha e dados no Supabase. Cada conta acessa seus próprios casamentos. O site ainda não foi publicado na Vercel.
+Angular 21, TypeScript, SCSS e Angular Material, com login por e-mail/senha e dados no Supabase. Cada conta acessa seus próprios casamentos.
+
+**Site publicado:** [organizacasamento.vercel.app](https://organizacasamento.vercel.app).
+
+**Projeto na Vercel:** [Caic's projects → organizacasamento](https://vercel.com/caics-projects-4f9e26de/organizacasamento). Publicações de `main` atualizam o endereço principal automaticamente. Os endereços longos de branch/deployment são auxiliares.
 
 - **Visão geral:** orçamento, valores combinados, pagamentos e próximos vencimentos.
 - **Gastos e pagamentos:** pesquisa de preços, gastos contratados, entrada e parcelas, pagamentos, ajustes e relatórios. Fornecedores ficam nas abas dessa área; contrato e comprovantes são anexos opcionais.
@@ -28,7 +32,7 @@ npm start
 
 Abra `http://localhost:4200` e crie sua conta. Configure `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` em `.env.local` ou no ambiente de build. Nunca use chave secreta/service_role no frontend. `npm start` e `npm run build` geram a configuração pública a partir dessas variáveis.
 
-No Supabase → Authentication → URL Configuration, use Site URL `http://localhost:4200` e permita `http://localhost:4200/**` e `http://127.0.0.1:4200/**` nos Redirect URLs. Quando publicar, configure o domínio definitivo. O `config.toml` local não altera o Auth remoto.
+No Supabase → Authentication → URL Configuration, use Site URL `https://organizacasamento.vercel.app`. Permita os Redirect URLs `https://organizacasamento.vercel.app/acesso/confirmar` e `https://organizacasamento.vercel.app/acesso/nova-senha`. Mantenha `http://localhost:4200/**` e `http://127.0.0.1:4200/**` para testes locais. O `config.toml` local não altera o Auth remoto; a aplicação dessas URLs no painel ainda precisa ser confirmada.
 
 Após entrar, **Trazer meus cadastros anteriores** permite baixar backup e importar casamentos deste navegador ou de um backup JSON. A importação confere os dados salvos e mantém os originais. Também está acessível pelo botão de informações da barra superior. Nenhum cadastro antigo é apagado automaticamente.
 
@@ -63,8 +67,8 @@ No uso normal, os repositórios usam Supabase e Storage privado, com transaçõe
 ## Limitações
 
 - É necessário ter internet para ler/salvar. Não há gravação offline nem fallback silencioso para IndexedDB. Outra aba/aparelho é atualizado ao reabrir/atualizar a tela; não há assinatura Realtime.
-- O site precisa ser publicado para os links de convites funcionarem em outros aparelhos. `localhost` continua acessível somente na própria máquina.
-- Login por e-mail/senha implementado. Google OAuth, SMTP próprio, Vercel e compartilhamento de um casamento entre contas são etapas separadas. A entrega real dos e-mails deve ser validada após configurar os retornos do Auth.
+- Para compartilhar convites, gere os links a partir do site publicado. Links antigos de `localhost` continuam acessíveis somente na própria máquina.
+- Login por e-mail/senha implementado. Google OAuth, SMTP próprio e compartilhamento de um casamento entre contas são etapas separadas. A entrega real dos e-mails deve ser validada após configurar os retornos do Auth.
 - WhatsApp prepara mensagens/arquivos para revisão; o envio é confirmado pela pessoa no aplicativo.
 - A lista de presentes em PDF é uma cópia do momento da exportação. Não reserva produtos nem atualiza arquivos já enviados. A leitura automática de produtos de lojas não está implementada.
 
