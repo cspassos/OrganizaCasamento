@@ -4,6 +4,16 @@ const project = 'luhamomwwsiqxodwjodo';
 const payload = JSON.parse(
   await readFile(new URL('../supabase/templates/auth-config.json', import.meta.url), 'utf8'),
 );
+for (const [type, file] of [
+  ['confirmation', 'confirmation.html'],
+  ['recovery', 'recovery.html'],
+  ['password_changed_notification', 'password-changed.html'],
+]) {
+  payload[`mailer_templates_${type}_content`] = await readFile(
+    new URL(`../supabase/templates/${file}`, import.meta.url),
+    'utf8',
+  );
+}
 if (!process.argv.includes('--apply')) {
   console.log('Revisão: projeto', project);
   console.log(Object.keys(payload).join('\n'));

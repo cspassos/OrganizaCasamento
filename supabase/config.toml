@@ -433,7 +433,7 @@ subject = "Confirme seu e-mail — OrganizaCasamento"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Crie uma nova senha — OrganizaCasamento"
+subject = "Redefina sua senha — OrganizaCasamento"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.notification.password_changed]

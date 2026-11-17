@@ -10,6 +10,12 @@ Para aplicar com acesso administrativo autorizado, execute `node scripts/configu
 
 Também podem ser aplicados no painel Authentication → Emails: copie o assunto de `auth-config.json` e o HTML correspondente. Habilite a notificação de senha alterada.
 
+Para facilitar a aplicação manual dos modelos de confirmação e recuperação, execute `node scripts/prepare-auth-emails.mjs` e abra `artifacts/configurar-emails.html`. Essa página tem prévias e botões separados para copiar o assunto e o HTML de cada modelo. Ela não altera configurações remotas.
+
+Os modelos foram revisados para renderização sem imagens externas e com botão em tabela para clientes de e-mail. Os links de confirmação/recuperação continuam sendo preenchidos por `{{ .ConfirmationURL }}`. Os arquivos HTML são a fonte usada pelo script de aplicação; o JSON contém os assuntos e opções de notificação.
+
+Nas imagens fornecidas pelo proprietário em 17/11/2026, o SMTP personalizado já está habilitado com host `smtp-relay.brevo.com`, e uma mensagem recebida apresenta remetente `@brevosend.com`. Isso indica envio pelo Brevo; o conteúdo em inglês é o modelo padrão de autenticação. Não é necessário substituir esse SMTP para traduzir os modelos. O uso de remetente Gmail pode causar substituição do domínio pelo Brevo, conforme a documentação: https://help.brevo.com/hc/en-us/articles/16045394674066-Troubleshooting-Domain-authentication.
+
 O `supabase/config.toml` configura somente o ambiente de desenvolvimento do Supabase. Ele não publica modelos no serviço hospedado. O envio para clientes em produção também depende do SMTP e remetente configurados no painel; não basta conectar o banco.
 
 ## Dados e acesso
