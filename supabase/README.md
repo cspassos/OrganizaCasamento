@@ -1,74 +1,71 @@
-# Preparação do Supabase
+﻿# Supabase integrado
 
-**Estado: três migrações aplicadas e verificadas no projeto OrganizaCasamento em 16/11/2026. O frontend ainda utiliza IndexedDB.**
-
-Projeto verificado: `luhamomwwsiqxodwjodo` (`https://luhamomwwsiqxodwjodo.supabase.co`). Antes da aplicação, tabelas públicas, migrações, usuários e buckets estavam vazios. Histórico remoto e nomes dos arquivos locais estão sincronizados:
+Projeto: `luhamomwwsiqxodwjodo` (`https://luhamomwwsiqxodwjodo.supabase.co`). Migrações aplicadas e verificadas em 16/11/2026:
 
 - `20261116184053_wedding_control_foundation`
 - `20261116184100_private_wedding_storage`
 - `20261116184215_restrict_internal_ddl_trigger`
+- `20261116193756_cloud_workspace_transactions`
 
-Verificações concluídas: 23 tabelas com RLS, 87 políticas nas tabelas da aplicação, 4 políticas de Storage e 2 buckets privados. Auditoria de segurança sem avisos após restringir a função interna de DDL `rls_auto_enable()`. Avisos informativos de índices ainda não utilizados são esperados no banco vazio; os índices foram mantidos.
+## Persistência e segurança
 
-Teste remoto em `tests/rls_smoke.sql` aprovado com duas contas temporárias e rollback integral; confirmação posterior de zero usuários/casamentos/convidados de teste persistidos. Consulta anônima de casamentos pela Data API com chave publicável respondeu HTTP 401. Auth verificado com e-mail habilitado, confirmação de e-mail exigida e login anônimo desabilitado. Não foram alteradas as opções de Auth remotas: URLs finais, SMTP, login Google e recuperação devem ser concluídos durante a implementação do login.
+São 24 tabelas com RLS por proprietário. `wedding_workspaces` preserva os agregados usados pelas regras existentes (casamento, financeiro, pessoas, fornecedores, convites e presentes). Cada gravação sincroniza as tabelas relacionais na mesma transação. Isso mantém IDs e dados legados sem reintroduzir contratos/equipe no fluxo simplificado.
 
-Tipos gerados a partir do banco hospedado em `src/app/core/models/database.types.ts`. Nenhuma chave secreta ou token OAuth foi gravado no projeto.
+Clientes leem apenas seus registros. Escritas passam por RPCs; CRUD direto nas tabelas de negócio está revogado. Funções públicas são `SECURITY INVOKER`; operações privilegiadas ficam em `app_private` e conferem explicitamente `auth.uid()`. Não usam metadados editáveis para autorização.
 
-O conector dedicado é **supabase-organizacasamento**. Não aplicar em outro projeto por causa de uma conexão MCP antiga. Para futuras alterações, inspecionar tabelas e histórico existentes e criar uma nova migração. Não executar reset remoto nem reaplicar as migrações já registradas.
+- `save_workspace`: bloqueio por casamento, revisão otimista, projeção relacional e validação financeira. Impede mistura de casamentos, parcelas divergentes, excesso de pagamento/devolução e remoção do histórico. Operações podem ser desfeitas com motivo; não apagadas.
+- `import_workspace`: mesma validação, preserva UUIDs e usa hash de origem para repetição sem duplicação. Não sobrescreve um casamento já existente de outra origem.
+- `save_preference`: grava preferências da própria conta sem perder outra preferência concorrente.
+- `delete_workspace`: verifica proprietário e exclui em cascata. O cliente remove os arquivos pela Storage API depois. Se a rede interromper a limpeza, podem restar arquivos privados órfãos; não apagar linhas de `storage.objects` via SQL.
 
-## Estrutura
+Escopo: uma conta proprietária por casamento. Compartilhar entre contas exige uma implementação futura de membros/permissões. A mesma conta já pode acessar em outro aparelho.
 
-| Área            | Tabelas                                                                                                              |
-| --------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Conta           | `profiles`, `user_preferences`                                                                                       |
-| Casamento       | `weddings`                                                                                                           |
-| Financeiro      | `finance_settings`, `finance_categories`, `expenses`, `installments`, `financial_transactions`, `finance_audit`      |
-| Fornecedores    | `suppliers`                                                                                                          |
-| Convidados      | `families`, `guests`, `special_participations`                                                                       |
-| Convites        | `invitation_designs`, `invitations`, `invitation_guests`, `rsvp_responses`, `invitation_messages`, `whatsapp_queues` |
-| Presentes       | `gift_lists`, `gift_items`, `external_gift_lists`                                                                    |
-| Compatibilidade | `legacy_snapshots`                                                                                                   |
+## Arquivos
 
-O escopo inicial é uma conta proprietária por casamento, com quantos casamentos forem necessários. Compartilhamento entre contas do casal requer uma implementação posterior de membros e convites de acesso; não abrir RLS para todos os usuários autenticados.
+Buckets privados: `wedding-images` (2 MiB; JPEG/PNG/WebP) e `wedding-documents` (1 MiB; PDF/JPEG/PNG/WebP). Caminho: `<user_uuid>/<wedding_uuid>/<sha256>.<extensão>`.
 
-- UUIDs preservam os identificadores locais. Valores monetários são inteiros em centavos e datas vazias devem virar NULL na importação. Datas de eventos não são timestamps; datas de histórico usam `timestamptz`.
-- RLS habilitada nas 23 tabelas, sem acesso `anon`, sem autorização baseada em metadados editáveis do usuário. Políticas de escrita rejeitam casamentos arquivados.
-- Referências compostas incluem `wedding_id`, impedindo misturar pessoas, parcelas, pagamentos e outros vínculos de casamentos distintos.
-- Nomes de convidados não são únicos: homônimos continuam permitidos.
-- Fotos e documentos vão para Storage; tabelas armazenam caminhos. Não colocar base64 nem URLs assinadas permanentes nas tabelas.
-- `legacy_snapshots` preserva contratos, propostas, profissionais e escalas antigos para consulta/importação, sem reintroduzir esses cadastros no fluxo simplificado. Campos legados de convidados/participações também têm espaço de preservação.
-- Tokens públicos de convites devem ser novos, aleatórios e guardados apenas como hash. Não importar os antigos tokens locais como links públicos. Ainda não há endpoint público de RSVP.
+Agregados guardam referências, não base64. O adaptador carrega os binários autenticados em memória para compatibilidade de fotos, anexos e PDFs existentes. Uploads podem preceder a criação do casamento; leitura e limpeza ficam restritas ao prefixo do proprietário. Falhas não são apresentadas como sucesso nem salvas localmente.
 
-## Arquivos privados
+## Convites
 
-Buckets previstos: `wedding-images` (2 MiB; JPEG/PNG/WebP) e `wedding-documents` (1 MiB; PDF/JPEG/PNG/WebP), ambos privados. Nome de objeto: `<user_uuid>/<wedding_uuid>/<arquivo_aleatorio>`.
+`view_invitation` e `respond_invitation` aceitam o token aleatório de 256 bits, inclusive sem login. A consulta retorna apenas desenho, nomes e respostas dos destinatários, sem contatos, outros convidados ou financeiro. Desativar o convite ou arquivar o casamento bloqueia acesso/respostas. Respostas usam o mesmo bloqueio/revisão das gravações do proprietário.
 
-Existem políticas de leitura, criação, edição e remoção, incluindo suporte a substituição de arquivo. A integração deverá usar URLs assinadas de duração limitada e remover arquivos pela Storage API antes de excluir definitivamente um casamento. Apagar uma linha SQL não apaga o conteúdo binário no Storage. Não excluir diretamente linhas de `storage.objects`.
+A tabela relacional guarda o hash do token. O agregado privado do proprietário mantém o token para permitir copiar o link novamente; nenhuma leitura anônima desse agregado é permitida. Tokens locais existentes já são aleatórios de 256 bits e permanecem nos convites selecionados para importação.
 
-## Limite deliberado do financeiro
+Fotos são acessíveis com o token somente se o caminho coincide com a foto daquele convite ativo. Demais arquivos continuam privados. Links `localhost` não podem ser usados por outras pessoas: falta publicar o frontend.
 
-As tabelas financeiras estão preparadas com acesso de leitura do proprietário, mas a escrita direta pelo cliente está revogada. Antes de trocar o frontend para Supabase, implementar RPCs transacionais para orçamento, contratação, parcelamento, pagamentos, devoluções, ajustes, cancelamento, estorno e auditoria, com bloqueio concorrente e validação de saldos. Não liberar CRUD financeiro direto para contornar isso.
+## Auth e configuração
 
-Essa preparação não migra dados locais nem muda o armazenamento atual da aplicação. Os cálculos existentes e os dados no navegador permanecem intactos.
+E-mail/senha, criação de conta, confirmação, recuperação, troca de senha e saída implementados com `supabase-js` **2.99.3**, fixado no lockfile. Rotas privadas exigem sessão. Sair/trocar de conta recarrega o aplicativo para limpar dados em memória.
 
-## Configuração e aplicação
+Configure `.env.local` a partir de `.env.example`: somente URL e chave **publicável**. Nunca usar service_role, chave secreta ou token de gerenciamento no frontend.
 
-Arquivos gerados com Supabase CLI **3.2.0**. `config.toml` representa o ambiente **local**, com URL em localhost:4200, senha mínima de 8 caracteres e login anônimo desabilitado. Ele não altera as opções do painel remoto por si só.
+No painel remoto, conferir Authentication → URL Configuration:
 
-Procedimento para novas configurações e etapas restantes:
+- Site URL: `http://localhost:4200` durante o desenvolvimento.
+- Redirect URLs: `http://localhost:4200/**` e `http://127.0.0.1:4200/**`.
+- Na publicação, configurar domínio real e retornos `/acesso/confirmar` e `/acesso/nova-senha`.
 
-1. Inspecionar o esquema existente e histórico de migrações; resolver qualquer conflito antes de aplicar.
-2. Aplicar somente novas migrações com a ferramenta autenticada e registrar o mesmo histórico remoto/local. As três migrações listadas acima já foram aplicadas.
-3. Executar consultas de verificação, testes RLS e advisors de segurança/performance no projeto real.
-4. Conferir Auth: e-mail/senha, confirmação de e-mail, recuperação de senha, SMTP e URLs de redirecionamento. O domínio da Vercel só deve ser configurado quando conhecido. Login Google precisa da configuração OAuth própria, não de uma chave secreta no frontend.
-5. Confirmar limites/tipos e acesso privado dos dois buckets via Storage API.
-6. Implementar login, adaptadores e RPCs antes da migração dos cadastros reais. Migrar com backup, validação e importação idempotente; nunca apagar IndexedDB automaticamente.
+O conector não permite editar configurações remotas do Auth. A confirmação dessas URLs e o teste de entrega de e-mail estão pendentes de ação no painel. Não foram enviados e-mails de teste. SMTP próprio, Google OAuth e hospedagem não configurados. `config.toml` representa apenas o Supabase local.
 
-## Testes locais sem Docker
+## Importação
+
+Após entrar, abrir `/importar-dados` no navegador/endereço original. Escolher casamentos, baixar backup JSON e importar. Casamentos demonstrativos/massa temporária são excluídos da seleção. Também é possível abrir um backup JSON exportado nessa tela.
+
+Cada importação valida dados, envia fotos/documentos ao Storage e compara os agregados lidos do servidor, independentemente da ordem das chaves JSON. O original no IndexedDB é preservado. Concluídos não são duplicados ao repetir. A migração real só ocorre quando o usuário entra e a executa.
+
+## Verificação
 
 ```sh
 npm install --prefix artifacts/sql-runtime --no-save --package-lock=false @electric-sql/pglite@0.5.16
 node scripts/test-supabase-schema.mjs
+node scripts/test-cloud-workspaces.mjs
+npm test -- --watch=false
+npx playwright test --workers=4
+npx playwright test --config playwright.cloud.config.ts --workers=1
+npm run build
 ```
 
-O teste usa um Postgres/WASM isolado com representações mínimas de `auth` e `storage`, aplica o SQL e testa acesso de duas contas, bloqueio anônimo, vínculos cruzados, arquivamento, quantidades, exclusão em cascata e restrições de escrita financeira. Não substitui os testes dos serviços Auth/Storage, advisors nem testes de integração no Supabase hospedado.
+O primeiro SQL testa o estágio de fundação. O segundo aplica todas as migrações no Postgres/WASM e verifica transações, saldos, RLS, revisão, importação e RSVP. Gera `tests/cloud_smoke.sql`, executado também no banco real em uma única transação com rollback. `tests/rls_smoke.sql` documenta a verificação histórica anterior à revogação do CRUD e não valida as permissões atuais.
+
+Testes de interface usam HTTP simulado para não criar contas/enviar e-mails. SQL real confirma as funções hospedadas, mas não substitui a conferência final de e-mail/sessão e upload com conta real após configurar Auth. Advisors de segurança executados após migração: nenhum aviso.

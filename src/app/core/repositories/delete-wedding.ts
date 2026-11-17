@@ -1,8 +1,10 @@
 import { IndexedDbRepository, LOCAL_DB_VERSION } from './indexed-db.repository';
 import { Wedding } from '../models/models';
+import { cloudBackend, cloudEnabled } from './cloud-backend';
 
 export const deletedWeddingKey = (id: string) => `deleted-wedding:${id}`;
 export async function deleteWeddingData(id: string) {
+  if(cloudEnabled) return cloudBackend.deleteWedding(id);
   await new IndexedDbRepository<Wedding>('weddings').list();
   return new Promise<void>((resolve, reject) => {
     const request = indexedDB.open('organiza-casamento', LOCAL_DB_VERSION);

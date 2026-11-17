@@ -3,10 +3,12 @@
     <span class="eyebrow">ORGANIZACASAMENTO</span
     ><a routerLink="/convites/enviados" class="text-link">Voltar à organização</a>
   </div>
-  <p class="notice invitation-local-note">
-    Simulação local: esta página só funciona no navegador e endereço em que o convite foi criado. As
-    respostas de teste atualizam seus convidados. Não é um link público para envio.
-  </p>
+  @if (!cloud) {
+    <p class="notice invitation-local-note">
+      Simulação local: esta página só funciona no navegador e endereço em que o convite foi criado.
+      As respostas de teste atualizam seus convidados. Não é um link público para envio.
+    </p>
+  }
   @if (loading()) {
     <p role="status">Abrindo seu convite…</p>
   }
@@ -22,7 +24,11 @@
         <p>Convite para {{ v.issue.recipientLabel }}. Responda por cada pessoa abaixo.</p>
         @if (saved()) {
           <p class="feedback success" role="status">
-            Respostas salvas neste navegador. Você pode alterá-las e salvar novamente.
+            {{
+              cloud
+                ? 'Respostas enviadas aos noivos. Você pode alterá-las e salvar novamente.'
+                : 'Respostas salvas neste navegador. Você pode alterá-las e salvar novamente.'
+            }}
           </p>
         }
         <form (ngSubmit)="save()">
@@ -60,7 +66,9 @@
             }
           </div>
           <button class="button primary" type="submit" [disabled]="saving()">
-            {{ saving() ? 'Salvando…' : 'Salvar respostas de teste' }}
+            {{
+              saving() ? 'Salvando…' : cloud ? 'Confirmar respostas' : 'Salvar respostas de teste'
+            }}
           </button>
         </form>
         @if (v.issue.design.address) {

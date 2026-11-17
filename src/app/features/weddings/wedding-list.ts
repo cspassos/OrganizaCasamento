@@ -1,3 +1,4 @@
+import { cloudEnabled } from '../../core/repositories/cloud-backend';
 import { MatMenuModule } from '@angular/material/menu';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -28,6 +29,7 @@ import { TemporaryDataService } from '../../core/services/temporary-data';
   templateUrl: './wedding-list.html',
 })
 export class WeddingList {
+  cloud = cloudEnabled;
   store = inject(WeddingsService);
   private temporary = inject(TemporaryDataService);
   private dialog = inject(MatDialog);

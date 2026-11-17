@@ -8,6 +8,8 @@ import { PreferencesService } from '../core/services/preferences';
 import { mainNavigation, navigation, routeFor } from '../core/constants/navigation';
 import { WeddingsService } from '../core/services/weddings';
 import { FormsModule, NgModel } from '@angular/forms';
+import { AuthService } from '../core/services/auth';
+import { cloudEnabled } from '../core/repositories/cloud-backend';
 @Component({
   selector: 'oc-layout',
   imports: [RouterLink, RouterOutlet, Icon, MatButtonModule, FormsModule],
@@ -15,6 +17,15 @@ import { FormsModule, NgModel } from '@angular/forms';
   host: { '(document:keydown.escape)': 'mobile.set(false)' },
 })
 export class MainLayout {
+  cloud = cloudEnabled;
+  auth = inject(AuthService);
+  async signOut() {
+    try {
+      await this.auth.signOut();
+    } catch {
+      this.selectionError.set('Não foi possível sair. Confira sua conexão e tente novamente.');
+    }
+  }
   private router = inject(Router);
   private currentUrl = toSignal(
     this.router.events.pipe(

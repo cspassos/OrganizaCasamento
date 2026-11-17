@@ -82,3 +82,21 @@ Compartilhamento local por PDF/mensagem; não há reserva pública nem atualiza�
 4. Para corrigir um registro ou mudar a meta, abra Gerenciar presente → Editar e altere as duas quantidades. É permitido receber mais unidades que a meta; o total recebido é preservado e a falta fica em zero.
 5. Recarregue e confira a persistência. O PDF e a mensagem com links mostram apenas os presentes que ainda faltam, com a quantidade restante. Baixe novamente após atualizar os recebimentos.
 6. Presentes antigos sem quantidade são considerados 1 unidade; os já marcados como recebidos continuam recebidos.
+
+## Login e transferência dos cadastros antigos — Supabase
+
+Este roteiro usa o sistema normal em `http://localhost:4200`. Os roteiros históricos anteriores pressupõem que você já entrou e selecionou o casamento. A massa temporária local agora fica restrita à configuração de testes.
+
+1. No painel Supabase → Authentication → URL Configuration, confira Site URL `http://localhost:4200` e Redirect URLs `http://localhost:4200/**` e `http://127.0.0.1:4200/**`. Salve. Sem isso, e-mails podem levar a outro endereço.
+2. Reinicie o servidor com `npm start`. Abra o sistema e clique em **Ainda não tenho conta**.
+3. Informe seu e-mail e senha, repita a senha e clique em **Criar minha conta**. Confirme pelo e-mail. O serviço de e-mails precisa estar configurado para permitir o destinatário; o SMTP padrão do Supabase tem restrições.
+4. Volte e entre. Confira a tela **Trazer meus cadastros anteriores**. Abra no mesmo navegador e endereço dos cadastros antigos (localhost e 127.0.0.1 têm bases distintas).
+5. Escolha os casamentos que pertencem à sua conta. Clique em **1. Baixar backup**, guarde o arquivo e só depois em **2. Importar os selecionados**. Espere a confirmação de conferência. Os originais não são apagados.
+6. Clique em **Ir para meu casamento**. Confira convidados, gastos, parcelas, pagamentos, fotos e presentes. Recarregue e confira novamente. Não crie novamente registros já importados.
+7. Para uma conta sem dados antigos, clique em **Ir para meu casamento** e cadastre um casamento novo. Os novos cadastros usam Supabase.
+8. Em outro navegador/aparelho, entre na mesma conta e confira os registros. Isso exige que o frontend esteja em um endereço acessível por esse aparelho; localhost não é público.
+9. Clique em **Sair**. Tente abrir uma tela de gastos diretamente: deve solicitar login. Outra conta não deve ver os seus casamentos.
+10. Em **Esqueci minha senha**, solicite recuperação e abra o link no mesmo navegador. Escolha e confirme uma nova senha. Esse teste depende da entrega do e-mail e dos Redirect URLs.
+11. Para acessar a importação depois, abra o botão de informações na barra superior → **Trazer cadastros antigos ou backup**.
+
+Os testes automatizados não enviam e-mails reais. A importação dos seus cadastros e o teste de entrega do e-mail precisam ser feitos com sua conta. Não envie senha ou chaves secretas pelo chat.

@@ -1,9 +1,12 @@
 import { Repository } from '../models/models';
+import { cloudBackend, cloudEnabled } from './cloud-backend';
 export const LOCAL_DB_VERSION = 6;
 export class IndexedDbRepository<T extends { id: string }> implements Repository<T> {
   private db?: Promise<IDBDatabase>;
   constructor(
-    private store: 'preferences' | 'weddings' | 'finance' | 'people' | 'invitations' | 'suppliers' | 'gifts',
+    private store:
+      'preferences' | 'weddings' | 'finance' | 'people' | 'invitations' | 'suppliers' | 'gifts',
+    private forceLocal = false,
   ) {}
   private open(): Promise<IDBDatabase> {
     return (this.db ??= new Promise((resolve, reject) => {
@@ -30,6 +33,7 @@ export class IndexedDbRepository<T extends { id: string }> implements Repository
     }));
   }
   async list(): Promise<T[]> {
+    if (cloudEnabled && !this.forceLocal) return cloudBackend.list<T>(this.store);
     const db = await this.open();
     return new Promise((resolve, reject) => {
       const r = db.transaction(this.store).objectStore(this.store).getAll();
@@ -58,16 +62,19 @@ export class IndexedDbRepository<T extends { id: string }> implements Repository
     });
   }
   save(value: T) {
+    if (cloudEnabled && !this.forceLocal) return cloudBackend.save(this.store, value);
     return this.write((s) => {
       s.put(value);
     }, value.id);
   }
   remove(id: string) {
+    if (cloudEnabled && !this.forceLocal) return cloudBackend.remove(this.store, id);
     return this.write((s) => {
       s.delete(id);
     });
   }
   async update(id: string, transform: (value: T | undefined) => T): Promise<T> {
+    if (cloudEnabled && !this.forceLocal) return cloudBackend.update(this.store, id, transform);
     const db = await this.open();
     return new Promise((resolve, reject) => {
       const guarded = this.store !== 'preferences';

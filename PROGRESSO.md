@@ -594,3 +594,15 @@ Solicitação atendida: itens 2 a 6 da revisão.
 - Auth consultado: e-mail habilitado, confirmação exigida, login anônimo desabilitado. Não alteradas configurações remotas de Auth, SMTP, Google ou URLs de retorno.
 - Tipos TypeScript gerados do banco real, 50 verificações locais em Postgres/WASM e build aprovados. Avisos de performance apenas informativos de índices ainda sem uso no banco vazio.
 - A aplicação permanece local: login, adaptadores, RPCs transacionais financeiras, arquivos via Storage API e migração segura dos cadastros são próximos passos. Dados do navegador preservados.
+
+## Login e persistência Supabase — 16/11/2026
+
+- Aplicação normal passou a usar Supabase; configuração `testing` mantém IndexedDB isolado para regressão. Não há fallback local de gravação quando a internet falha. IndexedDB antigo permanece preservado como fonte de importação.
+- Login por e-mail/senha, criação de conta, confirmação, recuperação, alteração de senha e saída. Rotas privadas protegidas e memória limpa ao sair/trocar de conta.
+- Quarta migração aplicada no projeto luhamomwwsiqxodwjodo: 20261116193756_cloud_workspace_transactions. Agora 24 tabelas com RLS. Agregados versionados sincronizam tabelas relacionais na mesma transação; gravações usam RPC, bloqueio e revisão otimista. Proteções de saldos e histórico verificadas no servidor.
+- Fotos e anexos no Storage privado com referência no banco e carregamento autenticado. Importação exige backup, preserva IDs, confere leitura do servidor e impede duplicação/sobrescrita de outra origem. Dados reais ainda não importados: isso requer o usuário entrar na conta e selecionar os casamentos do navegador original.
+- Convites podem ser consultados/respondidos sem login por token aleatório, retornando somente desenho e destinatários daquele convite. Desativação/arquivamento bloqueiam acesso. Uso em outro aparelho ainda depende de publicar o frontend.
+- Verificação: 88 testes unitários, 59 testes anteriores de navegador, 5 testes novos da interface em modo Supabase com HTTP simulado, 50 verificações da fundação Postgres e 28 verificações das transações aprovados. Smoke SQL também executado no projeto real com rollback; nenhuma conta ou casamento de teste persistido. Advisors de segurança sem avisos.
+- Build aprovado, com aviso de tamanho inicial de aproximadamente 703 kB (limite de aviso 500 kB; limite de erro 1 MB). Arquivos e variáveis locais fora do Git.
+- Pendente no painel: confirmar Site URL/Redirect URLs do Auth, pois o conector não permite editar essa configuração. Entrega real dos e-mails e fluxo completo com conta real precisam dessa conferência. SMTP próprio, Google OAuth, compartilhamento entre contas e Vercel não configurados.
+- Documentação atualizada em README.md e supabase/README.md; roteiro de login/importação em TESTES-REVISAO.md.

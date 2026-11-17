@@ -136,7 +136,9 @@
   </section>
 }
 
-<details class="optional-details temporary-tools">
-  <summary>Dados de teste (temporário)</summary>
-  <oc-temporary-data-panel />
-</details>
+@if (!cloud) {
+  <details class="optional-details temporary-tools">
+    <summary>Dados de teste (temporário)</summary>
+    <oc-temporary-data-panel />
+  </details>
+}

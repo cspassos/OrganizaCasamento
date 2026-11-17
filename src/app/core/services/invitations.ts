@@ -21,6 +21,11 @@ import {
 import { localToday } from '../utils/finance';
 import { WeddingsService } from './weddings';
 import { PeopleService } from './people';
+import {
+  cloudEnabled,
+  publicInvitation,
+  respondPublicInvitation,
+} from '../repositories/cloud-backend';
 @Injectable({ providedIn: 'root' })
 export class InvitationsService {
   weddings = inject(WeddingsService);
@@ -289,6 +294,7 @@ export class InvitationsService {
     });
   }
   async localView(token: string) {
+    if (cloudEnabled) return publicInvitation(token);
     if (!/^[a-f\d]{64}$/.test(token)) throw new Error('Convite não encontrado neste navegador.');
     const ledgers = await this.repository.list(),
       ledger = ledgers.find((l) => l.issues.some((i) => i.token === token)),
@@ -311,6 +317,10 @@ export class InvitationsService {
     return { issue, members };
   }
   async respond(token: string, answers: RsvpAnswer[]) {
+    if (cloudEnabled) {
+      await respondPublicInvitation(token, answers);
+      return;
+    }
     const view = await this.localView(token);
     await this.mutate(
       view.issue.weddingId,

@@ -8,7 +8,7 @@ export default defineConfig({
     timezoneId: 'America/Sao_Paulo',
   },
   webServer: {
-    command: 'npm start -- --host 127.0.0.1 --port 4300',
+    command: 'npx ng serve --configuration testing --host 127.0.0.1 --port 4300',
     url: 'http://127.0.0.1:4300',
     reuseExistingServer: false,
   },

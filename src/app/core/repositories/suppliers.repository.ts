@@ -4,6 +4,7 @@ import { SuppliersLedger } from '../models/suppliers';
 import { IndexedDbRepository, LOCAL_DB_VERSION } from './indexed-db.repository';
 import { emptyLedger, validateLedger } from '../utils/finance';
 import { emptySuppliers, validateSuppliers } from '../utils/suppliers';
+import { cloudBackend, cloudEnabled } from './cloud-backend';
 
 export interface PlanningRecords {
   suppliers: SuppliersLedger;
@@ -24,6 +25,18 @@ export async function updatePlanning(
   fallback?: FinanceLedger,
   requireWedding = true,
 ): Promise<PlanningRecords> {
+  if (cloudEnabled)
+    return cloudBackend.transact(weddingId, (workspace) => {
+      const existing = !!workspace.finance;
+      const suppliers = workspace.suppliers ?? emptySuppliers(weddingId);
+      const finance = workspace.finance ?? structuredClone(fallback ?? emptyLedger(weddingId));
+      action(suppliers, finance, existing);
+      validateLedger(finance);
+      validateSuppliers(suppliers, finance);
+      workspace.suppliers = suppliers;
+      workspace.finance = finance;
+      return { suppliers, finance };
+    });
   await new IndexedDbRepository<SuppliersLedger>('suppliers').list();
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('organiza-casamento', LOCAL_DB_VERSION);

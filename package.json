@@ -2,6 +2,8 @@
   "name": "organiza-casamento",
   "version": "0.0.0",
   "scripts": {
+    "prestart": "node scripts/configure-cloud.mjs",
+    "prebuild": "node scripts/configure-cloud.mjs",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
@@ -19,6 +21,7 @@
     "@angular/material": "^21.2.14",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "@supabase/supabase-js": "2.99.3",
     "chart.js": "^4.6.1",
     "fake-indexeddb": "^6.2.8",
     "fflate": "^0.8.2",

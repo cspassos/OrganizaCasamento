@@ -47,8 +47,10 @@ Thumbs.db
 # Local test evidence and generated downloads (may contain personal data)
 /artifacts/
 /blob-report/
+/src/environments/cloud.generated.ts
 /playwright/.cache/
 /output/
+organiza-casamento-backup*.json
 
 # Credentials and machine-specific connections
 .env

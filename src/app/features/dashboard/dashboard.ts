@@ -7,6 +7,7 @@ import { FinanceService } from '../../core/services/finance';
 import { money } from '../../core/utils/finance';
 import { PeopleService } from '../../core/services/people';
 import { TemporaryDataPanel } from '../../shared/components/temporary-data-panel';
+import { cloudEnabled } from '../../core/repositories/cloud-backend';
 
 @Component({
   selector: 'oc-dashboard',
@@ -14,6 +15,7 @@ import { TemporaryDataPanel } from '../../shared/components/temporary-data-panel
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
+  cloud = cloudEnabled;
   store = inject(WeddingsService);
   finance = inject(FinanceService);
   people = inject(PeopleService);

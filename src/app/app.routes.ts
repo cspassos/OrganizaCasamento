@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { unsavedWeddingGuard } from './core/guards/unsaved-wedding';
 import { MainLayout } from './layout/main-layout';
+import { authGuard } from './core/guards/auth';
 const applicationRoutes: Routes = [
   {
     path: 'presentes',
@@ -122,9 +123,11 @@ const applicationRoutes: Routes = [
   { path: '**', redirectTo: 'dashboard' },
 ];
 export const routes: Routes = [
+  {path:'acesso/:action',loadComponent:()=>import('./features/auth/auth-page').then(m=>m.AuthPage)},
+  {path:'importar-dados',canActivate:[authGuard],loadComponent:()=>import('./features/auth/import-local-page').then(m=>m.ImportLocalPage)},
   {
     path: 'convite/:token',
     loadComponent: () => import('./features/invitations/local-rsvp').then((m) => m.LocalRsvp),
   },
-  { path: '', component: MainLayout, children: applicationRoutes },
+  { path: '', component: MainLayout, canActivate:[authGuard], children: applicationRoutes },
 ];

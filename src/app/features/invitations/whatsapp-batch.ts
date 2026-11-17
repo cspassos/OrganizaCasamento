@@ -1,3 +1,4 @@
+import { cloudEnabled } from '../../core/repositories/cloud-backend';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -17,7 +18,12 @@ import { BatchExportDialog } from './batch-export-dialog';
     <h2>Enviar para várias pessoas</h2>
     <p class="muted">
       Selecione os destinatários e prepare uma fila de conversas. Você confirma cada envio no
-      WhatsApp. O andamento fica salvo neste navegador, mesmo se sair da tela.
+      WhatsApp.
+      {{
+        cloud
+          ? 'O andamento fica salvo na sua conta.'
+          : 'O andamento fica salvo neste navegador, mesmo se sair da tela.'
+      }}
     </p>
     @if (error()) {
       <p class="feedback error" role="alert">{{ error() }}</p>
@@ -185,6 +191,7 @@ import { BatchExportDialog } from './batch-export-dialog';
   </section>`,
 })
 export class WhatsappBatch {
+  cloud = cloudEnabled;
   store = inject(InvitationsService);
   dialogs = inject(MatDialog);
   actions = messageActions;

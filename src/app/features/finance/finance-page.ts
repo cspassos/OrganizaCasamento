@@ -1,3 +1,4 @@
+import { cloudEnabled } from '../../core/repositories/cloud-backend';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -25,6 +26,7 @@ import { SuppliersPage } from '../suppliers/suppliers-page';
   templateUrl: './finance-page.html',
 })
 export class FinancePage {
+  cloud = cloudEnabled;
   finance = inject(FinanceService);
   private params = toSignal(inject(ActivatedRoute).paramMap);
   section = computed(() => this.params()?.get('section') ?? 'orcamento');

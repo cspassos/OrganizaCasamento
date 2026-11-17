@@ -1,3 +1,4 @@
+// Foundation-stage checks only; current RPC permissions are tested in test-cloud-workspaces.mjs.
 // Isolated Postgres/WASM smoke tests. Does not connect to any hosted project.
 // Runtime installed outside the application: npm install --prefix artifacts/sql-runtime
 //   --no-save --package-lock=false @electric-sql/pglite@0.5.16
@@ -48,7 +49,7 @@ try {
     grant select,insert,update,delete on storage.objects to authenticated;
     insert into auth.users values ('${a}'),('${b}');
   `);
-  const files = (await fs.readdir('supabase/migrations')).filter((f) => f.endsWith('.sql')).sort();
+  const files = (await fs.readdir('supabase/migrations')).filter((f) => f.endsWith('.sql') && !f.includes('cloud_workspace_transactions')).sort();
   for (const file of files) await db.exec(await fs.readFile(`supabase/migrations/${file}`, 'utf8'));
   const tables = await query(
     "select tablename,rowsecurity from pg_tables where schemaname='public'",

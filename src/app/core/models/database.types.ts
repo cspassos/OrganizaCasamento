@@ -954,6 +954,7 @@ export type Database = {
         Row: {
           collapsed: boolean;
           dark: boolean;
+          data: Json;
           id: string;
           selected_wedding_id: string | null;
           updated_at: string;
@@ -961,6 +962,7 @@ export type Database = {
         Insert: {
           collapsed?: boolean;
           dark?: boolean;
+          data?: Json;
           id?: string;
           selected_wedding_id?: string | null;
           updated_at?: string;
@@ -968,6 +970,7 @@ export type Database = {
         Update: {
           collapsed?: boolean;
           dark?: boolean;
+          data?: Json;
           id?: string;
           selected_wedding_id?: string | null;
           updated_at?: string;
@@ -977,6 +980,59 @@ export type Database = {
             foreignKeyName: 'user_preferences_selected_wedding_id_fkey';
             columns: ['selected_wedding_id'];
             isOneToOne: false;
+            referencedRelation: 'weddings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      wedding_workspaces: {
+        Row: {
+          created_at: string;
+          finance: Json | null;
+          gifts: Json | null;
+          import_hash: string | null;
+          invitations: Json | null;
+          owner_id: string;
+          people: Json | null;
+          revision: number;
+          suppliers: Json | null;
+          updated_at: string;
+          wedding: Json;
+          wedding_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          finance?: Json | null;
+          gifts?: Json | null;
+          import_hash?: string | null;
+          invitations?: Json | null;
+          owner_id: string;
+          people?: Json | null;
+          revision?: number;
+          suppliers?: Json | null;
+          updated_at?: string;
+          wedding: Json;
+          wedding_id: string;
+        };
+        Update: {
+          created_at?: string;
+          finance?: Json | null;
+          gifts?: Json | null;
+          import_hash?: string | null;
+          invitations?: Json | null;
+          owner_id?: string;
+          people?: Json | null;
+          revision?: number;
+          suppliers?: Json | null;
+          updated_at?: string;
+          wedding?: Json;
+          wedding_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'wedding_workspaces_wedding_id_fkey';
+            columns: ['wedding_id'];
+            isOneToOne: true;
             referencedRelation: 'weddings';
             referencedColumns: ['id'];
           },
@@ -1109,7 +1165,29 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      delete_workspace: { Args: { p_id: string }; Returns: undefined };
+      import_workspace: {
+        Args: { p_data: Json; p_hash: string; p_id: string };
+        Returns: number;
+      };
+      respond_invitation: {
+        Args: { p_answers: Json; p_token: string };
+        Returns: undefined;
+      };
+      save_preference: {
+        Args: { p_key: string; p_value: Json };
+        Returns: undefined;
+      };
+      save_workspace: {
+        Args: {
+          p_data: Json;
+          p_id: string;
+          p_metadata_only?: boolean;
+          p_version: number;
+        };
+        Returns: number;
+      };
+      view_invitation: { Args: { p_token: string }; Returns: Json };
     };
     Enums: {
       [_ in never]: never;

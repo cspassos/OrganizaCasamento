@@ -4,6 +4,7 @@ import { buildTemporarySeed } from '../../data/mocks/temporary-seed';
 import { WeddingsService } from './weddings';
 import { FinanceService } from './finance';
 import { PeopleService } from './people';
+import { cloudEnabled } from '../repositories/cloud-backend';
 interface SeedMarker {
   id: string;
   weddingId: string;
@@ -24,6 +25,10 @@ export class TemporaryDataService {
     return this.inspect();
   }
   private async inspect() {
+    if (cloudEnabled) {
+      this.ready.set(true);
+      return;
+    }
     try {
       this.marker.set(
         (await new IndexedDbRepository<SeedMarker>('preferences').list()).find(
@@ -37,6 +42,8 @@ export class TemporaryDataService {
     }
   }
   private async write(remove: boolean) {
+    if (cloudEnabled)
+      throw new Error('A massa local está disponível somente no ambiente de testes.');
     await this.initialized;
     await this.weddings.initialized;
     if (this.busy()) return;

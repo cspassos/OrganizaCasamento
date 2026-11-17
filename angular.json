@@ -30,7 +30,14 @@
               }
             ],
             "styles": ["public/fonts/fonts.css", "src/styles.scss"],
-            "allowedCommonJsDependencies": ["core-js", "raf", "rgbcolor", "html2canvas", "qrcode", "dijkstrajs"]
+            "allowedCommonJsDependencies": [
+              "core-js",
+              "raf",
+              "rgbcolor",
+              "html2canvas",
+              "qrcode",
+              "dijkstrajs"
+            ]
           },
           "configurations": {
             "production": {
@@ -52,6 +59,16 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "testing": {
+              "optimization": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.testing.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -64,12 +81,18 @@
             },
             "development": {
               "buildTarget": "organiza-casamento:build:development"
+            },
+            "testing": {
+              "buildTarget": "organiza-casamento:build:testing"
             }
           },
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "organiza-casamento:build:testing"
+          }
         }
       }
     }

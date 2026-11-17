@@ -94,7 +94,11 @@
     }
   }
   <p class="storage-reminder">
-    Dados financeiros locais e exclusivos deste casamento. Limpar os dados do site pode apagá-los.
+    {{
+      cloud
+        ? 'Dados financeiros salvos na sua conta e separados por casamento.'
+        : 'Dados financeiros locais e exclusivos deste casamento. Limpar os dados do site pode apagá-los.'
+    }}
     Exporte os relatórios regularmente.
   </p>
 } @else {

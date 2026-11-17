@@ -17,9 +17,14 @@
   <p role="status">Carregando convites…</p>
 } @else {
   <p class="notice invitation-local-note">
-    Teste local: os links e as respostas funcionam somente neste navegador e neste endereço. Para
-    convidar de verdade agora, baixe a imagem ou PDF e envie o arquivo. Links públicos serão
-    disponibilizados na integração final.
+    @if (cloud) {
+      As respostas dos convidados ficam salvas na sua conta. Para compartilhar com outras pessoas,
+      publique o site em um endereço acessível pela internet.
+    } @else {
+      Teste local: os links e as respostas funcionam somente neste navegador e neste endereço. Para
+      convidar de verdade agora, baixe a imagem ou PDF e envie o arquivo. Links públicos serão
+      disponibilizados na integração final.
+    }
   </p>
   @if (error() || store.error()) {
     <p class="feedback error" role="alert">{{ error() || store.error() }}</p>
@@ -188,10 +193,8 @@
     >
     @if (copiedLink()) {
       <label class="invitation-copy-link"
-        >Link apenas para teste neste navegador<input
-          readonly
-          [value]="copiedLink()"
-          (click)="$any($event.target).select()"
+        >{{ cloud ? 'Link do convite' : 'Link apenas para teste neste navegador'
+        }}<input readonly [value]="copiedLink()" (click)="$any($event.target).select()"
       /></label>
     }
     <div class="collection-toolbar">
@@ -298,7 +301,7 @@
             class="button secondary"
             (click)="downloadQr()"
           >
-            Baixar QR de teste</button
+            {{ cloud ? 'Baixar QR Code' : 'Baixar QR de teste' }}</button
           ><button class="button secondary" (click)="qr.set(null)">Fechar QR</button>
         </div>
       }
@@ -331,7 +334,9 @@
             }
             @for (response of i.responses; track $index) {
               <p>
-                <strong>Resposta local em {{ date(response.at) }}</strong>
+                <strong
+                  >{{ cloud ? 'Resposta em' : 'Resposta local em' }} {{ date(response.at) }}</strong
+                >
               </p>
               @for (a of response.answers; track a.guestId) {
                 <p>
@@ -379,8 +384,11 @@
             <div class="invitation-qr">
               <img [src]="qr()!.src" alt="QR Code do link de teste local" />
               <p>
-                QR apenas para teste. Outro dispositivo não tem acesso aos dados locais deste
-                navegador.
+                {{
+                  cloud
+                    ? 'QR Code para abrir este convite. O endereço do site precisa estar disponível na internet.'
+                    : 'QR apenas para teste. Outro dispositivo não tem acesso aos dados locais deste navegador.'
+                }}
               </p>
               <button class="button secondary" (click)="downloadQr()">Baixar QR de teste</button>
             </div>
@@ -548,7 +556,10 @@
       <p class="muted">
         O atalho do WhatsApp abre a conversa com o texto preenchido, sem anexar o arquivo. Para
         incluir a imagem ou o PDF, use as opções acima. Depois registre o envio em Convites
-        enviados. O link de teste local não deve ser enviado como confirmação pública.
+        enviados.
+        @if (!cloud) {
+          O link de teste local não deve ser enviado como confirmação pública.
+        }
       </p>
     </section>
   } @else if (section() === 'confirmacoes') {
@@ -607,8 +618,12 @@
       }
     }
     <p class="muted">
-      As respostas da simulação local aparecem aqui e em Convidados. Para testar, abra um convite em
-      <a routerLink="/convites/enviados">Convites enviados</a>.
+      {{
+        cloud
+          ? 'As respostas aparecem aqui e em Convidados.'
+          : 'As respostas da simulação local aparecem aqui e em Convidados.'
+      }}
+      Para testar, abra um convite em <a routerLink="/convites/enviados">Convites enviados</a>.
     </p>
   }
   @if (view() === 'cards' && (section() === 'enviados' || section() === 'confirmacoes')) {

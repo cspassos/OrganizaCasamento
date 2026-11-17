@@ -1,3 +1,4 @@
+import { cloudEnabled } from '../../core/repositories/cloud-backend';
 import { MatMenuModule } from '@angular/material/menu';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -46,6 +47,7 @@ import {
   templateUrl: './invitations-page.html',
 })
 export class InvitationsPage {
+  cloud = cloudEnabled;
   store = inject(InvitationsService);
   private dialogs = inject(MatDialog);
   params = toSignal(inject(ActivatedRoute).paramMap);
@@ -411,13 +413,17 @@ export class InvitationsPage {
     this.copiedLink.set(this.url(i));
     await this.run(
       () => navigator.clipboard.writeText(this.url(i)),
-      'Link de teste copiado. Ele funciona apenas neste navegador e endereço.',
+      this.cloud
+        ? 'Link copiado. Compartilhe quando o site estiver publicado.'
+        : 'Link de teste copiado. Ele funciona apenas neste navegador e endereço.',
     );
   }
   async showQr(i: IssuedInvitation) {
     await this.run(
       async () => this.qr.set({ id: i.id, src: await invitationQr(this.url(i)) }),
-      'QR de teste pronto. Não use como link público para convidados.',
+      this.cloud
+        ? 'QR Code pronto. O endereço deve estar acessível na internet.'
+        : 'QR de teste pronto. Não use como link público para convidados.',
     );
   }
   async downloadQr() {

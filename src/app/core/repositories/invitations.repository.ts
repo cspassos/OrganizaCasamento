@@ -5,6 +5,7 @@ import { Wedding } from '../models/models';
 import { IndexedDbRepository, LOCAL_DB_VERSION } from './indexed-db.repository';
 import { emptyInvitations, validateInvitations } from '../utils/invitations';
 import { emptyPeople, validatePeople } from '../utils/people';
+import { cloudBackend, cloudEnabled } from './cloud-backend';
 export interface InvitationsRepository {
   list(): Promise<InvitationLedger[]>;
   update(
@@ -21,6 +22,17 @@ export class LocalInvitationsRepository implements InvitationsRepository {
     weddingId: string,
     transform: (invitations: InvitationLedger, people: PeopleLedger) => void,
   ) {
+    if (cloudEnabled)
+      return cloudBackend.transact(weddingId, (workspace) => {
+        const invitations = workspace.invitations ?? emptyInvitations(weddingId);
+        const people = workspace.people ?? emptyPeople(weddingId);
+        transform(invitations, people);
+        validateInvitations(invitations);
+        validatePeople(people);
+        workspace.invitations = invitations;
+        workspace.people = people;
+        return invitations;
+      });
     await this.base.list();
     return new Promise<InvitationLedger>((resolve, reject) => {
       const request = indexedDB.open('organiza-casamento', LOCAL_DB_VERSION);

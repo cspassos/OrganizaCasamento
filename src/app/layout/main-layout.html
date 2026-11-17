@@ -52,7 +52,10 @@
       <div class="local-note">
         <oc-icon name="shield" />
         <div>
-          <strong>Seu planejamento, com você</strong><small>Dados salvos neste navegador.</small>
+          <strong>Seu planejamento, com você</strong
+          ><small>{{
+            cloud ? 'Dados salvos na sua conta.' : 'Dados salvos neste navegador.'
+          }}</small>
         </div>
       </div>
       <button
@@ -78,7 +81,7 @@
         ><span>{{ pageTitle() }} / {{ weddings.active()?.name ?? 'OrganizaCasamento' }}</span>
       </div>
       <div class="header-actions">
-        <span class="local-badge"><i></i> Ambiente local</span
+        <span class="local-badge"><i></i> {{ cloud ? 'Minha conta' : 'Ambiente local' }}</span
         ><button
           mat-icon-button
           [disabled]="!prefs.ready()"
@@ -88,19 +91,30 @@
           <oc-icon [name]="prefs.dark() ? 'light_mode' : 'dark_mode'" /></button
         ><button
           mat-icon-button
-          aria-label="Informações sobre os dados locais"
+          aria-label="Informações sobre os dados"
           (click)="info.set(!info())"
         >
           <oc-icon name="info" /></button
         ><a class="avatar small" routerLink="/casamentos" aria-label="Meus casamentos"
           ><oc-icon name="favorite_border"
         /></a>
+        @if (cloud) {
+          <button class="button secondary" (click)="signOut()" [title]="auth.user()?.email ?? ''">
+            Sair
+          </button>
+        }
       </div>
     </header>
     @if (info()) {
       <div class="notice" role="status">
-        Os dados ficam apenas neste navegador e podem ser perdidos ao limpar os dados do site.
-        Backup e sincronização serão implementados nas próximas etapas.
+        @if (cloud) {
+          Seus cadastros ficam na sua conta e podem ser acessados em outro aparelho. É necessário
+          estar conectado à internet para salvar.
+          <a routerLink="/importar-dados">Trazer cadastros antigos ou backup</a>
+        } @else {
+          Os dados ficam apenas neste navegador e podem ser perdidos ao limpar os dados do site.
+          Backup e sincronização serão implementados nas próximas etapas.
+        }
       </div>
     }
     @if (prefs.error()) {

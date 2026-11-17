@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { InvitationsService } from '../../core/services/invitations';
 import { InvitationPreview } from '../../shared/components/invitation-preview';
 import { mapsUrl } from '../../core/utils/invitations';
+import { cloudEnabled } from '../../core/repositories/cloud-backend';
 type LocalView = Awaited<ReturnType<InvitationsService['localView']>>;
 @Component({
   selector: 'oc-local-rsvp',
@@ -11,6 +12,7 @@ type LocalView = Awaited<ReturnType<InvitationsService['localView']>>;
   templateUrl: './local-rsvp.html',
 })
 export class LocalRsvp implements OnDestroy {
+  cloud = cloudEnabled;
   store = inject(InvitationsService);
   private route = inject(ActivatedRoute);
   private token = this.route.snapshot.paramMap.get('token') ?? '';

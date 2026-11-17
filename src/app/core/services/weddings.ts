@@ -3,6 +3,7 @@ import { Wedding } from '../models/models';
 import { IndexedDbRepository } from '../repositories/indexed-db.repository';
 import { validateWedding } from '../utils/wedding';
 import { deleteWeddingData } from '../repositories/delete-wedding';
+import { cloudEnabled } from '../repositories/cloud-backend';
 
 interface Selection {
   id: string;
@@ -113,6 +114,10 @@ export class WeddingsService {
     try {
       await deleteWeddingData(id);
       await this.load();
+    } catch (error) {
+      // The database deletion can finish before a Storage cleanup/network error.
+      if (cloudEnabled) await this.load();
+      throw error;
     } finally {
       this.busy.set(false);
     }

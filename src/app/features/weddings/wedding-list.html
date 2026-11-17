@@ -150,6 +150,9 @@
   }
 }
 <p class="storage-reminder">
-  <oc-icon name="info" />Os dados ficam neste navegador. Limpar os dados do site pode apagá-los.
-  Backup será disponibilizado em uma próxima etapa.
+  <oc-icon name="info" />{{
+    cloud
+      ? 'Seus casamentos ficam salvos na sua conta.'
+      : 'Os dados ficam neste navegador. Limpar os dados do site pode apagá-los. Backup será disponibilizado em uma próxima etapa.'
+  }}
 </p>
