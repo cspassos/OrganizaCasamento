@@ -2,6 +2,7 @@ export const mainNavigation = [
   { title: 'Visão geral', icon: 'space_dashboard', path: '/dashboard' },
   { title: 'Gastos e pagamentos', icon: 'account_balance_wallet', path: '/financeiro/despesas' },
   { title: 'Contas a pagar', icon: 'event_note', path: '/financeiro/contas' },
+  { title: 'Lembretes e anotações', icon: 'notifications', path: '/lembretes' },
   { title: 'Convidados', icon: 'group', path: '/pessoas/convidados' },
   { title: 'Convites', icon: 'mail', path: '/convites/modelos' },
   { title: 'Lista de presentes', icon: 'card_giftcard', path: '/presentes' },

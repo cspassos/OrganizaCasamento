@@ -19,6 +19,22 @@
   @if (finance.error()) {
     <p class="feedback error" role="alert">{{ finance.error() }}</p>
   }
+  <section class="card dashboard-reminders">
+    <div>
+      <h2>Para não esquecer</h2>
+      <p class="muted">
+        {{ organizer.pending().length }} lembretes em aberto · {{ organizer.bills().length }} contas
+        pedindo atenção
+      </p>
+    </div>
+    <a class="button secondary" routerLink="/lembretes">Ver lembretes e anotações</a>
+    @for (item of organizer.upcoming().slice(0, 3); track item.id) {
+      <a class="dashboard-reminder-item" routerLink="/lembretes"
+        ><strong>{{ item.title }}</strong
+        ><span>{{ organizer.label(item.date) }} · {{ date(item.date) }} {{ item.time }}</span></a
+      >
+    }
+  </section>
   @if (finance.summary(); as s) {
     <section class="stats-grid" aria-label="Resumo do dinheiro" id="indicadores">
       <oc-stat

@@ -387,7 +387,6 @@ test('preferência de visualização fica na conta e retorna após recarregar', 
   expect(await page.evaluate(() => localStorage.getItem('oc-people-view'))).toBeNull();
 });
 
-
 test('conta conectada aparece no computador e no celular', async ({ page }) => {
   await backend(page);
   await login(page);
@@ -396,4 +395,46 @@ test('conta conectada aparece no computador e no celular', async ({ page }) => {
   await expect(page.getByLabel('Conta conectada')).toContainText('teste@example.com');
   await expect(page.getByLabel('Conta conectada')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('anotacoes ficam na conta e falhas nao apagam o conteudo salvo', async ({ page }) => {
+  const server = await backend(page);
+  await login(page);
+  await wedding(page);
+  await page.goto('/lembretes');
+  await page.getByRole('button', { name: /Nova anota/ }).click();
+  let dialog = page.getByRole('dialog');
+  await dialog.getByLabel(/T.tulo/).fill('Ideia importante');
+  await dialog.getByLabel('Detalhes').fill('Guardar esta informacao na conta');
+  await dialog.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect([...server.rows.values()][0].wedding.organizer[0].title).toBe('Ideia importante');
+  await page.reload();
+  await expect(page.locator('.organizer-item')).toContainText('Ideia importante');
+  await page.getByRole('button', { name: 'Editar Ideia importante', exact: true }).click();
+  dialog = page.getByRole('dialog');
+  await dialog.getByLabel(/T.tulo/).fill('Outra ideia');
+  server.fail(true);
+  await dialog.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toBeVisible();
+  expect([...server.rows.values()][0].wedding.organizer[0].title).toBe('Ideia importante');
+  server.fail(false);
+  await dialog.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('.organizer-item')).toContainText('Outra ideia');
+  const row = [...server.rows.values()][0];
+  await page.goto(`/casamentos/${row.wedding.id}/editar`);
+  await page.getByLabel('Nome do casamento', { exact: true }).fill('Casamento atualizado');
+  row.wedding.organizer.push({
+    ...row.wedding.organizer[0],
+    id: crypto.randomUUID(),
+    title: 'Nota de outro aparelho',
+  });
+  row.revision++;
+  await page.getByRole('button', { name: 'Salvar casamento', exact: true }).click();
+  await expect(page).toHaveURL(/dashboard$/);
+  await page.goto('/lembretes');
+  await expect(page.locator('.organizer-item')).toHaveCount(2);
+  await expect(page.locator('.organizer-grid')).toContainText('Nota de outro aparelho');
 });

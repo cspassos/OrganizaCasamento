@@ -1,4 +1,15 @@
 @use '@angular/material' as mat;
+.organizer-check { display:flex; align-items:center; gap:10px; font-size:14px; }
+.organizer-check input { width:18px; height:18px; accent-color:var(--sage); }
+.reminder-bell { position:relative; }
+.reminder-count { position:absolute; top:0; right:0; padding:2px 4px; min-width:17px; border-radius:10px; background:#b84b3e; color:white; font-size:10px; line-height:1.3; text-align:center; }
+.dashboard-reminders { padding:24px; margin:20px 0; display:flex; flex-wrap:wrap; align-items:center; gap:16px; }
+.dashboard-reminders h2 { margin:0; font-size:22px; }.dashboard-reminders p { margin:8px 0 0; }
+.dashboard-reminders > .button { margin-left:auto; }
+.dashboard-reminder-item { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; width:100%; border-top:1px solid var(--border); padding-top:14px; font-size:14px; text-decoration:none; }
+.dashboard-reminder-item span { color:var(--muted); font-size:12px; }
+@media(max-width:600px) { .dashboard-reminders { padding:18px; }.dashboard-reminders > .button { margin-left:0; } }
+@media(max-width:380px) { .header-actions > .avatar { display:none; } }
 .simple-nav-link {
   text-decoration: none;
   margin-bottom: 6px;

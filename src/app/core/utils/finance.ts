@@ -20,8 +20,7 @@ export function cents(value: number): number {
     throw new Error('Informe um valor entre zero e R$ 999.999.999,99.');
   return Math.round((value + Number.EPSILON) * 100);
 }
-export function localToday() {
-  const d = new Date();
+export function localToday(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 export function emptyLedger(weddingId: string): FinanceLedger {

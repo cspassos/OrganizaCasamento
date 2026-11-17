@@ -10,6 +10,7 @@ import { FormsModule, NgModel } from '@angular/forms';
 import { AuthService } from '../core/services/auth';
 import { cloudEnabled } from '../core/repositories/cloud-backend';
 import { AdministrationService } from '../core/services/administration';
+import { OrganizerService } from '../core/services/organizer';
 @Component({
   selector: 'oc-layout',
   imports: [RouterLink, RouterOutlet, Icon, FormsModule],
@@ -19,6 +20,7 @@ import { AdministrationService } from '../core/services/administration';
 export class MainLayout {
   cloud = cloudEnabled;
   auth = inject(AuthService);
+  organizer = inject(OrganizerService);
   administration = inject(AdministrationService);
   async signOut() {
     try {
@@ -132,6 +134,7 @@ export class MainLayout {
             )[s[2]] ?? 'Pessoas'
           );
         if (s[1] === 'presentes') return 'Lista de presentes';
+        if (s[1] === 'lembretes') return 'Lembretes e anotações';
         if (s[1] === 'financeiro')
           return s[2] === 'despesas' && s[3]
             ? s[3] === 'nova'

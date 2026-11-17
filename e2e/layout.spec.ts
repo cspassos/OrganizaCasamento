@@ -16,7 +16,7 @@ test('menu direto destaca o destino em acesso direto, atualização e volta', as
     'aria-current',
     'page',
   );
-  await expect(menu.getByRole('link')).toHaveCount(7);
+  await expect(menu.getByRole('link')).toHaveCount(8);
 });
 test('tema e menu recolhido persistem no navegador', async ({ page }) => {
   await page.goto('/dashboard');

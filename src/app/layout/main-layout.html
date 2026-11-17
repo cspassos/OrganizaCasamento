@@ -85,6 +85,18 @@
         ><span>{{ pageTitle() }} / {{ weddings.active()?.name ?? 'OrganizaCasamento' }}</span>
       </div>
       <div class="header-actions">
+        <a
+          class="topbar-icon reminder-bell"
+          routerLink="/lembretes"
+          [attr.aria-label]="'Lembretes e anotações: ' + organizer.alertCount() + ' avisos'"
+          title="Lembretes e anotações"
+          ><oc-icon name="notifications" />
+          @if (organizer.alertCount()) {
+            <span class="reminder-count">{{
+              organizer.alertCount() > 99 ? '99+' : organizer.alertCount()
+            }}</span>
+          }
+        </a>
         <span class="local-badge account-identity" [title]="auth.user()?.email ?? ''"
           ><i></i
           ><span>{{ cloud ? (auth.user()?.email ?? 'Minha conta') : 'Ambiente local' }}</span></span

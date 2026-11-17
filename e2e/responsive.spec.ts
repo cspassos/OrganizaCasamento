@@ -32,6 +32,7 @@ for (const width of [320, 390, 667, 768]) {
       '/convites/confirmacoes',
       '/convites/criar',
       '/presentes',
+      '/lembretes',
     ];
     for (const route of routes) {
       await page.goto(route);
@@ -49,6 +50,8 @@ for (const width of [320, 390, 667, 768]) {
       ['/pessoas/padrinhos', /Adicionar participa/],
       ['/financeiro/fornecedores', /Novo fornecedor/],
       ['/presentes', /Adicionar presente/],
+      ['/lembretes', /Novo lembrete/],
+      ['/lembretes', /Nova anota/],
     ] as const;
     for (const [route, name] of cases) {
       await page.goto(route);

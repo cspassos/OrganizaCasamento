@@ -7,6 +7,7 @@ import { FinanceService } from '../../core/services/finance';
 import { money } from '../../core/utils/finance';
 import { PeopleService } from '../../core/services/people';
 import { cloudEnabled } from '../../core/repositories/cloud-backend';
+import { OrganizerService } from '../../core/services/organizer';
 
 @Component({
   selector: 'oc-dashboard',
@@ -18,6 +19,7 @@ export class Dashboard {
   store = inject(WeddingsService);
   finance = inject(FinanceService);
   people = inject(PeopleService);
+  organizer = inject(OrganizerService);
   nextBills = computed(() =>
     (this.finance.summary()?.bills ?? [])
       .filter((b) => b.open > 0)

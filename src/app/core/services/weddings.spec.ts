@@ -100,7 +100,7 @@ describe('WeddingsService', () => {
     const store = new WeddingsService();
     await store.initialized;
     const spy = vi
-      .spyOn(AppRepository.prototype, 'save')
+      .spyOn(AppRepository.prototype, 'update')
       .mockRejectedValueOnce(new Error('QuotaExceededError'));
     await expect(store.save(wedding('Sem espaço'))).rejects.toThrow('QuotaExceededError');
     expect(store.weddings()).toHaveLength(0);

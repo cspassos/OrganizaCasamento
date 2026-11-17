@@ -3,7 +3,7 @@ import { Wedding } from '../models/models';
 import { AppRepository } from '../repositories/app.repository';
 import { validateWedding } from '../utils/wedding';
 import { deleteWeddingData } from '../repositories/delete-wedding';
-import { cloudEnabled } from '../repositories/cloud-backend';
+import { cloudBackend, cloudEnabled } from '../repositories/cloud-backend';
 
 interface Selection {
   id: string;
@@ -65,6 +65,7 @@ export class WeddingsService {
       const now = new Date().toISOString();
       const value: Wedding = {
         ...wedding,
+        organizer: existing?.organizer ?? wedding.organizer,
         temporarySeed: existing?.temporarySeed ?? wedding.temporarySeed,
         name: wedding.name.trim(),
         brideName: wedding.brideName!.trim(),
@@ -74,8 +75,23 @@ export class WeddingsService {
         createdAt: existing?.createdAt ?? now,
         updatedAt: now,
       };
-      await this.repository.save(value);
-      this.records.update((items) => [...items.filter((w) => w.id !== value.id), value]);
+      // Keep organizer edits made on another device while this form was open.
+      const preserveOrganizer = (latest?: Wedding): Wedding => ({
+        ...value,
+        organizer: latest?.organizer ?? value.organizer,
+      });
+      const saved = cloudEnabled
+        ? await cloudBackend.transact(
+            value.id,
+            (workspace) => {
+              workspace.wedding = preserveOrganizer(workspace.wedding);
+              return workspace.wedding;
+            },
+            true,
+            value,
+          )
+        : await this.repository.update(value.id, preserveOrganizer);
+      this.records.update((items) => [...items.filter((w) => w.id !== saved.id), saved]);
       try {
         await this.select(value.id);
       } catch {

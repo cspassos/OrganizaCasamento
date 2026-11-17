@@ -1,4 +1,5 @@
 export interface Wedding {
+  organizer?: OrganizerItem[];
   temporarySeed?: boolean;
   id: string;
   name: string;
@@ -28,6 +29,17 @@ export interface Wedding {
   archived?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+export interface OrganizerItem {
+  id: string;
+  kind: 'note' | 'reminder';
+  title: string;
+  text: string;
+  date: string;
+  time: string;
+  important: boolean;
+  completed: boolean;
+  updatedAt: string;
 }
 export interface WeddingEntity {
   id: string;

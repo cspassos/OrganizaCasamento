@@ -15,7 +15,7 @@ test('controle simples: gasto direto, parcelas, pagamento e totais no painel', a
   page.on('pageerror', (e) => errors.push(e.message));
   await wedding(page);
   const menu = page.getByRole('navigation', { name: 'Seções do casamento' });
-  await expect(menu.getByRole('link')).toHaveCount(7);
+  await expect(menu.getByRole('link')).toHaveCount(8);
   await expect(menu.getByRole('link', { name: 'Equipe' })).toHaveCount(0);
   await page.getByRole('link', { name: 'Adicionar gasto', exact: true }).click();
   await page.getByLabel('Descrição *', { exact: true }).fill('Buffet da festa');

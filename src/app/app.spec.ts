@@ -15,7 +15,7 @@ describe('Application shell', () => {
     await TestBed.inject(Router).navigateByUrl('/');
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelectorAll('.nav-heading').length).toBe(7);
+    expect(el.querySelectorAll('.nav-heading').length).toBe(8);
     expect(el.querySelector('nav')?.textContent).not.toContain('Equipe');
     expect(el.querySelector('nav')?.textContent).not.toContain('Cronograma');
     expect(el.textContent).toContain('Ambiente local');

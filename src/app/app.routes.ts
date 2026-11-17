@@ -5,6 +5,10 @@ import { authGuard } from './core/guards/auth';
 import { administrationGuard } from './core/guards/administration';
 const applicationRoutes: Routes = [
   {
+    path: 'lembretes',
+    loadComponent: () => import('./features/organizer/organizer-page').then((m) => m.OrganizerPage),
+  },
+  {
     path: 'presentes',
     loadComponent: () => import('./features/gifts/gifts-page').then((m) => m.GiftsPage),
   },

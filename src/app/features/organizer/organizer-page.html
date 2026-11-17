@@ -1,0 +1,188 @@
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">MAIS LEVEZA PARA O GRANDE DIA</div>
+    <h1>Lembretes e anotações</h1>
+    <p class="muted">Suas ideias e próximos cuidados, em um só lugar.</p>
+  </div>
+</div>
+@if (store.weddings.loading()) {
+  <p role="status">Carregando…</p>
+} @else if (!store.weddings.active()) {
+  <section class="card organizer-empty">
+    <oc-icon name="favorite_border" />
+    <h2>Primeiro, escolha seu casamento</h2>
+    <a class="button primary" routerLink="/casamentos">Meus casamentos</a>
+  </section>
+} @else {
+  @if (error() || store.weddings.error()) {
+    <p role="alert" class="feedback error">{{ error() || store.weddings.error() }}</p>
+  }
+  @if (message()) {
+    <p role="status" class="feedback success">{{ message() }}</p>
+  }
+  @if (store.finance.error()) {
+    <p class="feedback error" role="alert">
+      Não foi possível atualizar os avisos das contas. {{ store.finance.error() }}
+    </p>
+  }
+  <section class="organizer-welcome">
+    <div class="organizer-welcome-icon"><oc-icon name="notifications" /></div>
+    <div>
+      <h2>Não precisa lembrar de tudo.</h2>
+      <p>Guarde uma ideia ou marque uma data. Nós reunimos aqui o que merece sua atenção.</p>
+    </div>
+    <div class="organizer-create">
+      <button class="button primary" (click)="edit('reminder')">
+        <oc-icon name="add" />Novo lembrete</button
+      ><button class="button secondary" (click)="edit('note')">
+        <oc-icon name="edit_note" />Nova anotação
+      </button>
+    </div>
+  </section>
+  @if (store.bills().length) {
+    <section class="card organizer-bills">
+      <div>
+        <h2><oc-icon name="event_note" />Contas que merecem atenção</h2>
+        <p class="muted">
+          Vencidas ou com vencimento nos próximos 7 dias. Atualizado automaticamente quando você
+          registra um pagamento.
+        </p>
+      </div>
+      @if (store.finance.error()) {
+        <p class="feedback error" role="alert">{{ store.finance.error() }}</p>
+      }
+      @for (b of store.bills().slice(0, 5); track b.id) {
+        <a
+          [routerLink]="['/financeiro/despesas', b.expenseId]"
+          class="organizer-bill"
+          [class.overdue]="store.days(b.dueDate) < 0"
+          ><div>
+            <strong>{{ store.expenseName(b.expenseId) }}</strong><small
+              >{{ b.label }} · {{ date(b.dueDate) }}</small
+            >
+          </div>
+          <span>{{ store.label(b.dueDate) }}</span><strong>{{ money(b.open) }}</strong
+          ><oc-icon name="chevron_right"
+        /></a>
+      }
+      <a routerLink="/financeiro/contas" class="text-link">Ver todas as contas →</a>
+    </section>
+  }
+  <div class="organizer-tools">
+    <label class="form-field"
+      >Buscar nas suas anotações e lembretes<input
+        type="search"
+        placeholder="O que você quer encontrar?"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)" /></label
+    ><label class="form-field"
+      >Mostrar<select
+        aria-label="Mostrar"
+        [ngModel]="filter()"
+        (ngModelChange)="filter.set($event)"
+      >
+        <option value="all">Em aberto</option>
+        <option value="reminder">Lembretes</option>
+        <option value="note">Anotações</option>
+        <option value="completed">Concluídos</option>
+      </select></label
+    >
+  </div>
+  <section class="organizer-grid" aria-label="Suas anotações e lembretes">
+    @for (item of visible(); track item.id) {
+      <article
+        class="organizer-item"
+        [class.note]="item.kind === 'note'"
+        [class.important]="item.important"
+        [class.completed]="item.completed"
+        [class.overdue]="item.kind === 'reminder' && !item.completed && store.overdue(item)"
+      >
+        <div class="organizer-item-top">
+          <span
+            ><oc-icon [name]="item.kind === 'note' ? 'edit_note' : 'notifications'" />{{
+              item.kind === 'note' ? 'Anotação' : 'Lembrete'
+            }}</span
+          >
+          @if (item.important) {
+            <span class="organizer-important"><oc-icon name="star" />Importante</span>
+          }
+        </div>
+        <h2>{{ item.title }}</h2>
+        @if (item.text) {
+          <p class="organizer-body">{{ item.text }}</p>
+        }
+        @if (item.kind === 'reminder') {
+          <div class="organizer-date">
+            <oc-icon name="schedule" /><span
+              >{{ date(item.date) }}{{ item.time ? ' · ' + item.time : '' }}</span
+            ><strong>{{
+              item.completed
+                ? 'Concluído'
+                : store.overdue(item)
+                  ? 'Atrasado'
+                  : store.label(item.date)
+            }}</strong>
+          </div>
+        }
+        <div class="organizer-item-actions">
+          @if (item.kind === 'reminder') {
+            <button class="button secondary" [disabled]="store.busy()" (click)="toggle(item)">
+              <oc-icon [name]="item.completed ? 'undo' : 'check'" />{{
+                item.completed ? 'Reabrir' : 'Concluir'
+              }}
+            </button>
+          }
+          <button
+            class="organizer-icon-button"
+            [attr.aria-label]="'Editar ' + item.title"
+            (click)="edit(item.kind, item)"
+          >
+            <oc-icon name="edit" /></button
+          ><button
+            class="organizer-icon-button"
+            [attr.aria-label]="'Excluir ' + item.title"
+            (click)="remove(item)"
+            [disabled]="store.busy()"
+          >
+            <oc-icon name="delete" />
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <div class="card organizer-empty">
+        <oc-icon name="edit_note" />
+        <h2>{{ query() ? 'Nenhum resultado por aqui.' : 'Espaço livre para suas ideias.' }}</h2>
+        <p>
+          {{
+            query()
+              ? 'Tente outra palavra ou mude o filtro.'
+              : 'Use os botões acima para guardar uma anotação ou criar um lembrete.'
+          }}
+        </p>
+      </div>
+    }
+  </section>
+  @if (pages() > 1) {
+    <nav class="collection-pagination" aria-label="Páginas das anotações">
+      <button
+        class="button secondary"
+        [disabled]="currentPage() <= 1"
+        (click)="page.set(currentPage() - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ currentPage() }} de {{ pages() }}</span>
+      <button
+        class="button secondary"
+        [disabled]="currentPage() >= pages()"
+        (click)="page.set(currentPage() + 1)"
+      >
+        Próxima
+      </button>
+    </nav>
+  }
+  <p class="organizer-footnote">
+    As anotações são privadas, salvas na sua conta e separadas por casamento. Os avisos aparecem ao
+    acessar o sistema.
+  </p>
+}
