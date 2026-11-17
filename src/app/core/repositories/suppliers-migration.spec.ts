@@ -1,5 +1,5 @@
 import { IDBFactory } from 'fake-indexeddb';
-import { IndexedDbRepository, LOCAL_DB_VERSION } from './indexed-db.repository';
+import { AppRepository, LOCAL_DB_VERSION } from './app.repository';
 describe('Migração de fornecedores e equipe', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('adiciona fornecedores à versão 4 sem modificar pessoas, convites ou financeiro', async () => {
@@ -23,7 +23,7 @@ describe('Migração de fornecedores e equipe', () => {
         };
       };
     });
-    expect(await new IndexedDbRepository<{ id: string }>('suppliers').list()).toEqual([]);
+    expect(await new AppRepository<{ id: string }>('suppliers').list()).toEqual([]);
     expect(LOCAL_DB_VERSION).toBe(6);
     for (const [store, sentinel] of [
       ['finance', 'pagamento preservado'],
@@ -31,7 +31,7 @@ describe('Migração de fornecedores e equipe', () => {
       ['invitations', 'convite preservado'],
     ] as const)
       expect(
-        (await new IndexedDbRepository<{ id: string; sentinel: string }>(store).list())[0].sentinel,
+        (await new AppRepository<{ id: string; sentinel: string }>(store).list())[0].sentinel,
       ).toBe(sentinel);
   });
 });

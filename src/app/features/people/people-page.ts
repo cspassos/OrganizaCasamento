@@ -17,6 +17,7 @@ import { PersonDialog } from './person-dialog';
 import { CollectionTable, searchText } from '../../shared/components/collection-table';
 import { ListPager } from '../../shared/components/list-pager';
 import { QuickGuestsDialog } from './quick-guests-dialog';
+import { PreferencesService } from '../../core/services/preferences';
 
 @Component({
   selector: 'oc-people-page',
@@ -133,11 +134,11 @@ export class PeoplePage {
   table = signal('');
   sent = signal('');
   page = signal(1);
-  view = signal(localStorage.getItem('oc-people-view') || 'table');
+  private preferences = inject(PreferencesService);
+  view = this.preferences.peopleView;
   pageSize = signal(25);
   setView(view: string) {
-    this.view.set(view);
-    localStorage.setItem('oc-people-view', view);
+    this.preferences.setCollectionView('people', view);
   }
   selected = signal<Set<string>>(new Set());
   bulkStatus = signal('Aguardando confirmação');

@@ -46,7 +46,7 @@ No painel remoto, conferir Authentication → URL Configuration:
 - Redirect URLs: `https://organizacasamento.vercel.app/acesso/confirmar` e `https://organizacasamento.vercel.app/acesso/nova-senha`.
 - Mantenha `http://localhost:4200/**` e `http://127.0.0.1:4200/**` para desenvolvimento.
 
-O conector não permite editar configurações remotas do Auth. A confirmação dessas URLs e o teste de entrega de e-mail estão pendentes de ação no painel. Não foram enviados e-mails de teste. SMTP próprio e Google OAuth não configurados. O frontend está publicado na Vercel. `config.toml` representa apenas o Supabase local.
+O conector não permite editar configurações remotas do Auth. As URLs de produção foram confirmadas pelo usuário no painel. A publicação dos modelos personalizados e o teste de entrega de e-mail ainda estão pendentes. Veja `templates/README.md`. Não foram enviados e-mails de teste. SMTP próprio e Google OAuth não configurados. O frontend está publicado na Vercel. `config.toml` representa apenas o Supabase local.
 
 ## Importação
 

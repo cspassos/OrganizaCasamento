@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { IndexedDbRepository } from '../repositories/indexed-db.repository';
+import { AppRepository } from '../repositories/app.repository';
 import { Preferences } from '../models/models';
 @Injectable({ providedIn: 'root' })
 export class PreferencesService {
@@ -7,7 +7,9 @@ export class PreferencesService {
   collapsed = signal(false);
   ready = signal(false);
   error = signal('');
-  private repo = new IndexedDbRepository<Preferences>('preferences');
+  peopleView = signal<'table' | 'cards'>('table');
+  invitationsView = signal<'table' | 'cards'>('table');
+  private repo = new AppRepository<Preferences>('preferences');
   private queue = Promise.resolve();
   constructor() {
     void this.load();
@@ -18,10 +20,12 @@ export class PreferencesService {
       if (p) {
         this.dark.set(p.dark);
         this.collapsed.set(p.collapsed);
+        this.peopleView.set(p.peopleView === 'cards' ? 'cards' : 'table');
+        this.invitationsView.set(p.invitationsView === 'cards' ? 'cards' : 'table');
       }
       this.apply();
     } catch {
-      this.error.set('Armazenamento local indisponível. As preferências não serão preservadas.');
+      this.error.set('Não foi possível carregar suas preferências da conta.');
     } finally {
       this.ready.set(true);
     }
@@ -39,11 +43,22 @@ export class PreferencesService {
     document.documentElement.classList.toggle('dark', this.dark());
   }
   private persist() {
-    const p = { id: 'appearance', dark: this.dark(), collapsed: this.collapsed() };
+    const p = {
+      id: 'appearance',
+      dark: this.dark(),
+      collapsed: this.collapsed(),
+      peopleView: this.peopleView(),
+      invitationsView: this.invitationsView(),
+    };
     this.queue = this.queue
       .then(() => this.repo.save(p))
       .catch(() => {
         this.error.set('Não foi possível salvar as preferências.');
       });
+  }
+  setCollectionView(collection: 'people' | 'invitations', value: string) {
+    const view = value === 'cards' ? 'cards' : 'table';
+    (collection === 'people' ? this.peopleView : this.invitationsView).set(view);
+    this.persist();
   }
 }

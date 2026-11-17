@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IndexedDbRepository } from '../../core/repositories/indexed-db.repository';
+import { readLegacyRecords } from './legacy-backup';
 import { cloudBackend, cloudEnabled, Workspace } from '../../core/repositories/cloud-backend';
 import { AuthService } from '../../core/services/auth';
 import { Wedding } from '../../core/models/models';
@@ -145,9 +145,7 @@ export class ImportLocalPage {
       return;
     }
     try {
-      const values = await Promise.all(
-        stores.map((s) => new IndexedDbRepository<any>(s, true).list()),
-      );
+      const values = await Promise.all(stores.map((s) => readLegacyRecords(s)));
       this.snapshot = Object.fromEntries(stores.map((s, i) => [s, values[i]]));
       this.showSnapshot();
     } catch {

@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Wedding } from '../models/models';
-import { IndexedDbRepository } from '../repositories/indexed-db.repository';
+import { AppRepository } from '../repositories/app.repository';
 import { validateWedding } from '../utils/wedding';
 import { deleteWeddingData } from '../repositories/delete-wedding';
 import { cloudEnabled } from '../repositories/cloud-backend';
@@ -11,8 +11,8 @@ interface Selection {
 }
 @Injectable({ providedIn: 'root' })
 export class WeddingsService {
-  private repository = new IndexedDbRepository<Wedding>('weddings');
-  private selections = new IndexedDbRepository<Selection>('preferences');
+  private repository = new AppRepository<Wedding>('weddings');
+  private selections = new AppRepository<Selection>('preferences');
   private records = signal<Wedding[]>([]);
   private selectedId = signal<string | null>(null);
   readonly weddings = computed(() => this.records().filter((w) => !w.archived && !w.demo));

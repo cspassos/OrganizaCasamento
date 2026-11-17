@@ -1,7 +1,6 @@
 import { Injectable, computed, inject, signal, DestroyRef } from '@angular/core';
-import { IndexedDbRepository, LOCAL_DB_VERSION } from '../repositories/indexed-db.repository';
+import { AppRepository } from '../repositories/app.repository';
 import { WeddingsService } from './weddings';
-import { cloudEnabled } from '../repositories/cloud-backend';
 import {
   GiftItem,
   GiftList,
@@ -15,7 +14,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class GiftsService {
   weddings = inject(WeddingsService);
-  private repository = new IndexedDbRepository<GiftList>('gifts');
+  private repository = new AppRepository<GiftList>('gifts');
   private records = signal<GiftList[]>([]);
   list = computed(() => {
     const id = this.weddings.active()?.id;
@@ -67,70 +66,21 @@ export class GiftsService {
       throw new Error('Atualize os dados antes de salvar.');
     this.busy.set(true);
     try {
-      const list = cloudEnabled
-        ? await this.repository.update(weddingId, (current) => {
-            const result = structuredClone(current ?? emptyGifts(weddingId));
-            change(result);
-            result.items = result.items.map((item) => {
-              const counts = giftQuantities(item);
-              return {
-                ...item,
-                quantity: counts.quantity,
-                receivedQuantity: counts.received,
-                received: counts.remaining === 0,
-              };
-            });
-            validateGifts(result);
-            return result;
-          })
-        : await new Promise<GiftList>((resolve, reject) => {
-            const request = indexedDB.open('organiza-casamento', LOCAL_DB_VERSION);
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => {
-              const db = request.result;
-              const tx = db.transaction(['gifts', 'weddings', 'preferences'], 'readwrite');
-              const gifts = tx.objectStore('gifts').get(weddingId);
-              const wedding = tx.objectStore('weddings').get(weddingId);
-              const deleted = tx.objectStore('preferences').get(`deleted-wedding:${weddingId}`);
-              let pending = 3,
-                result: GiftList,
-                failure: unknown;
-              const ready = () => {
-                if (--pending) return;
-                try {
-                  if (!wedding.result || wedding.result.archived || deleted.result)
-                    throw new Error(
-                      'Este casamento foi arquivado ou excluído. Volte à lista de casamentos.',
-                    );
-                  result = structuredClone(gifts.result ?? emptyGifts(weddingId));
-                  change(result);
-                  result.items = result.items.map((item) => {
-                    const counts = giftQuantities(item);
-                    return {
-                      ...item,
-                      quantity: counts.quantity,
-                      receivedQuantity: counts.received,
-                      received: counts.remaining === 0,
-                    };
-                  });
-                  validateGifts(result);
-                  tx.objectStore('gifts').put(result);
-                } catch (error) {
-                  failure = error;
-                  tx.abort();
-                }
-              };
-              gifts.onsuccess = wedding.onsuccess = deleted.onsuccess = ready;
-              tx.oncomplete = () => {
-                db.close();
-                resolve(result);
-              };
-              tx.onabort = tx.onerror = () => {
-                db.close();
-                reject(failure ?? tx.error);
-              };
-            };
-          });
+      const list = await this.repository.update(weddingId, (current) => {
+        const result = structuredClone(current ?? emptyGifts(weddingId));
+        change(result);
+        result.items = result.items.map((item) => {
+          const counts = giftQuantities(item);
+          return {
+            ...item,
+            quantity: counts.quantity,
+            receivedQuantity: counts.received,
+            received: counts.remaining === 0,
+          };
+        });
+        validateGifts(result);
+        return result;
+      });
       this.revision++;
       this.records.update((rows) => [...rows.filter((r) => r.id !== weddingId), list]);
       try {

@@ -16,6 +16,9 @@ describe('Contatos brasileiros', () => {
       'a@@exemplo.com',
       'a b@exemplo.com',
       'a@-exemplo.com',
+      'ana.@exemplo.com',
+      'ana..souza@exemplo.com',
+      'ana@' + 'a'.repeat(64) + '.com',
     ])
       expect(validEmail(email)).toBe(false);
     expect(validEmail('ana.souza+casamento@exemplo.com.br')).toBe(true);

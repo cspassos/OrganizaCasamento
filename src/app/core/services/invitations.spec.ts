@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { IDBFactory } from 'fake-indexeddb';
 import { InvitationsService } from './invitations';
 import { WeddingsService } from './weddings';
-import { IndexedDbRepository } from '../repositories/indexed-db.repository';
+import { AppRepository } from '../repositories/app.repository';
 import { Wedding } from '../models/models';
 import { PeopleLedger } from '../models/people';
 import { emptyPeople, newGuest } from '../utils/people';
@@ -24,14 +24,14 @@ describe('Convites e RSVP local', () => {
   beforeEach(async () => {
     vi.stubGlobal('indexedDB', new IDBFactory());
     active = signal<Wedding | null>(wedding);
-    await new IndexedDbRepository<Wedding>('weddings').save(wedding);
+    await new AppRepository<Wedding>('weddings').save(wedding);
     people = emptyPeople(wedding.id);
     people.families.push({ id: 'family', weddingId: wedding.id, name: 'Família Silva', notes: '' });
     people.guests.push(
       { ...newGuest(wedding.id), name: 'Maria', familyId: 'family' },
       { ...newGuest(wedding.id), name: 'Pedro', familyId: 'family', child: true, age: 8 },
     );
-    await new IndexedDbRepository<PeopleLedger>('people').save(people);
+    await new AppRepository<PeopleLedger>('people').save(people);
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),

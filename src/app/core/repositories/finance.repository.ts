@@ -1,7 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import { Repository } from '../models/models';
 import { FinanceLedger } from '../models/finance';
-import { IndexedDbRepository } from './indexed-db.repository';
+import { AppRepository } from './app.repository';
 import { updatePlanning } from './suppliers.repository';
 export interface FinanceRepository extends Repository<FinanceLedger> {
   update(
@@ -10,8 +10,8 @@ export interface FinanceRepository extends Repository<FinanceLedger> {
     ensureSupplierFor?: string,
   ): Promise<FinanceLedger>;
 }
-export class LocalFinanceRepository implements FinanceRepository {
-  private base = new IndexedDbRepository<FinanceLedger>('finance');
+export class FinanceDataRepository implements FinanceRepository {
+  private base = new AppRepository<FinanceLedger>('finance');
   list() {
     return this.base.list();
   }
@@ -104,5 +104,5 @@ export class LocalFinanceRepository implements FinanceRepository {
 }
 export const FINANCE_REPOSITORY = new InjectionToken<FinanceRepository>('FinanceRepository', {
   providedIn: 'root',
-  factory: () => new LocalFinanceRepository(),
+  factory: () => new FinanceDataRepository(),
 });

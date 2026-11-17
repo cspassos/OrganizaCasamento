@@ -1,7 +1,7 @@
-import { Repository } from '../models/models';
-import { cloudBackend, cloudEnabled } from './cloud-backend';
+import { Repository } from '../../../app/core/models/models';
+import { cloudBackend, cloudEnabled } from '../../../app/core/repositories/cloud-backend';
 export const LOCAL_DB_VERSION = 6;
-export class IndexedDbRepository<T extends { id: string }> implements Repository<T> {
+export class AppRepository<T extends { id: string }> implements Repository<T> {
   private db?: Promise<IDBDatabase>;
   constructor(
     private store:

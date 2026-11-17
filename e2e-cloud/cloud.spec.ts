@@ -156,6 +156,7 @@ async function backend(page: Page) {
   });
   return {
     rows,
+    preferences: () => prefs,
     files,
     calls,
     fail: (v: boolean) => (fail = v),
@@ -168,8 +169,6 @@ async function login(page: Page) {
   await page.getByLabel('E-mail', { exact: true }).fill('teste@example.com');
   await page.getByLabel('Senha', { exact: true }).fill('SenhaDeTeste123');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL(/importar-dados/);
-  await page.getByRole('button', { name: 'Ir para meu casamento', exact: true }).click();
   await expect(page).toHaveURL(/dashboard$/);
 }
 async function wedding(page: Page) {
@@ -215,23 +214,11 @@ test('login, gasto e parcelas na nuvem; falha e conflito não mostram sucesso; s
   expect([...server.rows.values()][0].suppliers.suppliers).toHaveLength(1);
   await page.reload();
   await expect(page.locator('.bill-row')).toHaveCount(6);
-  const local = await page.evaluate(
-    () =>
-      new Promise<any[]>((resolve, reject) => {
-        const r = indexedDB.open('organiza-casamento');
-        r.onsuccess = () => {
-          const db = r.result,
-            q = db.transaction('weddings').objectStore('weddings').getAll();
-          q.onsuccess = () => {
-            resolve(q.result);
-            db.close();
-          };
-          q.onerror = reject;
-        };
-        r.onerror = reject;
-      }),
-  );
-  expect(local).toHaveLength(0);
+  expect(
+    await page.evaluate(async () =>
+      (await indexedDB.databases()).filter((d) => d.name === 'organiza-casamento'),
+    ),
+  ).toHaveLength(0);
   await page.getByRole('button', { name: 'Sair', exact: true }).click();
   await expect(page).toHaveURL(/acesso\/entrar/);
   await page.goto('/financeiro/despesas');
@@ -245,6 +232,7 @@ test('backup obrigatório, importação verificável e original local preservado
     () =>
       new Promise<void>((resolve, reject) => {
         const r = indexedDB.open('organiza-casamento');
+        r.onupgradeneeded = () => r.result.createObjectStore('weddings', { keyPath: 'id' });
         r.onsuccess = () => {
           const db = r.result,
             tx = db.transaction('weddings', 'readwrite');
@@ -294,7 +282,7 @@ test('cadastro e recuperação dão instruções sem enviar e-mails reais; login
   await page.getByLabel('Senha', { exact: true }).fill('SenhaDeTeste123');
   await page.getByLabel('Confirme a senha').fill('SenhaDeTeste123');
   await page.getByRole('button', { name: 'Criar minha conta', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('Confira seu e-mail');
+  await expect(page.getByRole('status')).toContainText('Enviamos um link');
   await page.goto('/acesso/recuperar');
   await page.getByLabel('E-mail', { exact: true }).fill('teste@example.com');
   await page.getByRole('button', { name: 'Enviar link de recuperação', exact: true }).click();
@@ -363,4 +351,36 @@ test('convidado abre convite e responde sem login ou acesso a dados privados', a
   await expect(page.getByRole('status')).toContainText('enviadas aos noivos');
   expect(server.calls.some((c) => c.includes('/respond_invitation'))).toBe(true);
   expect(server.calls.some((c) => c.endsWith('/token'))).toBe(false);
+});
+
+for (const action of ['entrar', 'criar-conta', 'recuperar']) {
+  test('e-mail inválido antes de chamar servidor: ' + action, async ({ page }) => {
+    const server = await backend(page);
+    await page.goto('/acesso/' + action);
+    for (const email of [
+      'sem-arroba',
+      'ana@dominio',
+      'ana..souza@exemplo.com',
+      'ana.@exemplo.com',
+    ]) {
+      await page.getByLabel('E-mail', { exact: true }).fill(email);
+      await page.locator('form button[type="submit"]').click();
+      await expect(page.getByRole('alert').last()).toContainText('e-mail válido');
+    }
+    expect(server.calls.some((c) => /\/(token|signup|recover)$/.test(c))).toBe(false);
+  });
+}
+
+test('preferência de visualização fica na conta e retorna após recarregar', async ({ page }) => {
+  const server = await backend(page);
+  await login(page);
+  await wedding(page);
+  await page.goto('/pessoas/convidados');
+  await page.locator('.people-list-options > summary').click();
+  await page.getByRole('button', { name: 'Cartões', exact: true }).click();
+  await expect.poll(() => server.preferences().appearance?.peopleView).toBe('cards');
+  await page.reload();
+  await page.locator('.people-list-options > summary').click();
+  await expect(page.getByRole('button', { name: 'Cartões', exact: true })).toHaveClass(/primary/);
+  expect(await page.evaluate(() => localStorage.getItem('oc-people-view'))).toBeNull();
 });

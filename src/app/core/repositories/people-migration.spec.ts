@@ -1,5 +1,5 @@
 import { IDBFactory } from 'fake-indexeddb';
-import { IndexedDbRepository } from './indexed-db.repository';
+import { AppRepository } from './app.repository';
 describe('Migração da etapa 04', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('adiciona pessoas mantendo casamentos, preferências e financeiro da versão 2', async () => {
@@ -24,16 +24,16 @@ describe('Migração da etapa 04', () => {
       };
       request.onerror = () => reject(request.error);
     });
-    const people = new IndexedDbRepository<{ id: string }>('people');
+    const people = new AppRepository<{ id: string }>('people');
     expect(await people.list()).toEqual([]);
-    expect(await new IndexedDbRepository<{ id: string; paid: number }>('finance').list()).toEqual([
+    expect(await new AppRepository<{ id: string; paid: number }>('finance').list()).toEqual([
       { id: 'w', paid: 400000 },
     ]);
+    expect((await new AppRepository<{ id: string; name: string }>('weddings').list())[0].name).toBe(
+      'Casamento existente',
+    );
     expect(
-      (await new IndexedDbRepository<{ id: string; name: string }>('weddings').list())[0].name,
-    ).toBe('Casamento existente');
-    expect(
-      (await new IndexedDbRepository<{ id: string; dark: boolean }>('preferences').list())[0].dark,
+      (await new AppRepository<{ id: string; dark: boolean }>('preferences').list())[0].dark,
     ).toBe(true);
   });
 });

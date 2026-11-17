@@ -11,7 +11,7 @@ import {
 import { PeopleLedger } from '../models/people';
 import { Wedding } from '../models/models';
 import { INVITATIONS_REPOSITORY } from '../repositories/invitations.repository';
-import { IndexedDbRepository } from '../repositories/indexed-db.repository';
+import { AppRepository } from '../repositories/app.repository';
 import {
   emptyInvitations,
   invitationToken,
@@ -304,8 +304,8 @@ export class InvitationsService {
         'Convite não encontrado ou desativado. O link de teste só funciona no navegador onde foi criado.',
       );
     const [people, weddings] = await Promise.all([
-      new IndexedDbRepository<PeopleLedger>('people').list(),
-      new IndexedDbRepository<Wedding>('weddings').list(),
+      new AppRepository<PeopleLedger>('people').list(),
+      new AppRepository<Wedding>('weddings').list(),
     ]);
     const wedding = weddings.find((w) => w.id === issue.weddingId);
     if (!wedding || wedding.archived) throw new Error('Este casamento não está disponível.');

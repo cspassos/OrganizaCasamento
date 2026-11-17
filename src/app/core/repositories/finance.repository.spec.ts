@@ -1,5 +1,5 @@
 import { IDBFactory } from 'fake-indexeddb';
-import { IndexedDbRepository } from './indexed-db.repository';
+import { AppRepository } from './app.repository';
 describe('Financial schema and atomic storage', () => {
   beforeEach(() => vi.stubGlobal('indexedDB', new IDBFactory()));
   afterEach(() => vi.unstubAllGlobals());
@@ -21,14 +21,14 @@ describe('Financial schema and atomic storage', () => {
       };
       r.onerror = () => reject(r.error);
     });
-    await new IndexedDbRepository<{ id: string }>('finance').list();
-    expect(
-      await new IndexedDbRepository<{ id: string; name: string }>('weddings').list(),
-    ).toContainEqual({ id: 'existing', name: 'Preservado' });
+    await new AppRepository<{ id: string }>('finance').list();
+    expect(await new AppRepository<{ id: string; name: string }>('weddings').list()).toContainEqual(
+      { id: 'existing', name: 'Preservado' },
+    );
   });
   it('serializes concurrent updates and rolls back a rejected operation', async () => {
-    const a = new IndexedDbRepository<{ id: string; count: number }>('finance'),
-      b = new IndexedDbRepository<{ id: string; count: number }>('finance');
+    const a = new AppRepository<{ id: string; count: number }>('finance'),
+      b = new AppRepository<{ id: string; count: number }>('finance');
     await a.save({ id: 'w', count: 0 });
     await Promise.all([
       a.update('w', (value) => ({ ...value!, count: value!.count + 1 })),

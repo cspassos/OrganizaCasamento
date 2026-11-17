@@ -23,6 +23,11 @@ export function validEmail(value: string): boolean {
   return (
     email.length <= 254 &&
     email.split('@')[0].length <= 64 &&
+    !email.split('@')[0].endsWith('.') &&
+    !!email
+      .split('@')[1]
+      ?.split('.')
+      .every((label) => label.length <= 63) &&
     /^(?!\.)(?!.*\.\.)[a-z\d.!#$%&'*+/=?^_`{|}~-]+@(?:[a-z\d](?:[a-z\d-]*[a-z\d])?\.)+[a-z]{2,63}$/i.test(
       email,
     )

@@ -1,6 +1,6 @@
 import { IDBFactory } from 'fake-indexeddb';
-import { LocalInvitationsRepository } from './invitations.repository';
-import { IndexedDbRepository } from './indexed-db.repository';
+import { InvitationsDataRepository } from './invitations.repository';
+import { AppRepository } from './app.repository';
 describe('Migração de convites', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('preserva pessoas e financeiro da versão 3 ao adicionar convites', async () => {
@@ -23,12 +23,12 @@ describe('Migração de convites', () => {
         };
       };
     });
-    expect(await new LocalInvitationsRepository().list()).toEqual([]);
+    expect(await new InvitationsDataRepository().list()).toEqual([]);
     expect(
-      (await new IndexedDbRepository<{ id: string; guests: string[] }>('people').list())[0].guests,
+      (await new AppRepository<{ id: string; guests: string[] }>('people').list())[0].guests,
     ).toEqual(['pessoa existente']);
-    expect(
-      (await new IndexedDbRepository<{ id: string; paid: number }>('finance').list())[0].paid,
-    ).toBe(1200000);
+    expect((await new AppRepository<{ id: string; paid: number }>('finance').list())[0].paid).toBe(
+      1200000,
+    );
   });
 });

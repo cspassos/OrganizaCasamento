@@ -4,7 +4,7 @@ import { IDBFactory } from 'fake-indexeddb';
 import { GiftsService } from './gifts';
 import { WeddingsService } from './weddings';
 import { GiftItem, emptyGifts, giftUrl, validateGifts, giftQuantities } from '../models/gifts';
-import { IndexedDbRepository } from '../repositories/indexed-db.repository';
+import { AppRepository } from '../repositories/app.repository';
 import { deleteWeddingData } from '../repositories/delete-wedding';
 import { Wedding } from '../models/models';
 describe('Lista de presentes', () => {
@@ -31,7 +31,7 @@ describe('Lista de presentes', () => {
         },
       ],
     });
-    await new IndexedDbRepository<Wedding>('weddings').save(wedding);
+    await new AppRepository<Wedding>('weddings').save(wedding);
     service = TestBed.inject(GiftsService);
     await service.initialized;
   });
@@ -61,7 +61,7 @@ describe('Lista de presentes', () => {
     expect(service.list()?.items[0].received).toBe(true);
     expect(service.list()?.sites[0].url).toBe('https://loja.example.com/lista');
     expect(service.list()?.title).toBe('Nosso novo lar');
-    expect(await new IndexedDbRepository('finance').list()).toEqual([]);
+    expect(await new AppRepository('finance').list()).toEqual([]);
     await expect(
       service.saveSite('w', { id: 'bad', name: 'Inválido', url: 'javascript:alert(1)' }),
     ).rejects.toThrow();
@@ -101,7 +101,7 @@ describe('Lista de presentes', () => {
   it('isola casamentos, rejeita formulário antigo e apaga presentes ao excluir casamento', async () => {
     await service.saveItem('w', item());
     const other = { ...wedding, id: 'other' };
-    await new IndexedDbRepository<Wedding>('weddings').save(other);
+    await new AppRepository<Wedding>('weddings').save(other);
     active.set(other);
     expect(service.list()?.items).toHaveLength(0);
     await expect(service.saveItem('w', item('stale'))).rejects.toThrow('mudou');
@@ -111,7 +111,7 @@ describe('Lista de presentes', () => {
     expect(service.list()?.items).toHaveLength(1);
     active.set(wedding);
     await expect(service.saveItem('w', item('resurrect'))).rejects.toThrow('excluído');
-    expect((await new IndexedDbRepository('gifts').list()).map((r) => r.id)).toEqual(['other']);
+    expect((await new AppRepository('gifts').list()).map((r) => r.id)).toEqual(['other']);
   });
   it('migra a versão 5 preservando os casamentos e registros existentes', async () => {
     // The version-5 fixture is created in a separate factory to exercise the upgrade path.
@@ -139,7 +139,7 @@ describe('Lista de presentes', () => {
         };
       };
     });
-    expect(await new IndexedDbRepository('gifts').list()).toEqual([]);
-    expect((await new IndexedDbRepository<Wedding>('weddings').list())[0].name).toBe(wedding.name);
+    expect(await new AppRepository('gifts').list()).toEqual([]);
+    expect((await new AppRepository<Wedding>('weddings').list())[0].name).toBe(wedding.name);
   });
 });

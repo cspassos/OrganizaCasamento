@@ -37,6 +37,8 @@ export interface Preferences {
   id: string;
   dark: boolean;
   collapsed: boolean;
+  peopleView?: 'table' | 'cards';
+  invitationsView?: 'table' | 'cards';
 }
 export interface Repository<T extends { id: string }> {
   list(): Promise<T[]>;

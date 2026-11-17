@@ -67,6 +67,34 @@
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.testing.ts"
+                },
+                {
+                  "replace": "src/app/core/repositories/app.repository.ts",
+                  "with": "src/testing/core/repositories/app.repository.ts"
+                },
+                {
+                  "replace": "src/app/core/repositories/suppliers.repository.ts",
+                  "with": "src/testing/core/repositories/suppliers.repository.ts"
+                },
+                {
+                  "replace": "src/app/core/repositories/invitations.repository.ts",
+                  "with": "src/testing/core/repositories/invitations.repository.ts"
+                },
+                {
+                  "replace": "src/app/core/repositories/delete-wedding.ts",
+                  "with": "src/testing/core/repositories/delete-wedding.ts"
+                },
+                {
+                  "replace": "src/app/core/services/gifts.ts",
+                  "with": "src/testing/core/services/gifts.ts"
+                },
+                {
+                  "replace": "src/app/core/services/temporary-data.ts",
+                  "with": "src/testing/core/services/temporary-data.ts"
+                },
+                {
+                  "replace": "src/app/shared/components/temporary-data-panel.ts",
+                  "with": "src/testing/shared/components/temporary-data-panel.ts"
                 }
               ]
             }

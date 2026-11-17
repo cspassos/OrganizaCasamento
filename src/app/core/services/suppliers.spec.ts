@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { IDBFactory } from 'fake-indexeddb';
 import { SuppliersService } from './suppliers';
 import { WeddingsService } from './weddings';
-import { IndexedDbRepository } from '../repositories/indexed-db.repository';
+import { AppRepository } from '../repositories/app.repository';
 import { Wedding } from '../models/models';
 import { ContractFinancePlan } from '../models/suppliers';
 import { ExpenseDraft } from '../models/finance';
@@ -25,7 +25,7 @@ describe('Fornecedores, contratos, financeiro e equipe', () => {
   beforeEach(async () => {
     vi.stubGlobal('indexedDB', new IDBFactory());
     active = signal<Wedding | null>(wedding);
-    await new IndexedDbRepository<Wedding>('weddings').save(wedding);
+    await new AppRepository<Wedding>('weddings').save(wedding);
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -355,7 +355,7 @@ describe('Fornecedores, contratos, financeiro e equipe', () => {
   it('isola casamentos e bloqueia gravação em casamento arquivado', async () => {
     const s = await supplier();
     const other = { ...wedding, id: 'w2' };
-    await new IndexedDbRepository<Wedding>('weddings').save(other);
+    await new AppRepository<Wedding>('weddings').save(other);
     active.set(other);
     expect(service.ledger()!.suppliers).toHaveLength(0);
     await expect(service.saveSupplier(s)).rejects.toThrow('casamento mudou');
@@ -367,7 +367,7 @@ describe('Fornecedores, contratos, financeiro e equipe', () => {
       }),
     ).rejects.toThrow('fornecedor cadastrado');
     active.set(wedding);
-    await new IndexedDbRepository<Wedding>('weddings').save({ ...wedding, archived: true });
+    await new AppRepository<Wedding>('weddings').save({ ...wedding, archived: true });
     await expect(service.saveSupplier({ ...s, name: 'Alterado' })).rejects.toThrow('arquivado');
   });
 });

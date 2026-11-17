@@ -62,13 +62,13 @@ O build fica em `dist/organiza-casamento/`. Evidências ficam em `artifacts/`, s
 - `TESTES-REVISAO.md`: roteiros de conferência.
 - `PROGRESSO.md`: histórico. Descrições antigas refletem a interface da época.
 
-No uso normal, os repositórios usam Supabase e Storage privado, com transações e revisão por casamento. IndexedDB versão 6 permanece como fonte de importação e no ambiente de testes. Excluir um casamento remove seus registros; arquivar os preserva.
+No uso normal, os repositórios usam Supabase e Storage privado, com transações e revisão por casamento. O adaptador IndexedDB fica isolado em `src/testing`; a produção mantém apenas a leitura explícita de backups antigos para importação. Preferências de visualização também são salvas na conta. Excluir um casamento remove seus registros; arquivar os preserva.
 
 ## Limitações
 
 - É necessário ter internet para ler/salvar. Não há gravação offline nem fallback silencioso para IndexedDB. Outra aba/aparelho é atualizado ao reabrir/atualizar a tela; não há assinatura Realtime.
 - Para compartilhar convites, gere os links a partir do site publicado. Links antigos de `localhost` continuam acessíveis somente na própria máquina.
-- Login por e-mail/senha implementado. Google OAuth, SMTP próprio e compartilhamento de um casamento entre contas são etapas separadas. A entrega real dos e-mails deve ser validada após configurar os retornos do Auth.
+- Login exclusivamente por e-mail/senha, com validação do formato e confirmação da conta. Sem Google OAuth. Retornos de produção configurados no painel. Modelos de e-mail preparados em `supabase/templates`; publicação dos modelos e entrega por SMTP ainda precisam ser concluídas. Compartilhamento de um casamento entre contas não implementado.
 - WhatsApp prepara mensagens/arquivos para revisão; o envio é confirmado pela pessoa no aplicativo.
 - A lista de presentes em PDF é uma cópia do momento da exportação. Não reserva produtos nem atualiza arquivos já enviados. A leitura automática de produtos de lojas não está implementada.
 

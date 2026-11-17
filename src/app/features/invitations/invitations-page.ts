@@ -1,4 +1,5 @@
 import { cloudEnabled } from '../../core/repositories/cloud-backend';
+import { PreferencesService } from '../../core/services/preferences';
 import { MatMenuModule } from '@angular/material/menu';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -66,11 +67,11 @@ export class InvitationsPage {
   query = signal('');
   filter = signal('');
   page = signal(1);
-  view = signal(localStorage.getItem('oc-invitations-view') || 'table');
+  private preferences = inject(PreferencesService);
+  view = this.preferences.invitationsView;
   pageSize = signal(25);
   setView(view: string) {
-    this.view.set(view);
-    localStorage.setItem('oc-invitations-view', view);
+    this.preferences.setCollectionView('invitations', view);
   }
   savedCards = computed(() => {
     const rows = this.designs().filter((d) =>

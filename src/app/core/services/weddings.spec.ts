@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto';
 import { WeddingsService } from './weddings';
-import { IndexedDbRepository } from '../repositories/indexed-db.repository';
+import { AppRepository } from '../repositories/app.repository';
 import { Wedding } from '../models/models';
-import { LocalFinanceRepository } from '../repositories/finance.repository';
+import { FinanceDataRepository } from '../repositories/finance.repository';
 
 const wedding = (name: string): Wedding => ({
   id: crypto.randomUUID(),
@@ -25,7 +25,7 @@ describe('WeddingsService', () => {
     await store.save(a);
     await store.save(b);
     for (const name of ['finance', 'people', 'invitations', 'suppliers'] as const) {
-      const repository = new IndexedDbRepository<{ id: string; weddingId: string }>(name);
+      const repository = new AppRepository<{ id: string; weddingId: string }>(name);
       await repository.save({ id: a.id, weddingId: a.id });
       await repository.save({ id: b.id, weddingId: b.id });
     }
@@ -33,12 +33,12 @@ describe('WeddingsService', () => {
     expect(store.active()?.id).toBe(a.id);
     expect(store.find(b.id)).toBeUndefined();
     await expect(
-      new LocalFinanceRepository().update(b.id, () => {
+      new FinanceDataRepository().update(b.id, () => {
         throw new Error('Não deve recriar o financeiro.');
       }),
     ).rejects.toThrow('excluído');
     for (const name of ['finance', 'people', 'invitations', 'suppliers'] as const) {
-      const repository = new IndexedDbRepository<{ id: string; weddingId: string }>(name);
+      const repository = new AppRepository<{ id: string; weddingId: string }>(name);
       const rows = await repository.list();
       expect(rows.some((r) => r.id === b.id)).toBe(false);
       expect(rows.some((r) => r.id === a.id)).toBe(true);
@@ -54,9 +54,9 @@ describe('WeddingsService', () => {
     expect(reloaded.weddings()).toHaveLength(0);
   });
   beforeEach(async () => {
-    const repo = new IndexedDbRepository<Wedding>('weddings');
+    const repo = new AppRepository<Wedding>('weddings');
     for (const w of await repo.list()) await repo.remove(w.id);
-    await new IndexedDbRepository<{ id: string }>('preferences').remove('active-wedding');
+    await new AppRepository<{ id: string }>('preferences').remove('active-wedding');
   });
   it('keeps weddings independent and restores the selected wedding in a new session', async () => {
     const store = new WeddingsService();
@@ -100,7 +100,7 @@ describe('WeddingsService', () => {
     const store = new WeddingsService();
     await store.initialized;
     const spy = vi
-      .spyOn(IndexedDbRepository.prototype, 'save')
+      .spyOn(AppRepository.prototype, 'save')
       .mockRejectedValueOnce(new Error('QuotaExceededError'));
     await expect(store.save(wedding('Sem espaço'))).rejects.toThrow('QuotaExceededError');
     expect(store.weddings()).toHaveLength(0);

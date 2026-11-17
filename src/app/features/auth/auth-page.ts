@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { cloudClient } from '../../core/repositories/cloud-backend';
 import { AuthService } from '../../core/services/auth';
+import { validEmail } from '../../core/utils/contact';
 
 @Component({
   imports: [FormsModule, RouterLink],
@@ -37,17 +38,30 @@ import { AuthService } from '../../core/services/auth';
       @if (message()) {
         <p class="feedback success" role="status">{{ message() }}</p>
       }
-      <form (ngSubmit)="submit()">
+      <form (ngSubmit)="submit()" novalidate>
         @if (mode !== 'nova-senha') {
           <label
             >E-mail<input
               type="email"
+              aria-label="E-mail"
               name="email"
               [(ngModel)]="email"
+              (ngModelChange)="emailError.set('')"
+              [attr.aria-invalid]="emailError() ? true : null"
+              aria-describedby="access-email-help"
               autocomplete="email"
               required
               maxlength="254"
-          /></label>
+            />
+            <small
+              id="access-email-help"
+              [class.field-error]="emailError()"
+              [attr.role]="emailError() ? 'alert' : null"
+              >{{
+                emailError() || 'Use um e-mail ao qual você tenha acesso. Ex.: nome@exemplo.com'
+              }}</small
+            ></label
+          >
         }
         @if (mode !== 'recuperar') {
           <label
@@ -179,6 +193,7 @@ export class AuthPage {
   busy = signal(false);
   error = signal('');
   message = signal('');
+  emailError = signal('');
   constructor() {
     this.route.paramMap.subscribe((p) => {
       this.mode = p.get('action') ?? 'entrar';
@@ -188,6 +203,7 @@ export class AuthPage {
       this.confirm = '';
       this.error.set('');
       this.message.set('');
+      this.emailError.set('');
       void this.handleSession();
     });
   }
@@ -195,7 +211,7 @@ export class AuthPage {
     try {
       await this.auth.initialized;
       if (this.mode === 'confirmar') {
-        if (this.auth.user()) await this.router.navigateByUrl('/importar-dados');
+        if (this.auth.user()) await this.router.navigateByUrl('/dashboard');
         else {
           this.mode = 'entrar';
           this.message.set(
@@ -212,6 +228,21 @@ export class AuthPage {
     if (this.busy()) return;
     this.error.set('');
     this.message.set('');
+    if (this.mode !== 'nova-senha') {
+      this.email = this.email.trim();
+      if (!this.email || !validEmail(this.email)) {
+        this.emailError.set(
+          this.email
+            ? 'Informe um e-mail válido, como nome@exemplo.com.'
+            : 'Informe seu e-mail para continuar.',
+        );
+        return;
+      }
+    }
+    if (this.mode === 'entrar' && !this.password) {
+      this.error.set('Informe sua senha para entrar.');
+      return;
+    }
     if (
       this.mode !== 'recuperar' &&
       this.mode !== 'entrar' &&
@@ -230,10 +261,10 @@ export class AuthPage {
           options: { emailRedirectTo: window.location.origin + '/acesso/confirmar' },
         });
         if (error) throw error;
-        if (data.session) await this.router.navigateByUrl('/importar-dados');
+        if (data.session) await this.router.navigateByUrl('/dashboard');
         else
           this.message.set(
-            'Confira seu e-mail para confirmar a conta. Depois, volte aqui e entre com sua senha.',
+            'Enviamos um link para confirmar seu e-mail. Abra a mensagem do OrganizaCasamento e clique em Confirmar meu e-mail. Confira também o spam. O acesso será liberado após a confirmação.',
           );
       } else if (this.mode === 'recuperar') {
         const { error } = await client.auth.resetPasswordForEmail(this.email.trim(), {
@@ -252,27 +283,39 @@ export class AuthPage {
         const { error } = await client.auth.updateUser({ password: this.password });
         if (error) throw error;
         this.auth.recovery.set(false);
-        await this.router.navigateByUrl('/importar-dados');
+        this.mode = 'entrar';
+        this.password = '';
+        this.confirm = '';
+        this.message.set(
+          'Sua senha foi alterada. Guarde sua nova senha e use-a nos próximos acessos.',
+        );
       } else {
         const { error } = await client.auth.signInWithPassword({
           email: this.email.trim(),
           password: this.password,
         });
         if (error) throw error;
-        await this.router.navigateByUrl('/importar-dados');
+        await this.router.navigateByUrl('/dashboard');
       }
     } catch (e: any) {
       const m = String(e?.message ?? '');
+      const code = String(e?.code ?? '');
       this.error.set(
-        /invalid login/i.test(m)
-          ? 'E-mail ou senha incorretos.'
-          : /email not confirmed/i.test(m)
-            ? 'Confirme sua conta pelo e-mail antes de entrar.'
-            : /rate|too many/i.test(m)
-              ? 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.'
-              : /fetch|network|timeout/i.test(m)
-                ? 'Não foi possível conectar. Confira sua internet e tente novamente.'
-                : m || 'Não foi possível concluir. Tente novamente.',
+        code === 'email_address_invalid' || /invalid.*email|email.*invalid/i.test(m)
+          ? 'Informe um e-mail válido, como nome@exemplo.com.'
+          : /email_address_not_authorized|email.*not.*authorized/i.test(code + ' ' + m)
+            ? 'O envio de e-mails ainda não está liberado para este endereço. A configuração de envio do sistema precisa ser concluída.'
+            : /error sending|smtp/i.test(m)
+              ? 'Não foi possível enviar o e-mail agora. Tente novamente mais tarde.'
+              : /invalid login/i.test(m)
+                ? 'E-mail ou senha incorretos.'
+                : /email not confirmed/i.test(m)
+                  ? 'Confirme sua conta pelo e-mail antes de entrar.'
+                  : /rate|too many/i.test(m)
+                    ? 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.'
+                    : /fetch|network|timeout/i.test(m)
+                      ? 'Não foi possível conectar. Confira sua internet e tente novamente.'
+                      : m || 'Não foi possível concluir. Tente novamente.',
       );
     } finally {
       this.busy.set(false);
