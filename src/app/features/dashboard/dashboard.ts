@@ -6,12 +6,11 @@ import { StatCard } from '../../shared/components/stat-card';
 import { FinanceService } from '../../core/services/finance';
 import { money } from '../../core/utils/finance';
 import { PeopleService } from '../../core/services/people';
-import { TemporaryDataPanel } from '../../shared/components/temporary-data-panel';
 import { cloudEnabled } from '../../core/repositories/cloud-backend';
 
 @Component({
   selector: 'oc-dashboard',
-  imports: [RouterLink, StatCard, TemporaryDataPanel],
+  imports: [RouterLink, StatCard],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {

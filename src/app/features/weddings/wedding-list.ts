@@ -10,28 +10,17 @@ import { Wedding } from '../../core/models/models';
 import { formatCalendarDate } from '../../core/utils/wedding';
 import { Icon } from '../../shared/components/icon';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog';
-import { TemporaryDataPanel } from '../../shared/components/temporary-data-panel';
 import { CollectionTable, searchText } from '../../shared/components/collection-table';
 import { ListPager } from '../../shared/components/list-pager';
-import { TemporaryDataService } from '../../core/services/temporary-data';
 
 @Component({
   selector: 'oc-weddings',
-  imports: [
-    MatMenuModule,
-    RouterLink,
-    CurrencyPipe,
-    Icon,
-    TemporaryDataPanel,
-    CollectionTable,
-    ListPager,
-  ],
+  imports: [MatMenuModule, RouterLink, CurrencyPipe, Icon, CollectionTable, ListPager],
   templateUrl: './wedding-list.html',
 })
 export class WeddingList {
   cloud = cloudEnabled;
   store = inject(WeddingsService);
-  private temporary = inject(TemporaryDataService);
   private dialog = inject(MatDialog);
   query = signal('');
   showArchived = signal(false);
@@ -126,7 +115,6 @@ export class WeddingList {
     this.error.set('');
     try {
       await this.store.deletePermanently(w.id);
-      await this.temporary.refresh();
       this.message.set('Casamento e dados vinculados excluídos definitivamente.');
     } catch (error) {
       this.error.set(

@@ -87,14 +87,6 @@
                 {
                   "replace": "src/app/core/services/gifts.ts",
                   "with": "src/testing/core/services/gifts.ts"
-                },
-                {
-                  "replace": "src/app/core/services/temporary-data.ts",
-                  "with": "src/testing/core/services/temporary-data.ts"
-                },
-                {
-                  "replace": "src/app/shared/components/temporary-data-panel.ts",
-                  "with": "src/testing/shared/components/temporary-data-panel.ts"
                 }
               ]
             }
