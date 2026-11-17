@@ -386,3 +386,14 @@ test('preferência de visualização fica na conta e retorna após recarregar', 
   await expect(page.getByRole('button', { name: 'Cartões', exact: true })).toHaveClass(/primary/);
   expect(await page.evaluate(() => localStorage.getItem('oc-people-view'))).toBeNull();
 });
+
+
+test('conta conectada aparece no computador e no celular', async ({ page }) => {
+  await backend(page);
+  await login(page);
+  await expect(page.locator('.account-identity')).toHaveText('teste@example.com');
+  await page.setViewportSize({ width: 320, height: 740 });
+  await expect(page.getByLabel('Conta conectada')).toContainText('teste@example.com');
+  await expect(page.getByLabel('Conta conectada')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

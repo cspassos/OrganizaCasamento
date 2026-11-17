@@ -261,3 +261,6 @@ footer {
     margin: 12px 0;
   }
 }
+
+.admin-account { font-size: 12px; overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 650px) { header nav { flex-wrap: wrap; } .admin-account { flex-basis: 100%; } }

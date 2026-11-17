@@ -85,7 +85,9 @@
         ><span>{{ pageTitle() }} / {{ weddings.active()?.name ?? 'OrganizaCasamento' }}</span>
       </div>
       <div class="header-actions">
-        <span class="local-badge"><i></i> {{ cloud ? 'Minha conta' : 'Ambiente local' }}</span
+        <span class="local-badge account-identity" [title]="auth.user()?.email ?? ''"
+          ><i></i
+          ><span>{{ cloud ? (auth.user()?.email ?? 'Minha conta') : 'Ambiente local' }}</span></span
         ><button
           class="topbar-icon"
           [disabled]="!prefs.ready()"
@@ -109,6 +111,11 @@
         }
       </div>
     </header>
+    @if (cloud && auth.user()?.email) {
+      <div class="mobile-account" aria-label="Conta conectada">
+        Conectado como <strong>{{ auth.user()?.email }}</strong>
+      </div>
+    }
     @if (info()) {
       <div class="notice" role="status">
         @if (cloud) {

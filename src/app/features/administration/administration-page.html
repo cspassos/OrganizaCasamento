@@ -2,6 +2,7 @@
   <header>
     <a routerLink="/">♡ OrganizaCasamento</a>
     <nav>
+      <span class="admin-account">{{ auth.user()?.email }}</span>
       <a routerLink="/dashboard">Meu casamento</a
       ><button class="button secondary" (click)="logout()">Sair</button>
     </nav>
