@@ -77,8 +77,7 @@
     <header class="topbar">
       <div class="breadcrumb">
         <button
-          mat-icon-button
-          class="mobile-toggle"
+          class="mobile-toggle topbar-icon"
           aria-label="Abrir menu"
           (click)="mobile.set(true)"
         >
@@ -88,19 +87,19 @@
       <div class="header-actions">
         <span class="local-badge"><i></i> {{ cloud ? 'Minha conta' : 'Ambiente local' }}</span
         ><button
-          mat-icon-button
+          class="topbar-icon"
           [disabled]="!prefs.ready()"
           [attr.aria-label]="prefs.dark() ? 'Ativar tema claro' : 'Ativar tema escuro'"
           (click)="prefs.toggleTheme()"
         >
           <oc-icon [name]="prefs.dark() ? 'light_mode' : 'dark_mode'" /></button
         ><button
-          mat-icon-button
+          class="topbar-icon"
           aria-label="Informações sobre os dados"
           (click)="info.set(!info())"
         >
           <oc-icon name="info" /></button
-        ><a class="avatar small" routerLink="/casamentos" aria-label="Meus casamentos"
+        ><a class="avatar topbar-icon" routerLink="/casamentos" aria-label="Meus casamentos"
           ><oc-icon name="favorite_border"
         /></a>
         @if (cloud) {

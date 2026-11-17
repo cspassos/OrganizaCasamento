@@ -2,7 +2,6 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
-import { MatButtonModule } from '@angular/material/button';
 import { Icon } from '../shared/components/icon';
 import { PreferencesService } from '../core/services/preferences';
 import { mainNavigation, navigation, routeFor } from '../core/constants/navigation';
@@ -13,7 +12,7 @@ import { cloudEnabled } from '../core/repositories/cloud-backend';
 import { AdministrationService } from '../core/services/administration';
 @Component({
   selector: 'oc-layout',
-  imports: [RouterLink, RouterOutlet, Icon, MatButtonModule, FormsModule],
+  imports: [RouterLink, RouterOutlet, Icon, FormsModule],
   templateUrl: './main-layout.html',
   host: { '(document:keydown.escape)': 'mobile.set(false)' },
 })

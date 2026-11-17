@@ -883,6 +883,51 @@ nav {
   align-items: center;
   gap: 10px;
 }
+.topbar .topbar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  line-height: 1;
+  text-decoration: none;
+}
+.topbar .topbar-icon.avatar {
+  background: var(--beige);
+  color: #8b774c;
+}
+.topbar .topbar-icon:hover {
+  background: var(--sage-light);
+}
+.topbar .topbar-icon > oc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+}
+.topbar .topbar-icon > oc-icon > span {
+  font-size: 22px;
+  line-height: 1;
+}
+.header-actions > .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+@media (max-width: 600px) {
+  .topbar { gap: 8px; }
+  .header-actions .local-badge { display: none; }
+}
 .local-badge {
   font-size: 10px;
   margin-right: 12px;
