@@ -9,7 +9,13 @@ Projeto: `luhamomwwsiqxodwjodo` (`https://luhamomwwsiqxodwjodo.supabase.co`). Mi
 
 ## Persistência e segurança
 
-São 26 tabelas com RLS por proprietário. `wedding_workspaces` preserva os agregados usados pelas regras existentes (casamento, financeiro, pessoas, fornecedores, convites e presentes). Cada gravação sincroniza as tabelas relacionais na mesma transação. Isso mantém IDs e dados legados sem reintroduzir contratos/equipe no fluxo simplificado.
+São 26 tabelas com nomes e colunas em português e RLS por proprietário. `espacos_casamento` preserva os agregados usados pelas regras existentes (casamento, financeiro, pessoas, fornecedores, convites e presentes). Cada gravação sincroniza as tabelas relacionais na mesma transação. Isso mantém IDs e dados legados sem reintroduzir contratos/equipe no fluxo simplificado.
+
+Em 17/11/2026, as migrações `nomes_em_portugues` e `permissao_conversao_espaco` foram aplicadas ao projeto remoto. As tabelas e colunas foram renomeadas sem recriar registros. As funções internas foram ajustadas, preservando o contrato JSON dos backups, importações, convites e RPCs. Os schemas gerenciados pelo Supabase (`auth`, `storage` etc.) permanecem intactos.
+
+Quatro views temporárias (`user_preferences`, `wedding_workspaces`, `app_administrators`, `administration_audit`) atendem versões publicadas anteriores. Elas são aliases com `security_invoker=true`, preservando RLS e os privilégios existentes; não são tabelas nem cópias dos registros. O código atualizado já consulta as tabelas em português. Remover esses aliases somente depois de publicar o frontend e a função `administration` atualizados e encerrar clientes antigos.
+
+Validações da renomeação: `node scripts/test-migracao-portugues.mjs` compara todas as 26 tabelas antes/depois com dados existentes; `node scripts/test-cloud-workspaces.mjs` verifica gravação, financeiro, isolamento, convites e importação. O roteiro `supabase/tests/cloud_smoke.sql` foi executado no banco remoto com rollback, sem deixar cadastros de teste. A comparação dos resumos dos dados remotos confirmou preservação integral dos registros e campos.
 
 Clientes leem apenas seus registros. Escritas passam por RPCs; CRUD direto nas tabelas de negócio está revogado. Funções públicas são `SECURITY INVOKER`; operações privilegiadas ficam em `app_private` e conferem explicitamente `auth.uid()`. Não usam metadados editáveis para autorização.
 

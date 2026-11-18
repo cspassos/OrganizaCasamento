@@ -37,9 +37,9 @@ export function administrationHandler({ privileged: db, authenticate }: Dependen
       const actor = identity.user;
       const body = await req.json();
       const { data: membership, error: memberError } = await db
-        .from('app_administrators')
-        .select('must_change_password')
-        .eq('user_id', actor.id)
+        .from('administradores_aplicativo')
+        .select('must_change_password:deve_alterar_senha')
+        .eq('usuario_id', actor.id)
         .maybeSingle();
       if (memberError) throw memberError;
       if (body.action === 'me')
@@ -50,8 +50,8 @@ export function administrationHandler({ privileged: db, authenticate }: Dependen
       if (!membership) return reply({ error: 'Esta área é exclusiva da administração.' }, 403);
       const audit = async (action: string, target: string | null = actor.id) => {
         const { error } = await db
-          .from('administration_audit')
-          .insert({ administrator_id: actor.id, target_user_id: target, action });
+          .from('auditoria_administracao')
+          .insert({ administrador_id: actor.id, usuario_alvo_id: target, acao: action });
         if (error) throw error;
       };
       if (body.action === 'change-initial-password') {
@@ -77,9 +77,9 @@ export function administrationHandler({ privileged: db, authenticate }: Dependen
             400,
           );
         const update = await db
-          .from('app_administrators')
-          .update({ must_change_password: false })
-          .eq('user_id', actor.id);
+          .from('administradores_aplicativo')
+          .update({ deve_alterar_senha: false })
+          .eq('usuario_id', actor.id);
         if (update.error) throw update.error;
         await audit('initial_password_changed');
         return reply({ message: 'Nova senha salva. Seu acesso administrativo está liberado.' });
@@ -101,10 +101,12 @@ export function administrationHandler({ privileged: db, authenticate }: Dependen
         return reply({ error: 'Usuário não encontrado.' }, 404);
       if (body.action === 'account') {
         const { data, error } = await db
-          .from('wedding_workspaces')
-          .select('wedding_id,wedding,finance,people,suppliers,invitations,gifts,updated_at')
-          .eq('owner_id', target)
-          .order('updated_at', { ascending: false });
+          .from('espacos_casamento')
+          .select(
+            'wedding_id:casamento_id,wedding:casamento,finance:financeiro,people:pessoas,suppliers:fornecedores,invitations:convites,gifts:presentes,updated_at:atualizado_em',
+          )
+          .eq('proprietario_id', target)
+          .order('atualizado_em', { ascending: false });
         if (error) throw error;
         await audit('view_account', target);
         return reply({ email: targetData.user.email, workspaces: data ?? [] });

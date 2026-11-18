@@ -104,7 +104,7 @@ describe('Administração no servidor', () => {
       ).status,
     ).toBe(200);
     expect(s.operations[0].user).toBe(id);
-    expect(s.operations.at(-1).value.action).toBe('initial_password_changed');
+    expect(s.operations.at(-1).value.acao).toBe('initial_password_changed');
   });
   it('lista contas e gera recuperação registrada sem retornar a senha da pessoa', async () => {
     const s = setup({ must_change_password: false });
@@ -114,9 +114,9 @@ describe('Administração no servidor', () => {
     expect(result.link).toContain('verify');
     expect(result).not.toHaveProperty('password');
     expect(s.operations.at(-1).value).toMatchObject({
-      administrator_id: id,
-      target_user_id: target,
-      action: 'password_reset_link',
+      administrador_id: id,
+      usuario_alvo_id: target,
+      acao: 'password_reset_link',
     });
   });
 });

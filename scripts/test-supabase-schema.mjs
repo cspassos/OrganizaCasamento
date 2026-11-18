@@ -49,7 +49,8 @@ try {
     grant select,insert,update,delete on storage.objects to authenticated;
     insert into auth.users values ('${a}'),('${b}');
   `);
-  const files = (await fs.readdir('supabase/migrations')).filter((f) => f.endsWith('.sql') && !f.includes('cloud_workspace_transactions')).sort();
+  // Este roteiro verifica a fundação histórica; o estado atual usa os outros dois roteiros.
+  const files = (await fs.readdir('supabase/migrations')).filter((f) => f.endsWith('.sql') && f < '20261116193756').sort();
   for (const file of files) await db.exec(await fs.readFile(`supabase/migrations/${file}`, 'utf8'));
   const tables = await query(
     "select tablename,rowsecurity from pg_tables where schemaname='public'",

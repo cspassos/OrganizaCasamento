@@ -1,12 +1,12 @@
 # Administração
 
-`/` é a apresentação pública. `/acesso/entrar` continua sendo o login. `/administracao` exige sessão e participação em `app_administrators`, conferida no servidor a cada chamada. Metadados editáveis do usuário e o endereço de e-mail não concedem privilégio.
+`/` é a apresentação pública. `/acesso/entrar` continua sendo o login. `/administracao` exige sessão e participação em `administradores_aplicativo`, conferida no servidor a cada chamada. Metadados editáveis do usuário e o endereço de e-mail não concedem privilégio.
 
 O administrador inicial foi criado pela API oficial do Auth, com o endereço solicitado pelo proprietário. A senha inicial não está no repositório, na migração ou no navegador da aplicação. A primeira entrada exige uma nova senha com ao menos 12 caracteres, letras e números; a função bloqueia consultas e recuperação de outras contas enquanto essa troca não ocorre.
 
 Administradores podem buscar contas com paginação, consultar os casamentos e gerar um link de recuperação de uso único para o titular escolher a própria senha. A senha atual nunca é retornada. A geração do link exige clique explícito e não envia mensagens automaticamente. Links são sensíveis e devem ser compartilhados apenas com o titular após verificar sua identidade.
 
-As consultas de contas e gerações de recuperação são registradas em `administration_audit`, sem gravar senhas ou links de recuperação. A consulta de casamentos é de suporte, em modo leitura; a propriedade dos dados e as regras de isolamento das contas continuam preservadas. O administrador também pode acessar normalmente as funções do próprio casamento.
+As consultas de contas e gerações de recuperação são registradas em `auditoria_administracao`, sem gravar senhas ou links de recuperação. A consulta de casamentos é de suporte, em modo leitura; a propriedade dos dados e as regras de isolamento das contas continuam preservadas. O administrador também pode acessar normalmente as funções do próprio casamento.
 
 ## Publicação da função
 

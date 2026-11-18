@@ -141,8 +141,8 @@ export class CloudBackend {
     const user = await this.user();
     if (store === 'preferences') {
       const { data, error } = await cloudClient()
-        .from('user_preferences')
-        .select('data')
+        .from('preferencias_usuario')
+        .select('data:dados')
         .eq('id', user.id)
         .maybeSingle();
       cloudError(error);
@@ -150,10 +150,18 @@ export class CloudBackend {
       return Object.values(data?.data ?? {}) as T[];
     }
     const column = store === 'weddings' ? 'wedding' : store;
+    const colunaBanco = {
+      wedding: 'casamento',
+      finance: 'financeiro',
+      people: 'pessoas',
+      suppliers: 'fornecedores',
+      invitations: 'convites',
+      gifts: 'presentes',
+    }[column];
     const { data, error } = await cloudClient()
-      .from('wedding_workspaces')
-      .select(column)
-      .order('created_at');
+      .from('espacos_casamento')
+      .select(`${column}:${colunaBanco}`)
+      .order('criado_em');
     cloudError(error);
     const result = await this.hydrate((data ?? []).map((r: any) => r[column]).filter(Boolean));
     await this.assertUser(user.id);
@@ -161,9 +169,11 @@ export class CloudBackend {
   }
   async read(id: string) {
     const { data, error } = await cloudClient()
-      .from('wedding_workspaces')
-      .select('*')
-      .eq('wedding_id', id)
+      .from('espacos_casamento')
+      .select(
+        'wedding:casamento,finance:financeiro,people:pessoas,suppliers:fornecedores,invitations:convites,gifts:presentes,revision:revisao',
+      )
+      .eq('casamento_id', id)
       .maybeSingle();
     cloudError(error);
     return data

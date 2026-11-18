@@ -8,1203 +8,1332 @@ export type Database = {
   };
   public: {
     Tables: {
+      administradores_aplicativo: {
+        Row: {
+          criado_em: string;
+          deve_alterar_senha: boolean;
+          usuario_id: string;
+        };
+        Insert: {
+          criado_em?: string;
+          deve_alterar_senha?: boolean;
+          usuario_id: string;
+        };
+        Update: {
+          criado_em?: string;
+          deve_alterar_senha?: boolean;
+          usuario_id?: string;
+        };
+        Relationships: [];
+      };
+      auditoria_administracao: {
+        Row: {
+          acao: string;
+          administrador_id: string;
+          criado_em: string;
+          id: string;
+          usuario_alvo_id: string | null;
+        };
+        Insert: {
+          acao: string;
+          administrador_id: string;
+          criado_em?: string;
+          id?: string;
+          usuario_alvo_id?: string | null;
+        };
+        Update: {
+          acao?: string;
+          administrador_id?: string;
+          criado_em?: string;
+          id?: string;
+          usuario_alvo_id?: string | null;
+        };
+        Relationships: [];
+      };
+      auditoria_financeira: {
+        Row: {
+          acao: string;
+          casamento_id: string;
+          detalhe: string;
+          entidade_id: string;
+          id: string;
+          ocorrido_em: string;
+        };
+        Insert: {
+          acao: string;
+          casamento_id: string;
+          detalhe?: string;
+          entidade_id?: string;
+          id?: string;
+          ocorrido_em?: string;
+        };
+        Update: {
+          acao?: string;
+          casamento_id?: string;
+          detalhe?: string;
+          entidade_id?: string;
+          id?: string;
+          ocorrido_em?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'finance_audit_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      casamentos: {
+        Row: {
+          arquivado: boolean;
+          atualizado_em: string;
+          caminho_foto: string | null;
+          capacidade: number;
+          cidade: string;
+          cores: string;
+          criado_em: string;
+          dados_temporarios: boolean;
+          data_casamento: string | null;
+          descricao_cerimonia: string;
+          endereco_cerimonia: string;
+          endereco_recepcao: string;
+          estado: string;
+          estilo: string;
+          estimativa_convidados: number;
+          horario_cerimonia: string | null;
+          horario_recepcao: string | null;
+          id: string;
+          local_cerimonia: string;
+          local_recepcao: string;
+          nome: string;
+          nome_noiva: string;
+          nome_noivo: string;
+          observacoes: string;
+          orcamento_inicial_centavos: number;
+          paleta_cores: string[];
+          proprietario_id: string;
+          tema: string;
+          tipo_cerimonia: string;
+        };
+        Insert: {
+          arquivado?: boolean;
+          atualizado_em?: string;
+          caminho_foto?: string | null;
+          capacidade?: number;
+          cidade?: string;
+          cores?: string;
+          criado_em?: string;
+          dados_temporarios?: boolean;
+          data_casamento?: string | null;
+          descricao_cerimonia?: string;
+          endereco_cerimonia?: string;
+          endereco_recepcao?: string;
+          estado?: string;
+          estilo?: string;
+          estimativa_convidados?: number;
+          horario_cerimonia?: string | null;
+          horario_recepcao?: string | null;
+          id?: string;
+          local_cerimonia?: string;
+          local_recepcao?: string;
+          nome: string;
+          nome_noiva?: string;
+          nome_noivo?: string;
+          observacoes?: string;
+          orcamento_inicial_centavos?: number;
+          paleta_cores?: string[];
+          proprietario_id?: string;
+          tema?: string;
+          tipo_cerimonia?: string;
+        };
+        Update: {
+          arquivado?: boolean;
+          atualizado_em?: string;
+          caminho_foto?: string | null;
+          capacidade?: number;
+          cidade?: string;
+          cores?: string;
+          criado_em?: string;
+          dados_temporarios?: boolean;
+          data_casamento?: string | null;
+          descricao_cerimonia?: string;
+          endereco_cerimonia?: string;
+          endereco_recepcao?: string;
+          estado?: string;
+          estilo?: string;
+          estimativa_convidados?: number;
+          horario_cerimonia?: string | null;
+          horario_recepcao?: string | null;
+          id?: string;
+          local_cerimonia?: string;
+          local_recepcao?: string;
+          nome?: string;
+          nome_noiva?: string;
+          nome_noivo?: string;
+          observacoes?: string;
+          orcamento_inicial_centavos?: number;
+          paleta_cores?: string[];
+          proprietario_id?: string;
+          tema?: string;
+          tipo_cerimonia?: string;
+        };
+        Relationships: [];
+      };
+      categorias_financeiras: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          criado_em: string;
+          id: string;
+          nome: string;
+          orcamento_centavos: number;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          criado_em?: string;
+          id?: string;
+          nome: string;
+          orcamento_centavos?: number;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          criado_em?: string;
+          id?: string;
+          nome?: string;
+          orcamento_centavos?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'finance_categories_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      configuracoes_financeiras: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          orcamento_centavos: number | null;
+          reserva_centavos: number;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          orcamento_centavos?: number | null;
+          reserva_centavos?: number;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          orcamento_centavos?: number | null;
+          reserva_centavos?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'finance_settings_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: true;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      convidados: {
+        Row: {
+          acompanhante_de: string | null;
+          atualizado_em: string;
+          casamento_id: string;
+          convite_enviado: boolean;
+          criado_em: string;
+          crianca: boolean;
+          data_envio: string | null;
+          detalhes_legados: Json;
+          email: string;
+          familia_id: string | null;
+          id: string;
+          idade: number | null;
+          lado: string;
+          nome: string;
+          observacoes: string;
+          parentesco: string;
+          situacao: string;
+          telefone: string;
+          whatsapp: string;
+        };
+        Insert: {
+          acompanhante_de?: string | null;
+          atualizado_em?: string;
+          casamento_id: string;
+          convite_enviado?: boolean;
+          criado_em?: string;
+          crianca?: boolean;
+          data_envio?: string | null;
+          detalhes_legados?: Json;
+          email?: string;
+          familia_id?: string | null;
+          id?: string;
+          idade?: number | null;
+          lado?: string;
+          nome: string;
+          observacoes?: string;
+          parentesco?: string;
+          situacao?: string;
+          telefone?: string;
+          whatsapp?: string;
+        };
+        Update: {
+          acompanhante_de?: string | null;
+          atualizado_em?: string;
+          casamento_id?: string;
+          convite_enviado?: boolean;
+          criado_em?: string;
+          crianca?: boolean;
+          data_envio?: string | null;
+          detalhes_legados?: Json;
+          email?: string;
+          familia_id?: string | null;
+          id?: string;
+          idade?: number | null;
+          lado?: string;
+          nome?: string;
+          observacoes?: string;
+          parentesco?: string;
+          situacao?: string;
+          telefone?: string;
+          whatsapp?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'guests_wedding_id_companion_of_fkey';
+            columns: ['casamento_id', 'acompanhante_de'];
+            isOneToOne: false;
+            referencedRelation: 'convidados';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+          {
+            foreignKeyName: 'guests_wedding_id_family_id_fkey';
+            columns: ['casamento_id', 'familia_id'];
+            isOneToOne: false;
+            referencedRelation: 'familias';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+          {
+            foreignKeyName: 'guests_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      convidados_convite: {
+        Row: {
+          casamento_id: string;
+          convidado_id: string;
+          convite_id: string;
+          copia_nome: string;
+          id: string;
+        };
+        Insert: {
+          casamento_id: string;
+          convidado_id: string;
+          convite_id: string;
+          copia_nome: string;
+          id?: string;
+        };
+        Update: {
+          casamento_id?: string;
+          convidado_id?: string;
+          convite_id?: string;
+          copia_nome?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invitation_guests_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invitation_guests_wedding_id_guest_id_fkey';
+            columns: ['casamento_id', 'convidado_id'];
+            isOneToOne: false;
+            referencedRelation: 'convidados';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+          {
+            foreignKeyName: 'invitation_guests_wedding_id_invitation_id_fkey';
+            columns: ['casamento_id', 'convite_id'];
+            isOneToOne: false;
+            referencedRelation: 'convites';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+        ];
+      };
+      convites: {
+        Row: {
+          ativo: boolean;
+          atualizado_em: string;
+          casamento_id: string;
+          chave_unidade: string;
+          copia_modelo: Json;
+          criado_em: string;
+          enviado_em: string | null;
+          hash_token: string | null;
+          id: string;
+          modelo_id: string | null;
+          rotulo_destinatario: string;
+        };
+        Insert: {
+          ativo?: boolean;
+          atualizado_em?: string;
+          casamento_id: string;
+          chave_unidade: string;
+          copia_modelo: Json;
+          criado_em?: string;
+          enviado_em?: string | null;
+          hash_token?: string | null;
+          id?: string;
+          modelo_id?: string | null;
+          rotulo_destinatario: string;
+        };
+        Update: {
+          ativo?: boolean;
+          atualizado_em?: string;
+          casamento_id?: string;
+          chave_unidade?: string;
+          copia_modelo?: Json;
+          criado_em?: string;
+          enviado_em?: string | null;
+          hash_token?: string | null;
+          id?: string;
+          modelo_id?: string | null;
+          rotulo_destinatario?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invitations_wedding_id_design_id_fkey';
+            columns: ['casamento_id', 'modelo_id'];
+            isOneToOne: false;
+            referencedRelation: 'modelos_convites';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+          {
+            foreignKeyName: 'invitations_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      despesas: {
+        Row: {
+          atualizado_em: string;
+          caminho_anexo: string | null;
+          casamento_id: string;
+          categoria_id: string;
+          contratado_centavos: number;
+          criado_em: string;
+          data_contrato: string | null;
+          data_vencimento: string | null;
+          descricao: string;
+          forma_pagamento: string;
+          fornecedor_id: string | null;
+          id: string;
+          nome_fornecedor: string;
+          observacoes: string;
+          previsto_centavos: number;
+          referencia_contrato: string;
+          situacao: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          caminho_anexo?: string | null;
+          casamento_id: string;
+          categoria_id: string;
+          contratado_centavos?: number;
+          criado_em?: string;
+          data_contrato?: string | null;
+          data_vencimento?: string | null;
+          descricao: string;
+          forma_pagamento?: string;
+          fornecedor_id?: string | null;
+          id?: string;
+          nome_fornecedor?: string;
+          observacoes?: string;
+          previsto_centavos?: number;
+          referencia_contrato?: string;
+          situacao?: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          caminho_anexo?: string | null;
+          casamento_id?: string;
+          categoria_id?: string;
+          contratado_centavos?: number;
+          criado_em?: string;
+          data_contrato?: string | null;
+          data_vencimento?: string | null;
+          descricao?: string;
+          forma_pagamento?: string;
+          fornecedor_id?: string | null;
+          id?: string;
+          nome_fornecedor?: string;
+          observacoes?: string;
+          previsto_centavos?: number;
+          referencia_contrato?: string;
+          situacao?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expenses_wedding_id_category_id_fkey';
+            columns: ['casamento_id', 'categoria_id'];
+            isOneToOne: false;
+            referencedRelation: 'categorias_financeiras';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expenses_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expenses_wedding_id_supplier_id_fkey';
+            columns: ['casamento_id', 'fornecedor_id'];
+            isOneToOne: false;
+            referencedRelation: 'fornecedores';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+        ];
+      };
+      espacos_casamento: {
+        Row: {
+          atualizado_em: string;
+          casamento: Json;
+          casamento_id: string;
+          convites: Json | null;
+          criado_em: string;
+          financeiro: Json | null;
+          fornecedores: Json | null;
+          hash_importacao: string | null;
+          pessoas: Json | null;
+          presentes: Json | null;
+          proprietario_id: string;
+          revisao: number;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento: Json;
+          casamento_id: string;
+          convites?: Json | null;
+          criado_em?: string;
+          financeiro?: Json | null;
+          fornecedores?: Json | null;
+          hash_importacao?: string | null;
+          pessoas?: Json | null;
+          presentes?: Json | null;
+          proprietario_id: string;
+          revisao?: number;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento?: Json;
+          casamento_id?: string;
+          convites?: Json | null;
+          criado_em?: string;
+          financeiro?: Json | null;
+          fornecedores?: Json | null;
+          hash_importacao?: string | null;
+          pessoas?: Json | null;
+          presentes?: Json | null;
+          proprietario_id?: string;
+          revisao?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'wedding_workspaces_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: true;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      familias: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          criado_em: string;
+          id: string;
+          nome: string;
+          observacoes: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          criado_em?: string;
+          id?: string;
+          nome: string;
+          observacoes?: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          criado_em?: string;
+          id?: string;
+          nome?: string;
+          observacoes?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'families_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      filas_whatsapp: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          fila: Json;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          fila: Json;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          fila?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'whatsapp_queues_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: true;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      fornecedores: {
+        Row: {
+          atualizado_em: string;
+          avaliacao: string;
+          caminho_anexo: string | null;
+          casamento_id: string;
+          categoria: string;
+          criado_em: string;
+          documento: string;
+          email: string;
+          empresa: string;
+          endereco: string;
+          id: string;
+          nome: string;
+          nota: number;
+          observacoes: string;
+          responsavel: string;
+          servico: string;
+          situacao: string;
+          telefone: string;
+          whatsapp: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          avaliacao?: string;
+          caminho_anexo?: string | null;
+          casamento_id: string;
+          categoria?: string;
+          criado_em?: string;
+          documento?: string;
+          email?: string;
+          empresa?: string;
+          endereco?: string;
+          id?: string;
+          nome: string;
+          nota?: number;
+          observacoes?: string;
+          responsavel?: string;
+          servico?: string;
+          situacao?: string;
+          telefone?: string;
+          whatsapp?: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          avaliacao?: string;
+          caminho_anexo?: string | null;
+          casamento_id?: string;
+          categoria?: string;
+          criado_em?: string;
+          documento?: string;
+          email?: string;
+          empresa?: string;
+          endereco?: string;
+          id?: string;
+          nome?: string;
+          nota?: number;
+          observacoes?: string;
+          responsavel?: string;
+          servico?: string;
+          situacao?: string;
+          telefone?: string;
+          whatsapp?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'suppliers_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      itens_presentes: {
+        Row: {
+          atualizado_em: string;
+          caminho_foto: string | null;
+          casamento_id: string;
+          criado_em: string;
+          descricao: string;
+          id: string;
+          nome: string;
+          preco_centavos: number | null;
+          quantidade: number;
+          quantidade_recebida: number;
+          url_produto: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          caminho_foto?: string | null;
+          casamento_id: string;
+          criado_em?: string;
+          descricao?: string;
+          id?: string;
+          nome: string;
+          preco_centavos?: number | null;
+          quantidade?: number;
+          quantidade_recebida?: number;
+          url_produto?: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          caminho_foto?: string | null;
+          casamento_id?: string;
+          criado_em?: string;
+          descricao?: string;
+          id?: string;
+          nome?: string;
+          preco_centavos?: number | null;
+          quantidade?: number;
+          quantidade_recebida?: number;
+          url_produto?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'gift_items_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      listas_presentes: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          mensagem: string;
+          titulo: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          mensagem?: string;
+          titulo?: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          mensagem?: string;
+          titulo?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'gift_lists_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: true;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      listas_presentes_externas: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          id: string;
+          nome: string;
+          url: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          id?: string;
+          nome: string;
+          url: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          id?: string;
+          nome?: string;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'external_gift_lists_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mensagens_convites: {
+        Row: {
+          acao: string;
+          atualizado_em: string;
+          casamento_id: string;
+          id: string;
+          mensagem: string;
+        };
+        Insert: {
+          acao: string;
+          atualizado_em?: string;
+          casamento_id: string;
+          id?: string;
+          mensagem: string;
+        };
+        Update: {
+          acao?: string;
+          atualizado_em?: string;
+          casamento_id?: string;
+          id?: string;
+          mensagem?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invitation_messages_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      modelos_convites: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          criado_em: string;
+          id: string;
+          modelo: Json;
+          titulo: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          criado_em?: string;
+          id?: string;
+          modelo: Json;
+          titulo: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          criado_em?: string;
+          id?: string;
+          modelo?: Json;
+          titulo?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invitation_designs_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      parcelas: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          criado_em: string;
+          data_vencimento: string;
+          despesa_id: string;
+          id: string;
+          numero: number;
+          rotulo: string;
+          valor_centavos: number;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          criado_em?: string;
+          data_vencimento: string;
+          despesa_id: string;
+          id?: string;
+          numero: number;
+          rotulo: string;
+          valor_centavos: number;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          criado_em?: string;
+          data_vencimento?: string;
+          despesa_id?: string;
+          id?: string;
+          numero?: number;
+          rotulo?: string;
+          valor_centavos?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'installments_wedding_id_expense_id_fkey';
+            columns: ['casamento_id', 'despesa_id'];
+            isOneToOne: false;
+            referencedRelation: 'despesas';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+          {
+            foreignKeyName: 'installments_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      participacoes_especiais: {
+        Row: {
+          atualizado_em: string;
+          casamento_id: string;
+          convidado_id: string;
+          criado_em: string;
+          detalhes_legados: Json;
+          id: string;
+          observacoes: string;
+          parceiro_id: string | null;
+          participacao: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_id: string;
+          convidado_id: string;
+          criado_em?: string;
+          detalhes_legados?: Json;
+          id?: string;
+          observacoes?: string;
+          parceiro_id?: string | null;
+          participacao: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_id?: string;
+          convidado_id?: string;
+          criado_em?: string;
+          detalhes_legados?: Json;
+          id?: string;
+          observacoes?: string;
+          parceiro_id?: string | null;
+          participacao?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'special_participations_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'special_participations_wedding_id_guest_id_fkey';
+            columns: ['casamento_id', 'convidado_id'];
+            isOneToOne: true;
+            referencedRelation: 'convidados';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+          {
+            foreignKeyName: 'special_participations_wedding_id_partner_id_fkey';
+            columns: ['casamento_id', 'parceiro_id'];
+            isOneToOne: false;
+            referencedRelation: 'participacoes_especiais';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+        ];
+      };
+      perfis: {
+        Row: {
+          atualizado_em: string;
+          criado_em: string;
+          id: string;
+          nome_exibicao: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          criado_em?: string;
+          id: string;
+          nome_exibicao?: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          criado_em?: string;
+          id?: string;
+          nome_exibicao?: string;
+        };
+        Relationships: [];
+      };
+      preferencias_usuario: {
+        Row: {
+          atualizado_em: string;
+          casamento_selecionado_id: string | null;
+          dados: Json;
+          id: string;
+          menu_recolhido: boolean;
+          tema_escuro: boolean;
+        };
+        Insert: {
+          atualizado_em?: string;
+          casamento_selecionado_id?: string | null;
+          dados?: Json;
+          id?: string;
+          menu_recolhido?: boolean;
+          tema_escuro?: boolean;
+        };
+        Update: {
+          atualizado_em?: string;
+          casamento_selecionado_id?: string | null;
+          dados?: Json;
+          id?: string;
+          menu_recolhido?: boolean;
+          tema_escuro?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_preferences_selected_wedding_id_fkey';
+            columns: ['casamento_selecionado_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      registros_legados: {
+        Row: {
+          casamento_id: string;
+          conteudo: Json;
+          id: string;
+          importado_em: string;
+          modulo: string;
+        };
+        Insert: {
+          casamento_id: string;
+          conteudo: Json;
+          id?: string;
+          importado_em?: string;
+          modulo: string;
+        };
+        Update: {
+          casamento_id?: string;
+          conteudo?: Json;
+          id?: string;
+          importado_em?: string;
+          modulo?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'legacy_snapshots_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      respostas_presenca: {
+        Row: {
+          casamento_id: string;
+          comparecera: boolean;
+          convidado_id: string;
+          convite_id: string;
+          id: string;
+          observacoes: string;
+          respondido_em: string;
+        };
+        Insert: {
+          casamento_id: string;
+          comparecera: boolean;
+          convidado_id: string;
+          convite_id: string;
+          id?: string;
+          observacoes?: string;
+          respondido_em?: string;
+        };
+        Update: {
+          casamento_id?: string;
+          comparecera?: boolean;
+          convidado_id?: string;
+          convite_id?: string;
+          id?: string;
+          observacoes?: string;
+          respondido_em?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'rsvp_responses_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'rsvp_responses_wedding_id_invitation_id_guest_id_fkey';
+            columns: ['casamento_id', 'convite_id', 'convidado_id'];
+            isOneToOne: false;
+            referencedRelation: 'convidados_convite';
+            referencedColumns: ['casamento_id', 'convite_id', 'convidado_id'];
+          },
+        ];
+      };
+      transacoes_financeiras: {
+        Row: {
+          anulado_em: string | null;
+          atualizado_em: string;
+          caminho_anexo: string | null;
+          casamento_id: string;
+          criado_em: string;
+          data_transacao: string;
+          despesa_id: string;
+          forma_pagamento: string;
+          id: string;
+          motivo_anulacao: string | null;
+          observacoes: string;
+          pagamento_id: string | null;
+          parcela_id: string;
+          tipo: string;
+          valor_centavos: number;
+        };
+        Insert: {
+          anulado_em?: string | null;
+          atualizado_em?: string;
+          caminho_anexo?: string | null;
+          casamento_id: string;
+          criado_em?: string;
+          data_transacao: string;
+          despesa_id: string;
+          forma_pagamento?: string;
+          id?: string;
+          motivo_anulacao?: string | null;
+          observacoes?: string;
+          pagamento_id?: string | null;
+          parcela_id: string;
+          tipo: string;
+          valor_centavos: number;
+        };
+        Update: {
+          anulado_em?: string | null;
+          atualizado_em?: string;
+          caminho_anexo?: string | null;
+          casamento_id?: string;
+          criado_em?: string;
+          data_transacao?: string;
+          despesa_id?: string;
+          forma_pagamento?: string;
+          id?: string;
+          motivo_anulacao?: string | null;
+          observacoes?: string;
+          pagamento_id?: string | null;
+          parcela_id?: string;
+          tipo?: string;
+          valor_centavos?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'financial_transactions_wedding_id_expense_id_installment_i_fkey';
+            columns: ['casamento_id', 'despesa_id', 'parcela_id'];
+            isOneToOne: false;
+            referencedRelation: 'parcelas';
+            referencedColumns: ['casamento_id', 'despesa_id', 'id'];
+          },
+          {
+            foreignKeyName: 'financial_transactions_wedding_id_fkey';
+            columns: ['casamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'casamentos';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'financial_transactions_wedding_id_payment_id_fkey';
+            columns: ['casamento_id', 'pagamento_id'];
+            isOneToOne: false;
+            referencedRelation: 'transacoes_financeiras';
+            referencedColumns: ['casamento_id', 'id'];
+          },
+        ];
+      };
+    };
+    Views: {
       administration_audit: {
         Row: {
-          action: string;
-          administrator_id: string;
-          created_at: string;
-          id: string;
+          action: string | null;
+          administrator_id: string | null;
+          created_at: string | null;
+          id: string | null;
           target_user_id: string | null;
         };
         Insert: {
-          action: string;
-          administrator_id: string;
-          created_at?: string;
-          id?: string;
+          action?: string | null;
+          administrator_id?: string | null;
+          created_at?: string | null;
+          id?: string | null;
           target_user_id?: string | null;
         };
         Update: {
-          action?: string;
-          administrator_id?: string;
-          created_at?: string;
-          id?: string;
+          action?: string | null;
+          administrator_id?: string | null;
+          created_at?: string | null;
+          id?: string | null;
           target_user_id?: string | null;
         };
         Relationships: [];
       };
       app_administrators: {
         Row: {
-          created_at: string;
-          must_change_password: boolean;
-          user_id: string;
+          created_at: string | null;
+          must_change_password: boolean | null;
+          user_id: string | null;
         };
         Insert: {
-          created_at?: string;
-          must_change_password?: boolean;
-          user_id: string;
+          created_at?: string | null;
+          must_change_password?: boolean | null;
+          user_id?: string | null;
         };
         Update: {
-          created_at?: string;
-          must_change_password?: boolean;
-          user_id?: string;
+          created_at?: string | null;
+          must_change_password?: boolean | null;
+          user_id?: string | null;
         };
         Relationships: [];
-      };
-      expenses: {
-        Row: {
-          attachment_path: string | null;
-          category_id: string;
-          contract_date: string | null;
-          contract_reference: string;
-          contracted_cents: number;
-          created_at: string;
-          description: string;
-          due_date: string | null;
-          id: string;
-          method: string;
-          notes: string;
-          planned_cents: number;
-          status: string;
-          supplier_id: string | null;
-          supplier_name: string;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          attachment_path?: string | null;
-          category_id: string;
-          contract_date?: string | null;
-          contract_reference?: string;
-          contracted_cents?: number;
-          created_at?: string;
-          description: string;
-          due_date?: string | null;
-          id?: string;
-          method?: string;
-          notes?: string;
-          planned_cents?: number;
-          status?: string;
-          supplier_id?: string | null;
-          supplier_name?: string;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          attachment_path?: string | null;
-          category_id?: string;
-          contract_date?: string | null;
-          contract_reference?: string;
-          contracted_cents?: number;
-          created_at?: string;
-          description?: string;
-          due_date?: string | null;
-          id?: string;
-          method?: string;
-          notes?: string;
-          planned_cents?: number;
-          status?: string;
-          supplier_id?: string | null;
-          supplier_name?: string;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'expenses_wedding_id_category_id_fkey';
-            columns: ['wedding_id', 'category_id'];
-            isOneToOne: false;
-            referencedRelation: 'finance_categories';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-          {
-            foreignKeyName: 'expenses_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'expenses_wedding_id_supplier_id_fkey';
-            columns: ['wedding_id', 'supplier_id'];
-            isOneToOne: false;
-            referencedRelation: 'suppliers';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-        ];
-      };
-      external_gift_lists: {
-        Row: {
-          id: string;
-          name: string;
-          updated_at: string;
-          url: string;
-          wedding_id: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          updated_at?: string;
-          url: string;
-          wedding_id: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          updated_at?: string;
-          url?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'external_gift_lists_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      families: {
-        Row: {
-          created_at: string;
-          id: string;
-          name: string;
-          notes: string;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          name: string;
-          notes?: string;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          name?: string;
-          notes?: string;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'families_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      finance_audit: {
-        Row: {
-          action: string;
-          detail: string;
-          entity_id: string;
-          id: string;
-          occurred_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          action: string;
-          detail?: string;
-          entity_id?: string;
-          id?: string;
-          occurred_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          action?: string;
-          detail?: string;
-          entity_id?: string;
-          id?: string;
-          occurred_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'finance_audit_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      finance_categories: {
-        Row: {
-          budget_cents: number;
-          created_at: string;
-          id: string;
-          name: string;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          budget_cents?: number;
-          created_at?: string;
-          id?: string;
-          name: string;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          budget_cents?: number;
-          created_at?: string;
-          id?: string;
-          name?: string;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'finance_categories_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      finance_settings: {
-        Row: {
-          budget_cents: number | null;
-          reserve_cents: number;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          budget_cents?: number | null;
-          reserve_cents?: number;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          budget_cents?: number | null;
-          reserve_cents?: number;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'finance_settings_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: true;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      financial_transactions: {
-        Row: {
-          amount_cents: number;
-          attachment_path: string | null;
-          created_at: string;
-          expense_id: string;
-          id: string;
-          installment_id: string;
-          kind: string;
-          method: string;
-          notes: string;
-          payment_id: string | null;
-          transaction_date: string;
-          updated_at: string;
-          void_reason: string | null;
-          voided_at: string | null;
-          wedding_id: string;
-        };
-        Insert: {
-          amount_cents: number;
-          attachment_path?: string | null;
-          created_at?: string;
-          expense_id: string;
-          id?: string;
-          installment_id: string;
-          kind: string;
-          method?: string;
-          notes?: string;
-          payment_id?: string | null;
-          transaction_date: string;
-          updated_at?: string;
-          void_reason?: string | null;
-          voided_at?: string | null;
-          wedding_id: string;
-        };
-        Update: {
-          amount_cents?: number;
-          attachment_path?: string | null;
-          created_at?: string;
-          expense_id?: string;
-          id?: string;
-          installment_id?: string;
-          kind?: string;
-          method?: string;
-          notes?: string;
-          payment_id?: string | null;
-          transaction_date?: string;
-          updated_at?: string;
-          void_reason?: string | null;
-          voided_at?: string | null;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'financial_transactions_wedding_id_expense_id_installment_i_fkey';
-            columns: ['wedding_id', 'expense_id', 'installment_id'];
-            isOneToOne: false;
-            referencedRelation: 'installments';
-            referencedColumns: ['wedding_id', 'expense_id', 'id'];
-          },
-          {
-            foreignKeyName: 'financial_transactions_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'financial_transactions_wedding_id_payment_id_fkey';
-            columns: ['wedding_id', 'payment_id'];
-            isOneToOne: false;
-            referencedRelation: 'financial_transactions';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-        ];
-      };
-      gift_items: {
-        Row: {
-          created_at: string;
-          description: string;
-          id: string;
-          name: string;
-          photo_path: string | null;
-          price_cents: number | null;
-          product_url: string;
-          quantity: number;
-          received_quantity: number;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          description?: string;
-          id?: string;
-          name: string;
-          photo_path?: string | null;
-          price_cents?: number | null;
-          product_url?: string;
-          quantity?: number;
-          received_quantity?: number;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          created_at?: string;
-          description?: string;
-          id?: string;
-          name?: string;
-          photo_path?: string | null;
-          price_cents?: number | null;
-          product_url?: string;
-          quantity?: number;
-          received_quantity?: number;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'gift_items_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      gift_lists: {
-        Row: {
-          message: string;
-          title: string;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          message?: string;
-          title?: string;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          message?: string;
-          title?: string;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'gift_lists_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: true;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      guests: {
-        Row: {
-          age: number | null;
-          child: boolean;
-          companion_of: string | null;
-          created_at: string;
-          email: string;
-          family_id: string | null;
-          id: string;
-          invitation_sent: boolean;
-          legacy_details: Json;
-          name: string;
-          notes: string;
-          phone: string;
-          relationship: string;
-          sent_date: string | null;
-          side: string;
-          status: string;
-          updated_at: string;
-          wedding_id: string;
-          whatsapp: string;
-        };
-        Insert: {
-          age?: number | null;
-          child?: boolean;
-          companion_of?: string | null;
-          created_at?: string;
-          email?: string;
-          family_id?: string | null;
-          id?: string;
-          invitation_sent?: boolean;
-          legacy_details?: Json;
-          name: string;
-          notes?: string;
-          phone?: string;
-          relationship?: string;
-          sent_date?: string | null;
-          side?: string;
-          status?: string;
-          updated_at?: string;
-          wedding_id: string;
-          whatsapp?: string;
-        };
-        Update: {
-          age?: number | null;
-          child?: boolean;
-          companion_of?: string | null;
-          created_at?: string;
-          email?: string;
-          family_id?: string | null;
-          id?: string;
-          invitation_sent?: boolean;
-          legacy_details?: Json;
-          name?: string;
-          notes?: string;
-          phone?: string;
-          relationship?: string;
-          sent_date?: string | null;
-          side?: string;
-          status?: string;
-          updated_at?: string;
-          wedding_id?: string;
-          whatsapp?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'guests_wedding_id_companion_of_fkey';
-            columns: ['wedding_id', 'companion_of'];
-            isOneToOne: false;
-            referencedRelation: 'guests';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-          {
-            foreignKeyName: 'guests_wedding_id_family_id_fkey';
-            columns: ['wedding_id', 'family_id'];
-            isOneToOne: false;
-            referencedRelation: 'families';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-          {
-            foreignKeyName: 'guests_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      installments: {
-        Row: {
-          amount_cents: number;
-          created_at: string;
-          due_date: string;
-          expense_id: string;
-          id: string;
-          label: string;
-          number: number;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          amount_cents: number;
-          created_at?: string;
-          due_date: string;
-          expense_id: string;
-          id?: string;
-          label: string;
-          number: number;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          amount_cents?: number;
-          created_at?: string;
-          due_date?: string;
-          expense_id?: string;
-          id?: string;
-          label?: string;
-          number?: number;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'installments_wedding_id_expense_id_fkey';
-            columns: ['wedding_id', 'expense_id'];
-            isOneToOne: false;
-            referencedRelation: 'expenses';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-          {
-            foreignKeyName: 'installments_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      invitation_designs: {
-        Row: {
-          created_at: string;
-          design: Json;
-          id: string;
-          title: string;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          design: Json;
-          id?: string;
-          title: string;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          created_at?: string;
-          design?: Json;
-          id?: string;
-          title?: string;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'invitation_designs_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      invitation_guests: {
-        Row: {
-          guest_id: string;
-          id: string;
-          invitation_id: string;
-          name_snapshot: string;
-          wedding_id: string;
-        };
-        Insert: {
-          guest_id: string;
-          id?: string;
-          invitation_id: string;
-          name_snapshot: string;
-          wedding_id: string;
-        };
-        Update: {
-          guest_id?: string;
-          id?: string;
-          invitation_id?: string;
-          name_snapshot?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'invitation_guests_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'invitation_guests_wedding_id_guest_id_fkey';
-            columns: ['wedding_id', 'guest_id'];
-            isOneToOne: false;
-            referencedRelation: 'guests';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-          {
-            foreignKeyName: 'invitation_guests_wedding_id_invitation_id_fkey';
-            columns: ['wedding_id', 'invitation_id'];
-            isOneToOne: false;
-            referencedRelation: 'invitations';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-        ];
-      };
-      invitation_messages: {
-        Row: {
-          action: string;
-          id: string;
-          message: string;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          action: string;
-          id?: string;
-          message: string;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          action?: string;
-          id?: string;
-          message?: string;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'invitation_messages_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      invitations: {
-        Row: {
-          active: boolean;
-          created_at: string;
-          design_id: string | null;
-          design_snapshot: Json;
-          id: string;
-          recipient_label: string;
-          sent_at: string | null;
-          token_hash: string | null;
-          unit_key: string;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          active?: boolean;
-          created_at?: string;
-          design_id?: string | null;
-          design_snapshot: Json;
-          id?: string;
-          recipient_label: string;
-          sent_at?: string | null;
-          token_hash?: string | null;
-          unit_key: string;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          active?: boolean;
-          created_at?: string;
-          design_id?: string | null;
-          design_snapshot?: Json;
-          id?: string;
-          recipient_label?: string;
-          sent_at?: string | null;
-          token_hash?: string | null;
-          unit_key?: string;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'invitations_wedding_id_design_id_fkey';
-            columns: ['wedding_id', 'design_id'];
-            isOneToOne: false;
-            referencedRelation: 'invitation_designs';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-          {
-            foreignKeyName: 'invitations_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      legacy_snapshots: {
-        Row: {
-          id: string;
-          imported_at: string;
-          module: string;
-          payload: Json;
-          wedding_id: string;
-        };
-        Insert: {
-          id?: string;
-          imported_at?: string;
-          module: string;
-          payload: Json;
-          wedding_id: string;
-        };
-        Update: {
-          id?: string;
-          imported_at?: string;
-          module?: string;
-          payload?: Json;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'legacy_snapshots_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      profiles: {
-        Row: {
-          created_at: string;
-          display_name: string;
-          id: string;
-          updated_at: string;
-        };
-        Insert: {
-          created_at?: string;
-          display_name?: string;
-          id: string;
-          updated_at?: string;
-        };
-        Update: {
-          created_at?: string;
-          display_name?: string;
-          id?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      rsvp_responses: {
-        Row: {
-          attending: boolean;
-          guest_id: string;
-          id: string;
-          invitation_id: string;
-          notes: string;
-          responded_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          attending: boolean;
-          guest_id: string;
-          id?: string;
-          invitation_id: string;
-          notes?: string;
-          responded_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          attending?: boolean;
-          guest_id?: string;
-          id?: string;
-          invitation_id?: string;
-          notes?: string;
-          responded_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'rsvp_responses_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'rsvp_responses_wedding_id_invitation_id_guest_id_fkey';
-            columns: ['wedding_id', 'invitation_id', 'guest_id'];
-            isOneToOne: false;
-            referencedRelation: 'invitation_guests';
-            referencedColumns: ['wedding_id', 'invitation_id', 'guest_id'];
-          },
-        ];
-      };
-      special_participations: {
-        Row: {
-          created_at: string;
-          guest_id: string;
-          id: string;
-          legacy_details: Json;
-          notes: string;
-          participation: string;
-          partner_id: string | null;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          guest_id: string;
-          id?: string;
-          legacy_details?: Json;
-          notes?: string;
-          participation: string;
-          partner_id?: string | null;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          created_at?: string;
-          guest_id?: string;
-          id?: string;
-          legacy_details?: Json;
-          notes?: string;
-          participation?: string;
-          partner_id?: string | null;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'special_participations_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'special_participations_wedding_id_guest_id_fkey';
-            columns: ['wedding_id', 'guest_id'];
-            isOneToOne: true;
-            referencedRelation: 'guests';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-          {
-            foreignKeyName: 'special_participations_wedding_id_partner_id_fkey';
-            columns: ['wedding_id', 'partner_id'];
-            isOneToOne: false;
-            referencedRelation: 'special_participations';
-            referencedColumns: ['wedding_id', 'id'];
-          },
-        ];
-      };
-      suppliers: {
-        Row: {
-          address: string;
-          attachment_path: string | null;
-          category: string;
-          company: string;
-          created_at: string;
-          document: string;
-          email: string;
-          id: string;
-          name: string;
-          notes: string;
-          phone: string;
-          rating: number;
-          responsible: string;
-          review: string;
-          service: string;
-          status: string;
-          updated_at: string;
-          wedding_id: string;
-          whatsapp: string;
-        };
-        Insert: {
-          address?: string;
-          attachment_path?: string | null;
-          category?: string;
-          company?: string;
-          created_at?: string;
-          document?: string;
-          email?: string;
-          id?: string;
-          name: string;
-          notes?: string;
-          phone?: string;
-          rating?: number;
-          responsible?: string;
-          review?: string;
-          service?: string;
-          status?: string;
-          updated_at?: string;
-          wedding_id: string;
-          whatsapp?: string;
-        };
-        Update: {
-          address?: string;
-          attachment_path?: string | null;
-          category?: string;
-          company?: string;
-          created_at?: string;
-          document?: string;
-          email?: string;
-          id?: string;
-          name?: string;
-          notes?: string;
-          phone?: string;
-          rating?: number;
-          responsible?: string;
-          review?: string;
-          service?: string;
-          status?: string;
-          updated_at?: string;
-          wedding_id?: string;
-          whatsapp?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'suppliers_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: false;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
       };
       user_preferences: {
         Row: {
-          collapsed: boolean;
-          dark: boolean;
-          data: Json;
-          id: string;
+          collapsed: boolean | null;
+          dark: boolean | null;
+          data: Json | null;
+          id: string | null;
           selected_wedding_id: string | null;
-          updated_at: string;
+          updated_at: string | null;
         };
         Insert: {
-          collapsed?: boolean;
-          dark?: boolean;
-          data?: Json;
-          id?: string;
+          collapsed?: boolean | null;
+          dark?: boolean | null;
+          data?: Json | null;
+          id?: string | null;
           selected_wedding_id?: string | null;
-          updated_at?: string;
+          updated_at?: string | null;
         };
         Update: {
-          collapsed?: boolean;
-          dark?: boolean;
-          data?: Json;
-          id?: string;
+          collapsed?: boolean | null;
+          dark?: boolean | null;
+          data?: Json | null;
+          id?: string | null;
           selected_wedding_id?: string | null;
-          updated_at?: string;
+          updated_at?: string | null;
         };
         Relationships: [
           {
             foreignKeyName: 'user_preferences_selected_wedding_id_fkey';
             columns: ['selected_wedding_id'];
             isOneToOne: false;
-            referencedRelation: 'weddings';
+            referencedRelation: 'casamentos';
             referencedColumns: ['id'];
           },
         ];
       };
       wedding_workspaces: {
         Row: {
-          created_at: string;
+          created_at: string | null;
           finance: Json | null;
           gifts: Json | null;
           import_hash: string | null;
           invitations: Json | null;
-          owner_id: string;
+          owner_id: string | null;
           people: Json | null;
-          revision: number;
+          revision: number | null;
           suppliers: Json | null;
-          updated_at: string;
-          wedding: Json;
-          wedding_id: string;
+          updated_at: string | null;
+          wedding: Json | null;
+          wedding_id: string | null;
         };
         Insert: {
-          created_at?: string;
+          created_at?: string | null;
           finance?: Json | null;
           gifts?: Json | null;
           import_hash?: string | null;
           invitations?: Json | null;
-          owner_id: string;
+          owner_id?: string | null;
           people?: Json | null;
-          revision?: number;
+          revision?: number | null;
           suppliers?: Json | null;
-          updated_at?: string;
-          wedding: Json;
-          wedding_id: string;
+          updated_at?: string | null;
+          wedding?: Json | null;
+          wedding_id?: string | null;
         };
         Update: {
-          created_at?: string;
+          created_at?: string | null;
           finance?: Json | null;
           gifts?: Json | null;
           import_hash?: string | null;
           invitations?: Json | null;
-          owner_id?: string;
+          owner_id?: string | null;
           people?: Json | null;
-          revision?: number;
+          revision?: number | null;
           suppliers?: Json | null;
-          updated_at?: string;
-          wedding?: Json;
-          wedding_id?: string;
+          updated_at?: string | null;
+          wedding?: Json | null;
+          wedding_id?: string | null;
         };
         Relationships: [
           {
             foreignKeyName: 'wedding_workspaces_wedding_id_fkey';
             columns: ['wedding_id'];
             isOneToOne: true;
-            referencedRelation: 'weddings';
+            referencedRelation: 'casamentos';
             referencedColumns: ['id'];
           },
         ];
       };
-      weddings: {
-        Row: {
-          archived: boolean;
-          bride_name: string;
-          capacity: number;
-          ceremony_address: string;
-          ceremony_description: string;
-          ceremony_time: string | null;
-          ceremony_type: string;
-          ceremony_venue: string;
-          city: string;
-          color_palette: string[];
-          colors: string;
-          created_at: string;
-          estimated_guests: number;
-          groom_name: string;
-          id: string;
-          initial_budget_cents: number;
-          name: string;
-          notes: string;
-          owner_id: string;
-          photo_path: string | null;
-          reception_address: string;
-          reception_time: string | null;
-          reception_venue: string;
-          state: string;
-          style: string;
-          temporary_seed: boolean;
-          theme: string;
-          updated_at: string;
-          wedding_date: string | null;
-        };
-        Insert: {
-          archived?: boolean;
-          bride_name?: string;
-          capacity?: number;
-          ceremony_address?: string;
-          ceremony_description?: string;
-          ceremony_time?: string | null;
-          ceremony_type?: string;
-          ceremony_venue?: string;
-          city?: string;
-          color_palette?: string[];
-          colors?: string;
-          created_at?: string;
-          estimated_guests?: number;
-          groom_name?: string;
-          id?: string;
-          initial_budget_cents?: number;
-          name: string;
-          notes?: string;
-          owner_id?: string;
-          photo_path?: string | null;
-          reception_address?: string;
-          reception_time?: string | null;
-          reception_venue?: string;
-          state?: string;
-          style?: string;
-          temporary_seed?: boolean;
-          theme?: string;
-          updated_at?: string;
-          wedding_date?: string | null;
-        };
-        Update: {
-          archived?: boolean;
-          bride_name?: string;
-          capacity?: number;
-          ceremony_address?: string;
-          ceremony_description?: string;
-          ceremony_time?: string | null;
-          ceremony_type?: string;
-          ceremony_venue?: string;
-          city?: string;
-          color_palette?: string[];
-          colors?: string;
-          created_at?: string;
-          estimated_guests?: number;
-          groom_name?: string;
-          id?: string;
-          initial_budget_cents?: number;
-          name?: string;
-          notes?: string;
-          owner_id?: string;
-          photo_path?: string | null;
-          reception_address?: string;
-          reception_time?: string | null;
-          reception_venue?: string;
-          state?: string;
-          style?: string;
-          temporary_seed?: boolean;
-          theme?: string;
-          updated_at?: string;
-          wedding_date?: string | null;
-        };
-        Relationships: [];
-      };
-      whatsapp_queues: {
-        Row: {
-          queue: Json;
-          updated_at: string;
-          wedding_id: string;
-        };
-        Insert: {
-          queue: Json;
-          updated_at?: string;
-          wedding_id: string;
-        };
-        Update: {
-          queue?: Json;
-          updated_at?: string;
-          wedding_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'whatsapp_queues_wedding_id_fkey';
-            columns: ['wedding_id'];
-            isOneToOne: true;
-            referencedRelation: 'weddings';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-    };
-    Views: {
-      [_ in never]: never;
     };
     Functions: {
       administration_accounts: {

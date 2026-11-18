@@ -42,7 +42,7 @@ async function mock(page: Page, isAdmin = true) {
       });
     if (path.endsWith('/user')) return reply(user);
     if (path.endsWith('/logout')) return reply({});
-    if (path.endsWith('/user_preferences') || path.endsWith('/wedding_workspaces'))
+    if (path.endsWith('/preferencias_usuario') || path.endsWith('/espacos_casamento'))
       return reply([]);
     if (path.endsWith('/functions/v1/administration')) {
       const body = req.postDataJSON();

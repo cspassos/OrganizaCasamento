@@ -69,11 +69,11 @@ async function backend(page: Page) {
         return route.fulfill({ status: 200, contentType: 'image/png', body: files.get(key)! });
       return reply({ message: 'File missing' }, 404);
     }
-    if (path.endsWith('/user_preferences'))
+    if (path.endsWith('/preferencias_usuario'))
       return reply(Object.keys(prefs).length ? [{ data: prefs }] : []);
-    if (path.endsWith('/wedding_workspaces')) {
+    if (path.endsWith('/espacos_casamento')) {
       let result = [...rows.values()];
-      const id = url.searchParams.get('wedding_id')?.replace('eq.', '');
+      const id = url.searchParams.get('casamento_id')?.replace('eq.', '');
       if (id) result = result.filter((r) => r.wedding_id === id);
       return reply(result);
     }

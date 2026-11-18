@@ -1,6 +1,7 @@
 ﻿// End-to-end database contract in isolated PostgreSQL/WASM (no hosted writes).
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { traduzirSQL, colunas } from './nomes-banco-portugues.mjs';
 import { PGlite } from '../artifacts/sql-runtime/node_modules/@electric-sql/pglite/dist/index.js';
 const db = new PGlite();
 let checks = 0;
@@ -17,11 +18,21 @@ const rawQuery = db.query.bind(db),
   rawExec = db.exec.bind(db);
 db.query = async (sql, args) => {
   if (recording) sqlLog.push(bind(sql, args) + ';');
-  return rawQuery(sql, args);
+  const result = await rawQuery(recording ? traduzirSQL(sql) : sql, args);
+  if (recording)
+    result.rows = result.rows.map((row) =>
+      Object.fromEntries(
+        Object.entries(row).map(([k, v]) => [
+          Object.keys(colunas).find((key) => colunas[key] === k) ?? k,
+          v,
+        ]),
+      ),
+    );
+  return result;
 };
 db.exec = async (sql) => {
   if (recording) sqlLog.push(sql + ';');
-  return rawExec(sql);
+  return rawExec(recording ? traduzirSQL(sql) : sql);
 };
 const a = '10000000-0000-4000-8000-000000000001',
   b = '10000000-0000-4000-8000-000000000002',
@@ -42,7 +53,7 @@ async function fails(sql, args, code) {
         "' then null;end;end;$$;",
     );
   await assert.rejects(
-    () => rawQuery(sql, args),
+    () => rawQuery(traduzirSQL(sql), args),
     (e) => {
       assert.equal(e.code, code, e.message);
       return true;
@@ -53,7 +64,7 @@ async function fails(sql, args, code) {
 async function save(state, version = null, metadata = false) {
   if (recording && metadata) {
     sqlLog.push(
-      `select public.save_workspace('${id}',${version},(select jsonb_set(to_jsonb(w),'{wedding,archived}','true') from public.wedding_workspaces w where wedding_id='${id}'),true);`,
+      `select public.save_workspace('${id}',${version},(select jsonb_set(app_private.documento_espaco(w),'{wedding,archived}','true') from public.wedding_workspaces w where wedding_id='${id}'),true);`,
     );
     const r = await rawQuery('select public.save_workspace($1,$2,$3,$4) r', [
       id,
@@ -85,21 +96,28 @@ try {
     .sort())
     await db.exec(await fs.readFile('supabase/migrations/' + f, 'utf8'));
   recording = true;
-  await db.query('insert into public.app_administrators(user_id) values ($1)',[a]);
+  await db.query('insert into public.app_administrators(user_id) values ($1)', [a]);
   await role(b);
-  assert.equal((await db.query('select * from public.app_administrators')).rows.length,0); checks++;
-  await fails('insert into public.app_administrators(user_id) values ($1)',[b],'42501');
-  await fails('select public.administration_accounts($1,$2)',['',1],'42501');
-  await fails('select * from public.administration_audit',[],'42501');
+  assert.equal((await db.query('select * from public.app_administrators')).rows.length, 0);
+  checks++;
+  await fails('insert into public.app_administrators(user_id) values ($1)', [b], '42501');
+  await fails('select public.administration_accounts($1,$2)', ['', 1], '42501');
+  await fails('select * from public.administration_audit', [], '42501');
   await role(a);
-  assert.equal((await db.query('select * from public.app_administrators')).rows.length,1); checks++;
-  await fails('update public.app_administrators set must_change_password=false',[],'42501');
-  await fails('select public.administration_accounts($1,$2)',['',1],'42501');
+  assert.equal((await db.query('select * from public.app_administrators')).rows.length, 1);
+  checks++;
+  await fails('update public.app_administrators set must_change_password=false', [], '42501');
+  await fails('select public.administration_accounts($1,$2)', ['', 1], '42501');
   await role(null);
-  await fails('select public.administration_accounts($1,$2)',['',1],'42501');
+  await fails('select public.administration_accounts($1,$2)', ['', 1], '42501');
   await db.exec('reset role');
-  assert.equal((await db.query('select public.administration_accounts($1,$2) as result',['ANA',1])).rows[0].result.users[0].email,'ana@example.com'); checks++;
-  await db.query('delete from public.app_administrators where user_id=$1',[a]);
+  assert.equal(
+    (await db.query('select public.administration_accounts($1,$2) as result', ['ANA', 1])).rows[0]
+      .result.users[0].email,
+    'ana@example.com',
+  );
+  checks++;
+  await db.query('delete from public.app_administrators where user_id=$1', [a]);
   await role(a);
   const state = {
     wedding: { id, name: 'Ana e Pedro', date: '', demo: false, initialBudget: 23000 },
@@ -293,7 +311,7 @@ try {
       "'),('" +
       b +
       "');\n" +
-      sqlLog.join('\n') +
+      sqlLog.map(traduzirSQL).join('\n') +
       "\nreset role;\nrollback;\nselect 'Cloud RPC smoke checks passed; fixtures rolled back' as result;\n",
   );
   console.log(

@@ -78,6 +78,8 @@ No uso normal, os repositórios usam Supabase e Storage privado, com transaçõe
 
 O projeto Supabase OrganizaCasamento (`luhamomwwsiqxodwjodo`) possui 26 tabelas com RLS, RPCs transacionais, importação idempotente e buckets privados. Tipos gerados em `src/app/core/models/database.types.ts`; detalhes em `supabase/README.md`.
 
+As 26 tabelas e suas colunas usam português: `casamentos`, `convidados`, `despesas`, `parcelas`, `itens_presentes`, `espacos_casamento` etc. A renomeação foi aplicada ao Supabase em 17/11/2026, preservando os dados e as permissões. Quatro views com nomes antigos mantêm compatibilidade com o site e a função administrativa já publicados; o código atualizado usa os nomes novos. Contratos JSON de backups e RPCs permanecem compatíveis.
+
 **Novos cadastros usam Supabase; os antigos só passam a ser usados na nuvem após a importação.** Para isso, entre na conta correta e escolha os casamentos no navegador original. Criar a estrutura não transfere automaticamente o IndexedDB.
 
 ## Página pública e administração
