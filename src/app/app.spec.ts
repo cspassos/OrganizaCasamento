@@ -15,7 +15,8 @@ describe('Application shell', () => {
     await TestBed.inject(Router).navigateByUrl('/');
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelectorAll('.nav-heading').length).toBe(8);
+    expect(el.querySelectorAll('nav[aria-label="Seções do casamento"] .nav-heading')).toHaveLength(8);
+    expect(el.querySelector('nav[aria-label="Suporte"] a')?.textContent).toContain('Ajuda');
     expect(el.querySelector('nav')?.textContent).not.toContain('Equipe');
     expect(el.querySelector('nav')?.textContent).not.toContain('Cronograma');
     expect(el.textContent).toContain('Ambiente local');
