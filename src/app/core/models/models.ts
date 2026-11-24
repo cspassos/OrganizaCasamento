@@ -1,4 +1,6 @@
 export interface Wedding {
+  planningHistory?: PlanningVersion[];
+  planningSavedAt?: string;
   organizer?: OrganizerItem[];
   temporarySeed?: boolean;
   id: string;
@@ -29,6 +31,23 @@ export interface Wedding {
   archived?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+export type PlanningDetails = Omit<
+  Wedding,
+  | 'id'
+  | 'demo'
+  | 'photo'
+  | 'archived'
+  | 'organizer'
+  | 'temporarySeed'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'planningHistory'
+  | 'planningSavedAt'
+>;
+export interface PlanningVersion {
+  savedAt?: string;
+  details: PlanningDetails;
 }
 export interface OrganizerItem {
   id: string;

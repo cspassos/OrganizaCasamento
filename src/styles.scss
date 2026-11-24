@@ -795,6 +795,28 @@ nav {
   flex: 1;
   scrollbar-width: thin;
 }
+.sidebar-menu {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.sidebar-menu nav {
+  overflow: visible;
+}
+.sidebar-menu .simple-nav-link {
+  margin-bottom: 3px;
+  min-height: 44px;
+  padding-block: 9px;
+}
+.sidebar-menu .simple-nav-link > oc-icon {
+  flex-shrink: 0;
+}
+.sidebar-menu [aria-label='Suporte'] {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
 .nav-heading {
   display: flex;
   align-items: center;
@@ -1521,7 +1543,7 @@ footer {
   justify-content: center;
   padding: 14px 0;
 }
-.compact nav {
+.compact .sidebar-menu {
   margin-top: 15px;
 }
 .compact .collapse-button {
@@ -1860,7 +1882,7 @@ footer {
   .compact .local-note {
     display: flex;
   }
-  .compact nav {
+  .compact .sidebar-menu {
     margin-top: 0;
   }
   .compact .collapse-button {
@@ -3200,6 +3222,9 @@ button:disabled {
   font-weight: 600;
   cursor: pointer;
 }
+.collection-cell-money {
+  white-space: nowrap;
+}
 .collection-actions {
   display: flex;
   align-items: center;
@@ -3237,7 +3262,7 @@ button:disabled {
 .table-action-trigger:hover {
   background: var(--bg);
 }
-.table-action-trigger span {
+.table-action-trigger span[aria-hidden='true'] {
   font-size: 20px;
   line-height: 1;
 }
@@ -3407,6 +3432,41 @@ oc-list-pager {
   }
   .collection-table .button {
     min-height: 44px;
+  }
+  .collection-table {
+    th,
+    td {
+      padding-inline: 7px;
+    }
+    td {
+      min-width: 64px;
+      max-width: 160px;
+    }
+    .collection-action-column {
+      width: 48px;
+      min-width: 48px;
+      padding-inline: 2px;
+    }
+    .collection-actions {
+      min-width: 0;
+      justify-content: center;
+    }
+    .table-action-trigger {
+      width: 44px;
+      min-height: 44px;
+      padding: 0;
+    }
+    .collection-action-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+  .collection-pagination.collection-single-page {
+    display: none;
   }
   .collection-selection {
     align-items: stretch;

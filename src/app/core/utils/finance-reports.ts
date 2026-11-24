@@ -1,6 +1,7 @@
 import { FinanceLedger, transactionLabels } from '../models/finance';
 import {
   expenseBalance,
+  expenseCategoryNames,
   expenseDisplay,
   expenseStatus,
   financeSummary,
@@ -81,8 +82,6 @@ function buildBaseFinanceReport(
       (!f.status || expenseStatus(l, e) === f.status),
   );
   const expenses = matching.filter((e) => within(e.dueDate));
-  const category = (id: string) =>
-    l.categories.find((c) => c.id === id)?.name ?? 'Categoria indisponível';
   const report: FinanceReport = {
     title: reportNames[kind],
     columns: [],
@@ -132,7 +131,7 @@ function buildBaseFinanceReport(
       const b = expenseDisplay(l, e);
       return [
         e.description,
-        `${category(e.categoryId)} / ${e.supplier || 'Não informado'}`,
+        `${expenseCategoryNames(l, e) || 'Categoria indisponível'} / ${e.supplier || 'Não informado'}`,
         expenseStatus(l, e),
         money(e.plannedCents),
         money(b.due),

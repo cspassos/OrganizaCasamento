@@ -236,7 +236,7 @@ test('fornecedores, comparação, anexos, contrato financeiro, pagamento único 
   page.on('pageerror', (e) => errors.push(e.message));
   await wedding(page);
   await supplier(page);
-  await page.goto('/fornecedores/orcamentos');
+  await page.getByRole('link', { name: 'Consultar orçamentos' }).click();
   await expect(page.locator('.breadcrumb')).toContainText('Comparar orçamentos');
   for (const [service, value] of [
     ['Fotografia 8 horas', '12000'],
@@ -259,6 +259,16 @@ test('fornecedores, comparação, anexos, contrato financeiro, pagamento único 
     await dialog.getByRole('button', { name: 'Salvar', exact: true }).click();
     await expect(dialog).toHaveCount(0);
   }
+  const table = page.getByRole('table', { name: 'Orçamentos dos fornecedores' });
+  await expect(table.getByRole('row', { name: /Fotografia 8 horas/ })).toContainText('12.000,00');
+  await expect(table.getByRole('row', { name: /Fotografia com álbum/ })).toContainText('15.000,00');
+  const totals = page.getByRole('region', { name: 'Valores dos orçamentos' });
+  const search = page.getByRole('searchbox', { name: /Buscar/ });
+  await expect(totals).toContainText('27.000,00');
+  await search.fill('álbum');
+  await expect(totals).toContainText('27.000,00');
+  await expect(totals).toContainText('15.000,00');
+  await search.clear();
   await page.getByRole('button', { name: 'Selecionar todos os 2 do filtro', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Comparação dos selecionados', exact: true }),

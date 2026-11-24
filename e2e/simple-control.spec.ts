@@ -10,6 +10,132 @@ async function wedding(page: Page, name = 'Controle simples') {
   await expect(page).toHaveURL(/dashboard$/);
 }
 
+test('simula gastos contratados e planejados nas duas abas em tela de celular', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 740 });
+  await wedding(page);
+  for (const [name, status, amount] of [
+    ['Buffet', 'contracted', '14500'],
+    ['Decoração', 'planned', '5000'],
+  ]) {
+    await page.goto('/financeiro/despesas/nova');
+    await page.locator('#supplier').fill('Fornecedor ' + name);
+    await page.getByLabel('Descrição *', { exact: true }).fill(name);
+    await page.getByRole('combobox', { name: 'Situação', exact: true }).selectOption(status);
+    await page
+      .getByLabel(status === 'planned' ? 'Valor estimado *' : 'Valor total combinado *', {
+        exact: true,
+      })
+      .fill(amount);
+    await page.getByRole('button', { name: 'Salvar gasto', exact: true }).click();
+    await expect(page).toHaveURL(/\/financeiro\/despesas\/[a-f0-9-]{36}$/);
+  }
+  await page.goto('/financeiro/despesas');
+  const table = page.getByRole('table', { name: 'Despesas' });
+  const buffet = table.getByRole('row', { name: /Buffet/ });
+  await expect(table.getByRole('columnheader').nth(1)).toContainText('Valor');
+  await expect(table.getByRole('columnheader').nth(2)).toContainText('Já pago');
+  await expect(buffet.getByRole('cell').nth(1)).toContainText('14.500,00');
+  await expect(buffet.getByRole('cell').nth(1).locator('.collection-cell')).toHaveCSS(
+    'white-space',
+    'nowrap',
+  );
+  await expect(buffet.getByRole('cell').nth(2)).toContainText('0,00');
+  expect(
+    await buffet.evaluate((row) => {
+      const text = row.children[2].querySelector('.collection-cell')!.getBoundingClientRect();
+      const actions = row.querySelector('.collection-action-column')!.getBoundingClientRect();
+      return text.right <= actions.left;
+    }),
+  ).toBe(true);
+  await expect(buffet.getByRole('button', { name: 'Ações de Buffet' })).toBeVisible();
+  const forecast = page.getByRole('region', { name: 'Previsão de gastos' });
+  await expect(forecast).toContainText('19.500,00');
+  await forecast.getByRole('button', { name: 'Escolher gastos' }).click();
+  await forecast.getByRole('checkbox', { name: /Decoração/ }).uncheck();
+  await expect(forecast.getByText('Total selecionado').locator('..')).toContainText('14.500,00');
+  await expect(forecast).toContainText('19.500,00');
+  await expect(
+    forecast.evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).resolves.toBe(true);
+  await page
+    .getByRole('navigation', { name: 'Módulos financeiros' })
+    .getByRole('link', { name: 'Orçamento', exact: true })
+    .click();
+  await expect(forecast.getByText('Total selecionado').locator('..')).toContainText('14.500,00');
+  await forecast.getByRole('button', { name: 'Limpar seleção' }).click();
+  await expect(forecast.getByText('Total selecionado').locator('..')).toContainText('R$ 0,00');
+  await forecast.getByRole('button', { name: 'Selecionar todos' }).click();
+  await expect(forecast.getByText('Total selecionado').locator('..')).toContainText('19.500,00');
+});
+
+test('exclui uma despesa cancelada pela lista', async ({ page }) => {
+  await wedding(page);
+  await page.goto('/financeiro/despesas/nova');
+  await page.locator('#supplier').fill('Fornecedor do buffet');
+  await page.getByLabel('Descrição *', { exact: true }).fill('Buffet cancelado');
+  await page.getByLabel('Valor total combinado *', { exact: true }).fill('14500');
+  await page.getByRole('button', { name: 'Salvar gasto', exact: true }).click();
+  await page.getByRole('button', { name: 'Cancelar despesa', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click();
+  await expect(page.getByRole('button', { name: 'Excluir despesa', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Voltar às despesas', exact: true }).click();
+  await page.getByRole('button', { name: 'Ações de Buffet cancelado', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Excluir despesa', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Excluir despesa', exact: true })
+    .click();
+  await expect(page.getByRole('status').filter({ hasText: 'Despesa excluída.' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('table', { name: 'Despesas' })).toBeVisible();
+  await expect(page.getByRole('row', { name: /Buffet cancelado/ })).toHaveCount(0);
+});
+
+test('sugere parcela após a entrada e rejeita vencimentos invertidos', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 720 });
+  await wedding(page);
+  await page.goto('/financeiro/despesas/nova');
+  await page.locator('#supplier').fill('Fornecedor do buffet');
+  await page.getByLabel('Descrição *', { exact: true }).fill('Buffet');
+  const total = page.getByLabel('Valor total combinado *', { exact: true });
+  await page.getByLabel('Entrada / sinal', { exact: true }).fill('2500');
+  await page.getByLabel('Parcelas do restante', { exact: true }).fill('8');
+  await page.getByLabel('Vencimento / data da entrada *', { exact: true }).fill('10/12/2026');
+
+  const first = page.getByLabel('Primeiro vencimento do restante', { exact: true });
+  await expect(first).toHaveValue('10/01/2027');
+  await page.getByRole('button', { name: 'Salvar gasto', exact: true }).click();
+  await expect(total).toBeFocused();
+  await expect(total).toBeInViewport();
+  await expect(page.getByText('Informe um valor total maior que R$ 0,00.')).toBeInViewport();
+  await total.fill('14500');
+  await first.fill('24/11/2026');
+  await page.getByRole('button', { name: 'Salvar gasto', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('na data da entrada ou depois');
+  await expect(first).toBeFocused();
+  await first.fill('10/01/2027');
+  await page.getByRole('button', { name: 'Salvar gasto', exact: true }).click();
+  await expect(page).toHaveURL(/\/financeiro\/despesas\/[a-f0-9-]{36}$/);
+
+  const bills = page.locator('.bill-row');
+  await expect(bills).toHaveCount(9);
+  const entry = bills.filter({ hasText: 'Entrada' });
+  const firstBill = bills.filter({ hasText: 'Parcela 1/8' });
+  await expect(entry.getByLabel('Vencimento')).toHaveValue('10/12/2026');
+  await expect(firstBill.getByLabel('Vencimento')).toHaveValue('10/01/2027');
+  await firstBill.getByLabel('Vencimento').fill('24/11/2026');
+  await firstBill.getByRole('button', { name: 'Salvar vencimento' }).click();
+  await expect(page.getByRole('alert')).toContainText('na data da entrada ou depois');
+  await entry.getByLabel('Vencimento').fill('11/01/2027');
+  await entry.getByRole('button', { name: 'Salvar vencimento' }).click();
+  await expect(page.getByRole('alert')).toContainText('na data da primeira parcela ou antes');
+  await page.reload();
+  await expect(firstBill.getByLabel('Vencimento')).toHaveValue('10/01/2027');
+  await expect(entry.getByLabel('Vencimento')).toHaveValue('10/12/2026');
+});
+
 test('controle simples: gasto direto, parcelas, pagamento e totais no painel', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));

@@ -50,6 +50,9 @@ export function shiftMonth(date: string, offset: number) {
   ).getUTCDate();
   return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
 }
+export const installmentBeforeEntryMessage =
+  'O vencimento da parcela deve ser na data da entrada ou depois dela.';
+
 export function makeInstallments(expense: Expense, plan: InstallmentPlan): Installment[] {
   if (!isCalendarDate(plan.firstDueDate) || !isCalendarDate(expense.dueDate))
     throw new Error('Informe vencimentos válidos.');
@@ -60,6 +63,8 @@ export function makeInstallments(expense: Expense, plan: InstallmentPlan): Insta
   )
     throw new Error('A entrada não pode ultrapassar o valor contratado.');
   const rest = expense.contractedCents - plan.entryCents;
+  if (plan.entryCents > 0 && rest > 0 && plan.firstDueDate < expense.dueDate)
+    throw new Error(installmentBeforeEntryMessage);
   if (
     !Number.isInteger(plan.count) ||
     plan.count < 1 ||
@@ -127,6 +132,17 @@ export function expenseStatus(ledger: FinanceLedger, e: Expense, today = localTo
     return 'Vencida';
   return b.paid > 0 ? 'Parcialmente paga' : 'Contratada';
 }
+export function expenseCategoryIds(expense: Pick<Expense, 'categoryId' | 'additionalCategoryIds'>) {
+  return [expense.categoryId, ...(expense.additionalCategoryIds ?? [])];
+}
+
+export function expenseCategoryNames(ledger: FinanceLedger, expense: Expense) {
+  return expenseCategoryIds(expense)
+    .map((id) => ledger.categories.find((category) => category.id === id)?.name)
+    .filter(Boolean)
+    .join(', ');
+}
+
 // Presentation only: never rewrite cancelled installments or their audit history.
 export function expenseDisplay(ledger: FinanceLedger, expense: Expense) {
   const balance = expenseBalance(ledger, expense);
@@ -192,8 +208,11 @@ export function validateLedger(ledger: FinanceLedger) {
   )
     throw new Error('Relacionamentos financeiros inválidos.');
   for (const e of ledger.expenses) {
-    if (!ledger.categories.some((c) => c.id === e.categoryId))
+    const categories = expenseCategoryIds(e);
+    if (categories.some((id) => !ledger.categories.some((c) => c.id === id)))
       throw new Error('Categoria não encontrada.');
+    if (new Set(categories).size !== categories.length)
+      throw new Error('A despesa possui categorias repetidas.');
     if (
       e.status !== 'planned' &&
       ledger.installments

@@ -89,8 +89,10 @@ export class SuppliersPage {
       )
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
   );
+  allQuotes = computed(() => this.store.ledger()?.quotes ?? []);
+  quotesTotal = computed(() => this.allQuotes().reduce((sum, quote) => sum + quote.amountCents, 0));
   quotes = computed(() =>
-    (this.store.ledger()?.quotes ?? []).filter(
+    this.allQuotes().filter(
       (q) =>
         (!this.status() || q.status === this.status()) &&
         (!this.category() ||
@@ -99,6 +101,9 @@ export class SuppliersPage {
           q.service + ' ' + this.supplierName(q.supplierId) + ' ' + q.included + ' ' + q.conditions,
         ).includes(searchText(this.query())),
     ),
+  );
+  filteredQuotesTotal = computed(() =>
+    this.quotes().reduce((sum, quote) => sum + quote.amountCents, 0),
   );
   contracts = computed(() =>
     (this.store.ledger()?.contracts ?? []).filter(
@@ -147,8 +152,8 @@ export class SuppliersPage {
       tone: q.validUntil && q.validUntil < localToday() && q.status === 'received' ? 'danger' : '',
       cells: [
         q.service,
-        this.supplierName(q.supplierId),
         money(q.amountCents),
+        this.supplierName(q.supplierId),
         quoteStatuses[q.status] +
           (q.validUntil && q.validUntil < localToday() && q.status === 'received'
             ? ' · Validade vencida'
@@ -164,10 +169,10 @@ export class SuppliersPage {
       record: c,
       cells: [
         c.title,
-        this.supplierName(c.supplierId),
-        contractStatuses[c.status],
         money(c.amountCents),
         c.expenseId && c.status !== 'cancelled' ? money(this.balance(c).paid) : '—',
+        this.supplierName(c.supplierId),
+        contractStatuses[c.status],
         c.expenseId && c.status !== 'cancelled' ? money(this.balance(c).open) : '—',
       ],
     })),
@@ -179,10 +184,10 @@ export class SuppliersPage {
       tone: e.situation === 'Vencida' ? 'danger' : e.situation === 'Paga' ? 'paid' : '',
       cells: [
         this.supplierName(e.supplierId!),
-        e.description,
-        e.situation,
         money(e.status === 'planned' ? e.plannedCents : e.due),
         money(e.paid),
+        e.description,
+        e.situation,
         money(e.status === 'cancelled' ? 0 : e.open),
       ],
     })),
@@ -202,8 +207,8 @@ export class SuppliersPage {
       record: q,
       cells: [
         this.supplierName(q.supplierId),
-        q.service,
         money(q.amountCents),
+        q.service,
         money(q.amountCents - lowest),
         q.included,
         q.conditions,
@@ -400,11 +405,11 @@ export class SuppliersPage {
       section === 'cadastro'
         ? ['Nome', 'Categoria', 'Contato', 'Situação', 'Contratado no financeiro']
         : section === 'orcamentos'
-          ? ['Serviço', 'Fornecedor', 'Valor', 'Situação', 'Validade', 'Entrega']
+          ? ['Serviço', 'Valor', 'Fornecedor', 'Situação', 'Validade', 'Entrega']
           : section === 'contratos'
-            ? ['Contrato', 'Fornecedor', 'Situação', 'Valor', 'Pago', 'Em aberto']
+            ? ['Contrato', 'Valor', 'Pago', 'Fornecedor', 'Situação', 'Em aberto']
             : section === 'pagamentos'
-              ? ['Fornecedor', 'Despesa', 'Situação', 'Valor', 'Pago', 'Saldo']
+              ? ['Fornecedor', 'Valor', 'Pago', 'Despesa', 'Situação', 'Saldo']
               : ['Fornecedor', 'Categoria', 'Nota', 'Avaliação'];
     downloadCsv(
       headers,
@@ -416,8 +421,8 @@ export class SuppliersPage {
     downloadCsv(
       [
         'Fornecedor',
-        'Serviço',
         'Valor',
+        'Serviço',
         'Diferença para menor preço',
         'Incluído',
         'Condições',

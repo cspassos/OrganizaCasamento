@@ -51,6 +51,9 @@
   @if (!embedded()) {
     <nav class="people-tabs" aria-label="Fornecedores">
       <a routerLink="/fornecedores/cadastro" [class.active]="section() === 'cadastro'">Contatos</a>
+      <a routerLink="/fornecedores/orcamentos" [class.active]="section() === 'orcamentos'">
+        Orçamentos
+      </a>
     </nav>
   }
   @if (section() === 'cadastro') {
@@ -77,6 +80,7 @@
     </section>
   }
   @if (section() === 'cadastro') {
+    <a class="button secondary" routerLink="/fornecedores/orcamentos">Consultar orçamentos</a>
     <details class="optional-details">
       <summary>Contratos cadastrados anteriormente</summary>
       <p>
@@ -181,6 +185,15 @@
       [actions]="supplierActions"
     />
   } @else if (section() === 'orcamentos') {
+    @if (!store.error()) {
+      <section class="card form-section" aria-label="Valores dos orçamentos">
+        <h2>Total dos orçamentos cadastrados</h2>
+        <p><strong>{{ money(quotesTotal()) }}</strong> · {{ allQuotes().length }} proposta(s)</p>
+        @if (quotes().length !== allQuotes().length) {
+          <p>Subtotal dos resultados: <strong>{{ money(filteredQuotesTotal()) }}</strong></p>
+        }
+      </section>
+    }
     <p class="muted">
       Selecione duas ou mais propostas para comparar valores, serviços incluídos, condições e
       prazos. A menor proposta não é escolhida automaticamente.
@@ -216,7 +229,7 @@
     >
     <oc-collection-table
       label="Orçamentos dos fornecedores"
-      [headers]="['Serviço', 'Fornecedor', 'Valor', 'Situação', 'Validade', 'Entrega']"
+      [headers]="['Serviço', 'Valor', 'Fornecedor', 'Situação', 'Validade', 'Entrega']"
       [rows]="quoteRows()"
       [actions]="quoteActions"
       [selectable]="true"
@@ -238,8 +251,8 @@
           label="Comparação de orçamentos"
           [headers]="[
             'Fornecedor',
-            'Serviço',
             'Valor',
+            'Serviço',
             'Diferença para o menor',
             'Incluído',
             'Condições',
@@ -302,7 +315,7 @@
     >
     <oc-collection-table
       label="Contratos dos fornecedores"
-      [headers]="['Contrato', 'Fornecedor', 'Situação', 'Valor', 'Já pago', 'Falta pagar']"
+      [headers]="['Contrato', 'Valor', 'Já pago', 'Fornecedor', 'Situação', 'Falta pagar']"
       [rows]="contractRows()"
       [actions]="contractActions"
     />
@@ -325,7 +338,7 @@
     >
     <oc-collection-table
       label="Pagamentos vinculados aos fornecedores"
-      [headers]="['Fornecedor', 'Despesa', 'Situação', 'Valor', 'Pago líquido', 'Em aberto']"
+      [headers]="['Fornecedor', 'Valor', 'Pago líquido', 'Despesa', 'Situação', 'Em aberto']"
       [rows]="paymentRows()"
       [actions]="paymentActions"
     />

@@ -1,0 +1,44 @@
+<div class="page-heading">
+  <div>
+    <h1>Ajuda</h1>
+    <p class="muted">Encontre instruções para usar o OrganizaCasamento.</p>
+  </div>
+</div>
+
+<div class="help-search">
+  <label class="form-field">
+    Buscar na ajuda
+    <input
+      type="search"
+      placeholder="Ex.: parcelas, convidados ou histórico"
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+    />
+  </label>
+  @if (query()) {
+    <button class="button secondary" type="button" (click)="query.set('')">Limpar busca</button>
+  }
+</div>
+
+<div class="help-topics">
+  @for (topic of topics(); track topic.title) {
+    <section class="card form-section help-topic">
+      <h2>{{ topic.title }}</h2>
+      @for (question of topic.questions; track question.title) {
+        <details>
+          <summary>{{ question.title }}</summary>
+          <p>{{ question.answer }}</p>
+        </details>
+      }
+      @if (topic.links.length) {
+        <div class="help-links">
+          @for (link of topic.links; track link.path) {
+            <a class="button secondary" [routerLink]="link.path">{{ link.label }}</a>
+          }
+        </div>
+      }
+    </section>
+  } @empty {
+    <p class="feedback" role="status">Nenhuma resposta encontrada. Tente buscar por outro termo.</p>
+  }
+</div>

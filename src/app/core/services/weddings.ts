@@ -2,6 +2,7 @@ import { Injectable, computed, signal } from '@angular/core';
 import { Wedding } from '../models/models';
 import { AppRepository } from '../repositories/app.repository';
 import { validateWedding } from '../utils/wedding';
+import { savePlanning } from '../utils/planning';
 import { deleteWeddingData } from '../repositories/delete-wedding';
 import { cloudBackend, cloudEnabled } from '../repositories/cloud-backend';
 
@@ -75,22 +76,30 @@ export class WeddingsService {
         createdAt: existing?.createdAt ?? now,
         updatedAt: now,
       };
-      // Keep organizer edits made on another device while this form was open.
-      const preserveOrganizer = (latest?: Wedding): Wedding => ({
-        ...value,
-        organizer: latest?.organizer ?? value.organizer,
-      });
+      const update = (latest?: Wedding): Wedding => {
+        if (latest?.archived)
+          throw new Error('Restaure o casamento antes de editar o planejamento.');
+        return savePlanning(
+          {
+            ...value,
+            organizer: latest?.organizer ?? value.organizer,
+            createdAt: latest?.createdAt ?? value.createdAt,
+          },
+          now,
+          latest,
+        );
+      };
       const saved = cloudEnabled
         ? await cloudBackend.transact(
             value.id,
             (workspace) => {
-              workspace.wedding = preserveOrganizer(workspace.wedding);
+              workspace.wedding = update(workspace.wedding);
               return workspace.wedding;
             },
             true,
-            value,
+            update(),
           )
-        : await this.repository.update(value.id, preserveOrganizer);
+        : await this.repository.update(value.id, update);
       this.records.update((items) => [...items.filter((w) => w.id !== saved.id), saved]);
       try {
         await this.select(value.id);
@@ -110,8 +119,22 @@ export class WeddingsService {
     if (!current) throw new Error('Casamento não encontrado.');
     this.busy.set(true);
     try {
-      const value = { ...current, archived, updatedAt: new Date().toISOString() };
-      await this.repository.save(value);
+      const update = (latest?: Wedding) => {
+        if (!latest) throw new Error('Casamento não encontrado.');
+        return {
+          ...latest,
+          planningSavedAt: latest.planningSavedAt ?? latest.updatedAt ?? latest.createdAt,
+          archived,
+          updatedAt: new Date().toISOString(),
+        };
+      };
+      const value = cloudEnabled
+        ? await cloudBackend.transact(
+            id,
+            (workspace) => (workspace.wedding = update(workspace.wedding)),
+            true,
+          )
+        : await this.repository.update(id, update);
       this.records.update((items) => items.map((w) => (w.id === id ? value : w)));
       if (archived && this.selectedId() === id) await this.select(this.weddings()[0]?.id ?? null);
       if (!archived && !this.active()) await this.select(value.id);

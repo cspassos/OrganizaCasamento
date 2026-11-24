@@ -97,6 +97,7 @@ export class MainLayout {
       startWith(null),
       map(() => {
         const s = this.router.url.split(/[?#]/)[0].split('/');
+        if (s[1] === 'ajuda') return 'Ajuda';
         if (s[1] === 'fornecedores')
           return (
             (
@@ -158,7 +159,9 @@ export class MainLayout {
             ? 'Novo casamento'
             : s[3] === 'editar'
               ? 'Editar casamento'
-              : 'Meus casamentos';
+              : s[3] === 'planejamento'
+                ? 'Histórico do planejamento'
+                : 'Meus casamentos';
         return s[1] === 'modulo'
           ? (navigation[Number(s[2])]?.items[Number(s[3])] ?? 'Visão geral')
           : 'Visão geral';

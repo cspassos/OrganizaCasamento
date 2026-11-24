@@ -90,10 +90,10 @@ import { FinanceChart } from '../../shared/components/finance-chart';
         label="Pagamentos"
         [headers]="[
           'Operação',
+          'Valor',
           'Despesa',
           'Data',
           'Forma de pagamento',
-          'Valor',
           'Situação / motivo',
         ]"
         [rows]="tableRows()"
@@ -122,10 +122,10 @@ export class PaymentsPage {
         record: t,
         cells: [
           this.labels[t.kind],
+          this.money(t.amountCents),
           this.description(t.expenseId) ?? '',
           this.date(t.date),
           t.method,
-          this.money(t.amountCents),
           t.voidedAt ? 'Desfeita: ' + t.voidReason : 'Ativa',
         ],
       })),

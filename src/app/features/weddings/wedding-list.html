@@ -35,6 +35,9 @@
   </div>
   @if (view() === 'table') {
     <ng-template #weddingActions let-w>
+      <a mat-menu-item [routerLink]="['/casamentos', w.id, 'planejamento', 'historico']">
+        Histórico do planejamento
+      </a>
       @if (!w.archived) {
         <button mat-menu-item class="button primary" [disabled]="store.busy()" (click)="select(w)">
           Selecionar</button
@@ -93,6 +96,12 @@
               >
             </div>
             <div class="card-actions">
+              <a
+                class="button secondary"
+                [routerLink]="['/casamentos', w.id, 'planejamento', 'historico']"
+              >
+                Histórico do planejamento
+              </a>
               @if (!w.archived) {
                 <button class="button primary" [disabled]="store.busy()" (click)="select(w)">
                   Selecionar</button

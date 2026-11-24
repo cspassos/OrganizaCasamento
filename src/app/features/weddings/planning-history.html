@@ -1,0 +1,53 @@
+<div class="page-heading">
+  <div>
+    <h1>Histórico do planejamento</h1>
+    @if (wedding(); as w) {
+      <p class="muted">{{ w.name }}{{ w.archived ? ' · Arquivado' : '' }}</p>
+    }
+  </div>
+  <div class="card-actions">
+    @if (wedding(); as w) {
+      @if (!w.archived) {
+        <a class="button secondary" [routerLink]="['/casamentos', w.id, 'editar']"
+          >Editar casamento</a
+        >
+      }
+    }
+    <a class="button secondary" routerLink="/casamentos">Ver meus casamentos</a>
+  </div>
+</div>
+
+@if (store.loading()) {
+  <p class="feedback" role="status">Carregando planejamento…</p>
+} @else if (store.error()) {
+  <p class="feedback error" role="alert">{{ store.error() }}</p>
+} @else if (wedding()) {
+  @if (versions().length === 1) {
+    <p class="feedback">
+      Ainda não há versões anteriores. Ao salvar alterações nos dados do planejamento, a versão
+      anterior aparecerá aqui.
+    </p>
+  }
+  @for (version of versions(); track $index) {
+    <details class="card form-section optional-details" [open]="$first">
+      <summary>
+        {{ $first ? 'Planejamento atual' : 'Versão anterior ' + (versions().length - $index) }}
+        · {{ (version.savedAt | date: "dd/MM/yyyy 'às' HH:mm") || 'Data indisponível' }}
+      </summary>
+      <dl class="form-grid">
+        @for (field of version.fields; track field.key) {
+          <div>
+            <dt>
+              <strong>{{ field.label }}</strong>
+            </dt>
+            <dd style="margin: 0; white-space: pre-wrap; overflow-wrap: anywhere">
+              {{ field.value }}
+            </dd>
+          </div>
+        }
+      </dl>
+    </details>
+  }
+} @else {
+  <p class="feedback">Casamento não encontrado.</p>
+}

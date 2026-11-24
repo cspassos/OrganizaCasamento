@@ -92,7 +92,9 @@ export const searchText = (value: string) =>
               </th>
             }
             @if (actions()) {
-              <th class="collection-action-column">Ações</th>
+              <th class="collection-action-column">
+                <span class="collection-action-label">Ações</span>
+              </th>
             }
           </tr>
         </thead>
@@ -122,7 +124,12 @@ export const searchText = (value: string) =>
                       [ngTemplateOutletContext]="{ $implicit: r.record }"
                     />
                   } @else {
-                    <span class="collection-cell" [title]="cell">{{ cell || '—' }}</span>
+                    <span
+                      class="collection-cell"
+                      [class.collection-cell-money]="isMoney(cell)"
+                      [title]="cell"
+                      >{{ cell || '—' }}</span
+                    >
                   }
                 </td>
               }
@@ -134,7 +141,8 @@ export const searchText = (value: string) =>
                       [matMenuTriggerFor]="rowActions"
                       [attr.aria-label]="'Ações de ' + r.cells[0]"
                     >
-                      Ações <span aria-hidden="true">⋮</span>
+                      <span class="collection-action-label">Ações</span>
+                      <span aria-hidden="true">⋮</span>
                     </button>
                     <mat-menu #rowActions="matMenu" class="collection-action-menu">
                       <ng-template matMenuContent
@@ -158,7 +166,11 @@ export const searchText = (value: string) =>
       </table>
     </div>
     @if (!compact() || pages() > 1) {
-      <nav class="collection-pagination" [attr.aria-label]="'Páginas de ' + label()">
+      <nav
+        class="collection-pagination"
+        [class.collection-single-page]="pages() === 1"
+        [attr.aria-label]="'Páginas de ' + label()"
+      >
         <button class="button secondary" [disabled]="current() <= 1" (click)="page.set(1)">
           Primeira
         </button>
@@ -199,6 +211,9 @@ export const searchText = (value: string) =>
   `,
 })
 export class CollectionTable {
+  isMoney(value: string) {
+    return /^-?R\$\s*[\d.]+,\d{2}$/.test(value);
+  }
   rows = input.required<CollectionRow[]>();
   headers = input.required<string[]>();
   label = input('Resultados');

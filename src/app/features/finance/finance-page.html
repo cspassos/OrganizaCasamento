@@ -66,6 +66,9 @@
     }
   </nav>
   @for (w of [finance.weddings.active()]; track w?.id) {
+    @if (section() === 'orcamento' || section() === 'despesas') {
+      <oc-expense-forecast />
+    }
     @switch (section()) {
       @case ('orcamento') {
         <oc-budget />

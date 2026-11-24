@@ -11,6 +11,7 @@ export interface LocalAttachment {
 export interface Expense extends WeddingEntity {
   description: string;
   categoryId: string;
+  additionalCategoryIds?: string[];
   supplier: string;
   supplierId?: string;
   contractId?: string;
@@ -67,6 +68,7 @@ export interface FinanceLedger extends WeddingEntity {
 export interface ExpenseDraft {
   description: string;
   categoryId: string;
+  additionalCategoryIds?: string[];
   supplier: string;
   supplierId?: string;
   contractId?: string;

@@ -6,6 +6,7 @@ import { FinanceService } from '../../core/services/finance';
 import { money, localToday } from '../../core/utils/finance';
 import { formatCalendarDate } from '../../core/utils/wedding';
 import { BudgetPage } from './budget';
+import { ExpenseForecast } from './expense-forecast';
 import { ExpenseList } from './expense-list';
 import { BillsPage } from './bills';
 import { FinanceReports } from './reports';
@@ -17,6 +18,7 @@ import { SuppliersPage } from '../suppliers/suppliers-page';
     RouterLink,
     RouterLinkActive,
     BudgetPage,
+    ExpenseForecast,
     ExpenseList,
     BillsPage,
     FinanceReports,

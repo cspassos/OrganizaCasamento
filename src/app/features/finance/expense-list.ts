@@ -5,11 +5,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { FinanceService } from '../../core/services/finance';
-import { money } from '../../core/utils/finance';
+import { expenseCategoryIds, money } from '../../core/utils/finance';
 import { formatCalendarDate } from '../../core/utils/wedding';
 import { MatDialog } from '@angular/material/dialog';
-import { firstValueFrom } from 'rxjs';
-import { ConfirmDialog } from '../../shared/components/confirm-dialog';
+import { Expense } from '../../core/models/finance';
+import { confirmExpenseDeletion } from './confirm-expense-deletion';
 @Component({
   selector: 'oc-expense-list',
   imports: [MatMenuModule, CollectionTable, RouterLink, FormsModule],
@@ -82,21 +82,27 @@ import { ConfirmDialog } from '../../shared/components/confirm-dialog';
         @if (e.status === 'planned' && !e.contractId && !e.professionalId) {
           <button
             mat-menu-item
-            (click)="remove(e.id, e.weddingId, e.description)"
+            (click)="remove(e)"
             [disabled]="finance.busy()"
           >
             Excluir pesquisa de preço
+          </button>
+        }
+        @if (e.canDeleteCancelled) {
+          <button mat-menu-item (click)="remove(e)" [disabled]="finance.busy()">
+            Excluir despesa
           </button>
         }</ng-template
       ><oc-collection-table
         label="Despesas"
         [headers]="[
           'Descrição',
-          'Fornecedor',
-          'Próximo vencimento',
-          'Situação',
           'Valor',
           'Já pago',
+          'Fornecedor',
+          'Categorias',
+          'Próximo vencimento',
+          'Situação',
           'Falta pagar',
         ]"
         [rows]="tableRows()"
@@ -111,24 +117,18 @@ export class ExpenseList {
   private dialogs = inject(MatDialog);
   message = signal('');
   error = signal('');
-  async remove(id: string, weddingId: string, name: string) {
-    if (
-      !(await firstValueFrom(
-        this.dialogs
-          .open(ConfirmDialog, {
-            data: {
-              title: 'Excluir pesquisa de preço?',
-              message: `Excluir “${name}”? Esse valor guardado para comparação será removido da lista.`,
-            },
-          })
-          .afterClosed(),
-      ))
-    )
-      return;
+  async remove(expense: Expense) {
+    if (!(await confirmExpenseDeletion(this.dialogs, expense))) return;
     this.error.set('');
+    this.message.set('');
     try {
-      await this.finance.deletePriceResearch(weddingId, id);
-      this.message.set('Pesquisa de preço excluída.');
+      if (expense.status === 'cancelled') {
+        await this.finance.deleteCancelledExpense(expense.weddingId, expense.id);
+        this.message.set('Despesa excluída.');
+      } else {
+        await this.finance.deletePriceResearch(expense.weddingId, expense.id);
+        this.message.set('Pesquisa de preço excluída.');
+      }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Não foi possível excluir.');
     }
@@ -140,11 +140,12 @@ export class ExpenseList {
       tone: e.situation === 'Vencida' ? 'danger' : e.situation === 'Paga' ? 'paid' : '',
       cells: [
         e.description,
-        e.supplier,
-        e.nextDueDate ? this.date(e.nextDueDate) : '—',
-        e.situation,
         this.money(e.status === 'planned' ? e.plannedCents : e.due),
         this.money(e.paid),
+        e.supplier,
+        e.categoryNames,
+        e.nextDueDate ? this.date(e.nextDueDate) : '—',
+        e.situation,
         this.money(e.open),
       ],
     })),
@@ -162,7 +163,7 @@ export class ExpenseList {
       .filter(
         (e) =>
           (!this.supplierFilter() || e.supplierId === this.supplierFilter()) &&
-          (!this.category() || e.categoryId === this.category()) &&
+          (!this.category() || expenseCategoryIds(e).includes(this.category())) &&
           (!this.status() || e.situation === this.status()) &&
           `${e.description} ${e.supplier}`
             .toLocaleLowerCase('pt-BR')

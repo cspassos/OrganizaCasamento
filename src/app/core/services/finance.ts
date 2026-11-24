@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal, DestroyRef } from '@angular/core'
 import { FINANCE_REPOSITORY } from '../repositories/finance.repository';
 import { WeddingsService } from './weddings';
 import {
+  Expense,
   ExpenseDraft,
   FinanceLedger,
   FinanceTransaction,
@@ -13,6 +14,8 @@ import {
   cents,
   emptyLedger,
   expenseBalance,
+  expenseCategoryIds,
+  expenseCategoryNames,
   expenseDisplay,
   expenseStatus,
   financeSummary,
@@ -21,10 +24,20 @@ import {
   validateAttachment,
   validateLedger,
   installmentBalance,
+  installmentBeforeEntryMessage,
   money,
 } from '../utils/finance';
 import { isCalendarDate } from '../utils/wedding';
 import { NavigationEnd, Router } from '@angular/router';
+
+function canDeleteCancelledExpense(ledger: FinanceLedger, expense: Expense) {
+  return (
+    expense.status === 'cancelled' &&
+    !expense.contractId &&
+    !expense.professionalId &&
+    !ledger.transactions.some((transaction) => transaction.expenseId === expense.id)
+  );
+}
 
 @Injectable({ providedIn: 'root' })
 export class FinanceService {
@@ -61,6 +74,8 @@ export class FinanceService {
       ? l.expenses.map((e) => ({
           ...e,
           ...expenseDisplay(l, e),
+          categoryNames: expenseCategoryNames(l, e),
+          canDeleteCancelled: canDeleteCancelledExpense(l, e),
           situation: expenseStatus(l, e, this.today()),
         }))
       : [];
@@ -200,10 +215,11 @@ export class FinanceService {
         c.budgetCents = amount;
       } else l.categories.push({ id: key, weddingId, name: name.trim(), budgetCents: amount });
     });
+    return key;
   }
   async removeCategory(weddingId: string, id: string) {
     await this.mutate(weddingId, 'Categoria excluída', id, (l) => {
-      if (l.expenses.some((e) => e.categoryId === id))
+      if (l.expenses.some((e) => expenseCategoryIds(e).includes(id)))
         throw new Error('Esta categoria está vinculada a despesas e não pode ser excluída.');
       l.categories = l.categories.filter((c) => c.id !== id);
     });
@@ -240,6 +256,9 @@ export class FinanceService {
           );
         const value = {
           ...draft,
+          additionalCategoryIds: [
+            ...new Set(draft.additionalCategoryIds ?? previous?.additionalCategoryIds ?? []),
+          ].filter((categoryId) => categoryId !== draft.categoryId),
           supplierId: draft.supplierId ?? previous?.supplierId,
           contractId: draft.contractId ?? previous?.contractId,
           professionalId: draft.professionalId ?? previous?.professionalId,
@@ -282,12 +301,35 @@ export class FinanceService {
       e.status = 'cancelled';
     });
   }
+  async deleteCancelledExpense(weddingId: string, id: string) {
+    await this.mutate(weddingId, 'Despesa cancelada excluída', id, (ledger) => {
+      const expense = ledger.expenses.find((item) => item.id === id);
+      if (!expense) throw new Error('Despesa não encontrada.');
+      if (!canDeleteCancelledExpense(ledger, expense)) {
+        throw new Error(
+          'Só é possível excluir despesas canceladas sem pagamentos, ajustes, contrato ou profissional vinculado.',
+        );
+      }
+      ledger.installments = ledger.installments.filter((item) => item.expenseId !== id);
+      ledger.expenses = ledger.expenses.filter((item) => item.id !== id);
+    });
+  }
   async reschedule(weddingId: string, id: string, date: string) {
     if (!isCalendarDate(date)) throw new Error('Informe um vencimento válido.');
     await this.mutate(weddingId, 'Vencimento alterado', id, (l) => {
       const i = l.installments.find((i) => i.id === id);
       const e = l.expenses.find((e) => e.id === i?.expenseId);
       if (!i || e?.status !== 'contracted') throw new Error('Parcela indisponível.');
+      const installments = l.installments.filter((item) => item.expenseId === e.id);
+      const entry = installments.find((item) => item.label === 'Entrada');
+      if (i === entry) {
+        if (installments.some((item) => item !== entry && item.dueDate < date))
+          throw new Error(
+            'O vencimento da entrada deve ser na data da primeira parcela ou antes dela.',
+          );
+      } else if (entry && date < entry.dueDate) {
+        throw new Error(installmentBeforeEntryMessage);
+      }
       i.dueDate = date;
     });
   }

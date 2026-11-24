@@ -26,7 +26,9 @@
       <p class="feedback success" role="status">{{ message() }}</p>
     }
     @if (error() || finance.error()) {
-      <p class="feedback error" role="alert">{{ error() || finance.error() }}</p>
+      <p id="expense-form-error" class="feedback error" role="alert" tabindex="-1">
+        {{ error() || finance.error() }}
+      </p>
     }
     @if (changedWedding()) {
       <p class="feedback error" role="alert">
@@ -57,8 +59,8 @@
                 >Se for novo, o contato será salvo junto com o gasto. Não precisa cadastrar
                 antes.</small
               >
-              @if (form.controls.supplier.invalid && form.controls.supplier.touched) {
-                <small class="field-error" role="alert">Informe quem vai receber este valor.</small>
+              @if (fieldError('supplier'); as error) {
+                <small class="field-error" role="alert">{{ error }}</small>
               }
             </label>
             <mat-autocomplete
@@ -72,17 +74,31 @@
             <label class="form-field"
               >Descrição *<input
                 id="description"
+                aria-label="Descrição *"
                 formControlName="description"
                 maxlength="200"
                 placeholder="Ex.: buffet, decoração ou fotografia"
-            /></label>
+              />
+              @if (fieldError('description'); as error) {
+                <small class="field-error" role="alert">{{ error }}</small>
+              }
+            </label>
             <label class="form-field"
-              >Categoria *<select id="categoryId" formControlName="categoryId">
+              >Categoria *<select
+                #primaryCategory
+                id="categoryId"
+                aria-label="Categoria *"
+                formControlName="categoryId"
+                (change)="removeCategory(primaryCategory.value)"
+              >
                 @for (c of finance.ledger()?.categories; track c.id) {
                   <option [value]="c.id">{{ c.name }}</option>
                 }
-              </select></label
-            >
+              </select>
+              @if (fieldError('categoryId'); as error) {
+                <small class="field-error" role="alert">{{ error }}</small>
+              }
+            </label>
             <label class="form-field"
               >Situação<select id="status" formControlName="status">
                 <option value="contracted">Já combinei / contratei</option>
@@ -91,18 +107,98 @@
             >
             @if (form.controls.status.value === 'planned') {
               <label class="form-field"
-                >Valor estimado *<input id="planned" ocCurrency formControlName="planned"
-              /></label>
+                >Valor estimado *<input
+                  id="planned"
+                  aria-label="Valor estimado *"
+                  ocCurrency
+                  formControlName="planned"
+                />
+                @if (fieldError('planned'); as error) {
+                  <small class="field-error" role="alert">{{ error }}</small>
+                }
+              </label>
             } @else {
               <label class="form-field"
                 >Valor total combinado *<input
                   id="contracted"
+                  aria-label="Valor total combinado *"
+                  [attr.aria-invalid]="!!fieldError('contracted')"
+                  [attr.aria-describedby]="fieldError('contracted') ? 'contracted-error' : null"
                   ocCurrency
                   formControlName="contracted"
                   [readOnly]="hasHistory()"
-              /></label>
+                />
+                @if (fieldError('contracted'); as error) {
+                  <small id="contracted-error" class="field-error" role="alert">{{ error }}</small>
+                }
+              </label>
             }
           </div>
+          <details class="additional-categories" [open]="selectedCategories().length > 0">
+            <summary>
+              Categorias adicionais{{
+                selectedCategories().length ? ' (' + selectedCategories().length + ')' : ''
+              }}
+            </summary>
+            @if (selectedCategories().length) {
+              <ul class="expense-categories">
+                @for (category of selectedCategories(); track category.id) {
+                  <li>
+                    {{ category.name }}
+                    <button
+                      class="remove-category"
+                      type="button"
+                      [attr.aria-label]="'Remover categoria ' + category.name"
+                      (click)="removeCategory(category.id)"
+                    >
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+            <div class="category-picker form-field">
+              <select
+                #additionalCategory
+                aria-label="Adicionar categoria"
+                (change)="addCategory(additionalCategory.value); additionalCategory.value = ''"
+              >
+                <option value="">Adicionar categoria</option>
+                @for (category of availableCategories(); track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+            </div>
+            <details #newCategoryPanel class="new-category">
+              <summary>Criar nova categoria</summary>
+              <div class="category-create">
+                <label class="form-field">
+                  Nome da nova categoria
+                  <input
+                    #newCategory
+                    id="new-expense-category"
+                    maxlength="100"
+                    (input)="categoryError.set('')"
+                    (keydown.enter)="
+                      $event.preventDefault(); createCategory(newCategory, newCategoryPanel)
+                    "
+                  />
+                  @if (categoryError(); as error) {
+                    <small class="field-error" role="alert">{{ error }}</small>
+                  }
+                </label>
+                <button
+                  class="button secondary"
+                  type="button"
+                  [disabled]="finance.busy()"
+                  (click)="createCategory(newCategory, newCategoryPanel)"
+                >
+                  Criar e adicionar categoria
+                </button>
+              </div>
+            </details>
+            <small class="muted">No orçamento, o valor fica na categoria principal.</small>
+          </details>
         </section>
       } @else {
         <section class="card form-section">
@@ -126,7 +222,11 @@
                   label="Vencimento / data da entrada *"
                   inputId="dueDate"
                   formControlName="dueDate"
-              /></label>
+                />
+                @if (fieldError('dueDate'); as error) {
+                  <small class="field-error" role="alert">{{ error }}</small>
+                }
+              </label>
               <label class="form-field"
                 >Forma de pagamento<select id="method" formControlName="method">
                   @for (m of methods; track m) {
@@ -140,8 +240,13 @@
                   aria-label="Entrada / sinal"
                   ocCurrency
                   formControlName="entry"
-                /><small>Sem entrada? Deixe R$ 0,00.</small></label
-              >
+                />
+                @if (fieldError('entry'); as error) {
+                  <small class="field-error" role="alert">{{ error }}</small>
+                } @else {
+                  <small>Sem entrada? Deixe R$ 0,00.</small>
+                }
+              </label>
               <label class="form-field"
                 >Parcelas do restante<input
                   id="count"
@@ -151,8 +256,13 @@
                   min="1"
                   max="120"
                   step="1"
-                /><small>Pagamento único? Deixe 1 parcela e entrada zero.</small></label
-              >
+                />
+                @if (fieldError('count'); as error) {
+                  <small class="field-error" role="alert">{{ error }}</small>
+                } @else {
+                  <small>Pagamento único? Deixe 1 parcela e entrada zero.</small>
+                }
+              </label>
               @if (form.controls.entry.value > 0 || form.controls.count.value > 1) {
                 <label class="form-field"
                   >Primeiro vencimento do restante<oc-date-picker
@@ -160,7 +270,11 @@
                     label="Primeiro vencimento do restante"
                     inputId="firstDueDate"
                     formControlName="firstDueDate"
-                /></label>
+                  />
+                  @if (fieldError('firstDueDate'); as error) {
+                    <small class="field-error" role="alert">{{ error }}</small>
+                  }
+                </label>
               }
             </div>
             <p class="muted">
@@ -180,14 +294,22 @@
                   label="Data da contratação"
                   inputId="contractDate"
                   formControlName="contractDate"
-              /></label>
+                />
+                @if (fieldError('contractDate'); as error) {
+                  <small class="field-error" role="alert">{{ error }}</small>
+                }
+              </label>
               <label class="form-field"
                 >Referência do contrato<input
                   id="contractReference"
                   formControlName="contractReference"
                   maxlength="200"
                   placeholder="Se tiver, informe o número ou nome do contrato"
-              /></label>
+                />
+                @if (fieldError('contractReference'); as error) {
+                  <small class="field-error" role="alert">{{ error }}</small>
+                }
+              </label>
             }
             <label class="form-field full"
               >Observações<textarea
@@ -196,6 +318,9 @@
                 rows="2"
                 maxlength="4000"
               ></textarea>
+              @if (fieldError('notes'); as error) {
+                <small class="field-error" role="alert">{{ error }}</small>
+              }
             </label>
             <p class="full muted">
               Anexe o contrato ou comprovante aqui, se tiver. Ele também ficará acessível no

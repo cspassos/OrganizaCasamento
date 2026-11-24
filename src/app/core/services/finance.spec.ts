@@ -5,7 +5,7 @@ import { FinanceService } from './finance';
 import { WeddingsService } from './weddings';
 import { ExpenseDraft, FinanceTransaction } from '../models/finance';
 import { Wedding } from '../models/models';
-import { localToday } from '../utils/finance';
+import { localToday, shiftMonth } from '../utils/finance';
 import { FINANCE_REPOSITORY } from '../repositories/finance.repository';
 import { SUPPLIERS_REPOSITORY } from '../repositories/suppliers.repository';
 describe('Financial operations', () => {
@@ -191,9 +191,22 @@ describe('Financial operations', () => {
     expect(service.summary()!.contracted).toBe(0);
     expect(service.summary()!.paid).toBe(0);
     expect(service.ledger()!.transactions).toHaveLength(2);
+    await expect(service.deleteCancelledExpense(w.id, id)).rejects.toThrow('sem pagamentos');
     await expect(service.removeCategory(w.id, service.ledger()!.categories[0].id)).rejects.toThrow(
       'vinculada',
     );
+  });
+  it('deletes a cancelled expense and its installments, preserving unrelated expenses', async () => {
+    const first = await expense();
+    const other = await expense();
+    await expect(service.deleteCancelledExpense(w.id, first.id)).rejects.toThrow('canceladas');
+    await service.cancelExpense(w.id, first.id);
+    await service.deleteCancelledExpense(w.id, first.id);
+    expect(service.ledger()!.expenses.map((item) => item.id)).toEqual([other.id]);
+    expect(service.ledger()!.installments.map((item) => item.expenseId)).toEqual(
+      Array(6).fill(other.id),
+    );
+    expect(service.summary()!.contracted).toBe(1200000);
   });
   it('preserves history and prevents invalid schedule edits and duplicate obligations', async () => {
     const { id, draft } = await expense();
@@ -213,8 +226,14 @@ describe('Financial operations', () => {
         { entryCents: 0, count: 1, firstDueDate: localToday() },
       ),
     ).rejects.toThrow('histórico');
-    await service.reschedule(w.id, service.ledger()!.installments[0].id, '2027-01-31');
-    expect(service.ledger()!.installments[0].dueDate).toBe('2027-01-31');
+    const [entry, first] = service.ledger()!.installments;
+    await expect(
+      service.reschedule(w.id, entry.id, shiftMonth(first.dueDate, 1)),
+    ).rejects.toThrow('na data da primeira parcela ou antes');
+    const earlier = shiftMonth(first.dueDate, -1);
+    await service.reschedule(w.id, entry.id, earlier);
+    expect(service.ledger()!.installments[0].dueDate).toBe(earlier);
+    expect(service.ledger()!.transactions[0].installmentId).toBe(entry.id);
   });
   it('keeps weddings independent and rejects stale-form writes', async () => {
     await expense();

@@ -5,6 +5,10 @@ import { authGuard } from './core/guards/auth';
 import { administrationGuard } from './core/guards/administration';
 const applicationRoutes: Routes = [
   {
+    path: 'ajuda',
+    loadComponent: () => import('./features/help/help-page').then((m) => m.HelpPage),
+  },
+  {
     path: 'lembretes',
     loadComponent: () => import('./features/organizer/organizer-page').then((m) => m.OrganizerPage),
   },
@@ -105,6 +109,11 @@ const applicationRoutes: Routes = [
     path: 'casamentos/novo',
     loadComponent: () => import('./features/weddings/wedding-form').then((m) => m.WeddingForm),
     canDeactivate: [unsavedWeddingGuard],
+  },
+  {
+    path: 'casamentos/:id/planejamento/historico',
+    loadComponent: () =>
+      import('./features/weddings/planning-history').then((m) => m.PlanningHistory),
   },
   {
     path: 'casamentos/:id/editar',

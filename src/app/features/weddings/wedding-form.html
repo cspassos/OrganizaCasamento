@@ -4,7 +4,14 @@
     <h1>{{ id ? 'Editar casamento' : 'Novo casamento' }}</h1>
     <p class="muted">Um planejamento com a história de vocês.</p>
   </div>
-  <a class="button secondary" routerLink="/casamentos">Voltar aos casamentos</a>
+  <div class="card-actions">
+    @if (id && !loading() && !missing()) {
+      <a class="button secondary" [routerLink]="['/casamentos', id, 'planejamento', 'historico']">
+        Histórico do planejamento
+      </a>
+    }
+    <a class="button secondary" routerLink="/casamentos">Voltar aos casamentos</a>
+  </div>
 </div>
 @if (loading()) {
   <p class="feedback" role="status">Carregando dados…</p>

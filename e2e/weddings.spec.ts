@@ -15,6 +15,36 @@ async function action(page: Page, name: string) {
     .click();
   await page.getByRole('menuitem', { name, exact: true }).click();
 }
+test('consulta versões do planejamento após recarregar e arquivar o casamento', async ({
+  page,
+}) => {
+  await create(page);
+  await page.goto('/casamentos');
+  await action(page, 'Editar');
+  await page.getByRole('link', { name: 'Histórico do planejamento' }).click();
+  await expect(page.getByText('Ainda não há versões anteriores.', { exact: false })).toBeVisible();
+  await page.getByRole('link', { name: 'Editar casamento' }).click();
+  await page.getByLabel('Nome completo da noiva').fill('Ana Ferreira');
+  await page.getByLabel('Orçamento inicial (R$)').fill('90000');
+  await page.getByRole('button', { name: 'Salvar casamento', exact: true }).click();
+  await expect(page).toHaveURL(/dashboard$/);
+
+  await page.goto('/casamentos');
+  await action(page, 'Arquivar');
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar', exact: true }).click();
+  await page.getByRole('button', { name: /Ver arquivados/ }).click();
+  await action(page, 'Histórico do planejamento');
+  await expect(page).toHaveURL(/\/planejamento\/historico$/);
+  await page.reload();
+  const current = page.locator('details').filter({ hasText: 'Planejamento atual' });
+  await expect(current).toContainText('Ana Ferreira');
+  await expect(current).toContainText('90.000,00');
+  const previous = page.locator('details').filter({ hasText: 'Versão anterior' });
+  await expect(previous).toHaveCount(1);
+  await previous.locator('summary').click();
+  await expect(previous.getByText('Ana', { exact: true })).toBeVisible();
+  await expect(previous).toContainText('80.000,00');
+});
 test('casamentos independentes preservam orçamento, edição e seleção ao recarregar', async ({
   page,
 }) => {

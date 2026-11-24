@@ -65,7 +65,7 @@ import { formatCalendarDate } from '../../core/utils/wedding';
       ></ng-template
     ><oc-collection-table
       label="Contas e parcelas"
-      [headers]="['Despesa', 'Parcela', 'Vencimento', 'Situação', 'Valor', 'Pago', 'Saldo']"
+      [headers]="['Despesa', 'Valor', 'Pago', 'Parcela', 'Vencimento', 'Situação', 'Saldo']"
       [rows]="tableRows()"
       [actions]="rowActions"
     />
@@ -87,11 +87,11 @@ export class BillsPage {
         tone: i.open > 0 && i.dueDate < this.today ? 'danger' : i.open === 0 ? 'paid' : '',
         cells: [
           this.description(i.expenseId) ?? '',
+          this.money(i.due),
+          this.money(i.paid),
           i.label,
           this.date(i.dueDate),
           i.open === 0 ? 'Pago' : i.dueDate < this.today ? 'Vencida' : 'Em aberto',
-          this.money(i.due),
-          this.money(i.paid),
           this.money(i.open),
         ],
       })),

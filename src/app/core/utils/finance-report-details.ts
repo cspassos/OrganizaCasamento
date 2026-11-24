@@ -1,6 +1,7 @@
 import { FinanceLedger, transactionLabels } from '../models/finance';
 import {
   expenseBalance,
+  expenseCategoryNames,
   expenseDisplay,
   expenseStatus,
   financeSummary,
@@ -111,7 +112,7 @@ export function enrichFinanceReport(
       const b = expenseDisplay(l, e);
       return [
         e.description,
-        l.categories.find((c) => c.id === e.categoryId)?.name ?? '',
+        expenseCategoryNames(l, e),
         e.supplier || 'Não informado',
         expenseStatus(l, e),
         money(b.due),
@@ -184,7 +185,7 @@ export function enrichFinanceReport(
         title: `Despesa: ${e.description}`,
         columns: ['Informação', 'Detalhe'],
         rows: [
-          ['Categoria', l.categories.find((c) => c.id === e.categoryId)?.name ?? ''],
+          ['Categoria', expenseCategoryNames(l, e)],
           ['Fornecedor', e.supplier || 'Não informado'],
           ['Situação', expenseStatus(l, e)],
           ['Valor previsto', money(e.plannedCents)],

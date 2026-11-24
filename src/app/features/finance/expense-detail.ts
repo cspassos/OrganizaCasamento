@@ -11,6 +11,7 @@ import { transactionLabels } from '../../core/models/finance';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog';
 import { downloadAttachment } from '../../shared/components/attachment';
 import { TransactionDialog } from './transaction-dialog';
+import { confirmExpenseDeletion } from './confirm-expense-deletion';
 
 @Component({
   selector: 'oc-expense-detail',
@@ -22,24 +23,12 @@ export class ExpenseDetail {
   private route = inject(ActivatedRoute);
   private dialog = inject(MatDialog);
   private router = inject(Router);
-  async removeResearch() {
+  async remove() {
     const e = this.expense();
-    if (!e) return;
-    if (
-      !(await firstValueFrom(
-        this.dialog
-          .open(ConfirmDialog, {
-            data: {
-              title: 'Excluir pesquisa de preço?',
-              message: `Excluir “${e.description}”? Esse valor guardado para comparação será removido da lista.`,
-            },
-          })
-          .afterClosed(),
-      ))
-    )
-      return;
+    if (!e || !(await confirmExpenseDeletion(this.dialog, e))) return;
     try {
-      await this.finance.deletePriceResearch(e.weddingId, e.id);
+      if (e.status === 'cancelled') await this.finance.deleteCancelledExpense(e.weddingId, e.id);
+      else await this.finance.deletePriceResearch(e.weddingId, e.id);
       await this.router.navigateByUrl('/financeiro/despesas');
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Não foi possível excluir.');
@@ -54,6 +43,11 @@ export class ExpenseDetail {
         ?.installments.filter((i) => i.expenseId === this.id)
         .sort((a, b) => a.number - b.number) ?? [],
   );
+  installmentBeforeEntry = computed(() => {
+    const installments = this.installments();
+    const entry = installments.find((item) => item.label === 'Entrada');
+    return !!entry && installments.some((item) => item.dueDate < entry.dueDate);
+  });
   transactions = computed(
     () =>
       this.finance

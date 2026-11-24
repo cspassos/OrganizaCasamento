@@ -29,6 +29,9 @@
       <span class="pill" [class.danger-pill]="e.situation === 'Vencida'">{{ e.situation }}</span>
     </div>
     <p class="muted">{{ e.supplier || 'Fornecedor não informado' }} · {{ e.method }}</p>
+    @if (e.categoryNames) {
+      <p class="muted">Categorias: {{ e.categoryNames }}</p>
+    }
     <div class="finance-metrics">
       <div>
         <small>Previsto</small><strong>{{ money(e.plannedCents) }}</strong>
@@ -79,7 +82,7 @@
           }
         }
         @if (e.status === 'planned' && !e.contractId && !e.professionalId) {
-          <button class="button secondary" [disabled]="finance.busy()" (click)="removeResearch()">
+          <button class="button secondary" [disabled]="finance.busy()" (click)="remove()">
             Excluir pesquisa de preço
           </button>
         }
@@ -95,11 +98,21 @@
             Cancelar despesa
           </button>
         }
+      } @else if (e.canDeleteCancelled) {
+        <button class="button secondary destructive" [disabled]="finance.busy()" (click)="remove()">
+          Excluir despesa
+        </button>
       }
     </div>
   </section>
   <section class="card form-section">
     <h2>Parcelas e vencimentos</h2>
+    @if (e.status === 'contracted' && installmentBeforeEntry()) {
+      <p class="feedback error">
+        Há parcelas com vencimento anterior à entrada. Confira as datas do acordo e corrija os
+        vencimentos abaixo.
+      </p>
+    }
     @for (i of installments(); track i.id) {
       <div class="bill-row" [class.overdue-row]="isOverdue(i)">
         <div>

@@ -89,6 +89,23 @@ describe('WeddingsService', () => {
     await store.setArchived(b.id, false);
     expect(store.active()?.initialBudget).toBe(b.initialBudget);
   });
+  it('keeps a legacy planning version and skips duplicate versions on identical saves', async () => {
+    const original = { ...wedding('Planejamento antigo'), updatedAt: '2026-11-20T12:00:00Z' };
+    const repository = new AppRepository<Wedding>('weddings');
+    await repository.save(original);
+    const store = new WeddingsService();
+    const edited = { ...original, initialBudget: 55000 };
+    await store.save(edited);
+    await store.save(edited);
+
+    const saved = (await repository.list()).find((record) => record.id === original.id);
+    expect(saved?.initialBudget).toBe(55000);
+    expect(saved?.planningHistory).toHaveLength(1);
+    expect(saved?.planningHistory?.[0]).toMatchObject({
+      savedAt: original.updatedAt,
+      details: { name: original.name, initialBudget: original.initialBudget },
+    });
+  });
   it('does not persist invalid records or invalid selections', async () => {
     const store = new WeddingsService();
     await store.initialized;

@@ -1,0 +1,79 @@
+<section class="card form-section forecast" aria-labelledby="expense-forecast-title">
+  <div class="forecast-header">
+    <div>
+      <h2 id="expense-forecast-title">Previsão de gastos</h2>
+      <p class="muted">Soma os gastos contratados e os valores estimados dos gastos planejados.</p>
+    </div>
+    @if (expenses().length) {
+      <button
+        type="button"
+        class="button secondary"
+        aria-controls="expense-forecast-selection"
+        [attr.aria-expanded]="choosing()"
+        (click)="choosing.set(!choosing())"
+      >
+        {{ choosing() ? 'Fechar seleção' : 'Escolher gastos' }}
+      </button>
+    }
+  </div>
+  <div class="forecast-totals">
+    <div>
+      <span>Total de todos os gastos</span>
+      <strong>{{ money(total()) }}</strong>
+    </div>
+    <div aria-live="polite">
+      @if (choosing() || selected().length !== expenses().length) {
+        <span>Total selecionado · {{ selected().length }} de {{ expenses().length }}</span>
+        <strong>{{ money(selectedTotal()) }}</strong>
+      }
+    </div>
+  </div>
+  <div id="expense-forecast-selection" [hidden]="!choosing() || !expenses().length">
+    @if (choosing() && expenses().length) {
+      <div class="forecast-tools">
+        @if (expenses().length > 10) {
+          <label class="form-field">
+            Buscar gastos na previsão
+            <input type="search" [value]="query()" (input)="setQuery($any($event.target).value)" />
+          </label>
+        }
+        <div class="forecast-actions">
+          <button type="button" class="button secondary" (click)="selectAll(true)">
+            Selecionar todos
+          </button>
+          <button type="button" class="button secondary" (click)="selectAll(false)">
+            Limpar seleção
+          </button>
+        </div>
+      </div>
+      <ul class="forecast-items">
+        @for (expense of visible(); track expense.id) {
+          <li>
+            <label>
+              <input
+                type="checkbox"
+                [checked]="!excluded().has(expense.id)"
+                (change)="select(expense.id, $any($event.target).checked)"
+              />
+              <span>
+                {{ expense.description }}
+                <small class="muted"
+                  >{{ expense.status === 'contracted' ? 'Contratado' : 'Planejado'
+                  }}{{ expense.supplier ? ' · ' + expense.supplier : '' }}</small
+                >
+              </span>
+              <strong>{{ money(expense.amount) }}</strong>
+            </label>
+          </li>
+        } @empty {
+          <li class="muted">Nenhum gasto encontrado.</li>
+        }
+      </ul>
+      @if (visible().length < matches().length) {
+        <button type="button" class="button secondary" (click)="showMore()">
+          Mostrar mais gastos
+        </button>
+      }
+    }
+  </div>
+</section>
